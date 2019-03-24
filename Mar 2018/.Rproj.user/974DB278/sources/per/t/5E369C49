@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1519025146260.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "836550788",
+    "id" : "5E369C49",
+    "lastKnownWriteTime" : 1518724454,
+    "last_content_update" : 1518724454,
+    "path" : "C:/wia_desktop/2018/Blog/Tutorials/Feb 2018/MDFA_Legacy_MSE.R",
+    "project_path" : null,
+    "properties" : {
+        "cursorPosition" : "136,24",
+        "scrollLine" : "105"
+    },
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

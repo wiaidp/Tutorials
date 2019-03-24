@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1553351421303.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "609854210",
+    "id" : "ED8E2B19",
+    "lastKnownWriteTime" : 1553422693,
+    "last_content_update" : 1553422693042,
+    "path" : "C:/wia_desktop/2019/Blog/Tutorials/April 2019/mdfa_mse_trade_func.R",
+    "project_path" : "mdfa_mse_trade_func.R",
+    "properties" : {
+        "cursorPosition" : "173,54",
+        "scrollLine" : "136"
+    },
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

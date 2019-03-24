@@ -1,0 +1,42 @@
+\SweaveOpts{concordance=FALSE}
+
+
+
+
+\chapter{Reverse Engineering}\label{rev_eng}
+
+
+Consider the generic MSE-expression
+\[\sum_k|\Gamma(\omega_k)-\hat{\Gamma}(\omega_k)|^2h(\omega_k)\]
+In contrast to the previous chapters, where $\hat{\Gamma}(\omega_k)$ was obtained as the outcome of the MSE-criterion
+\[\sum_k|\Gamma(\omega_k)-\hat{\Gamma}(\omega_k)|^2h(\omega_k)\to\min_{\hat{\Gamma}}\]
+for given $\Gamma$ and $h$, we here consider cases where $\hat{\Gamma}(\omega_k)$ is \textbf{already known/given} (for example by a customer) and we try to determine either $\Gamma(\omega_k)$, for given $h(\omega_k)$, or the positive weighting function $h(\omega_k)>0$\footnote{The function $h$ is determined up to a scaling constant i.e. it is assumed that $\sum_kh(\omega_k)$ is fixed.}, for given $\Gamma(\omega_k)$, from either
+\[\sum_k|\Gamma(\omega_k)-\hat{\Gamma}(\omega_k)|^2h(\omega_k)\to\min_{{\Gamma}}\]
+or from
+\[\sum_k|\Gamma(\omega_k)-\hat{\Gamma}(\omega_k)|^2h(\omega_k)\to\min_{h(\omega_k)}\]
+This is called reverse-engineering since we look for the problem formulation which lead to the pre-specified 'solution' $\hat{\Gamma}$.
+\begin{itemize}
+\item In the first criterion, we assume the weighting function $h(\omega_k)$ to be given (for a model-based spectrum or DFT) and we look
+for a target $\Gamma(\omega_k)$ which minimzes the MSE i.e. we look for determining the original 'problem', as specified by the unknown target $\Gamma(\omega_k)$, given $h(\omega_k)$ (a model or the DFT). Note that this is essentially the same as prior (real-time/concurrent) estimation problem except that the roles of $\Gamma$ and $\hat{\Gamma}$ are now interchanged: the new target $\hat{\Gamma}$ is an asymmetric filter and the filter subject to optimization, $\Gamma$, must by symmetric which is easily obtained by setting $Lag=T/2$ in MDFA.
+\item In the second problem formulation we seek an 'optimal' model description which would generate the given $\hat{\Gamma}(\omega_k)$ as solution of the MSE-problem given the target $\Gamma$, but recall above footnote. 
+\end{itemize}
+
+Examples:
+\begin{itemize}
+\item Assume $h=constant>0$ (white noise) and $\hat{\Gamma}$ is equally weighted MA(200). Which target (problem) is associated to $\hat{\Gamma}$ in the first place?
+\item Assume $\Gamma(\omega_k)=\exp(i\omega_k)$ is the anticipative (one-step ahead) allpass and $\hat{\Gamma}$ is the equally weighted MA($T$) of length $T$ equal to the sample length. Which weighting function $h$ (model) is associated to $\hat{\Gamma}$ in the first place?
+\end{itemize}
+Background: filter zoo in financial trading.
+
+
+
+
+
+
+Reverse-engineering is crucial when replicating designs (for example classic model-based designs or, more generally, customer solutions) in MDFA for later customization. It is also useful when assessing the pertinence of an alleged 'proven' solution $\hat{\Gamma}(\omega_k)$ :
+\begin{itemize}
+\item For given $\hat{\Gamma}(\omega_k)$ and target $\Gamma(\omega_k)$ obtain $S(\omega_k)$
+        Translation: under which data-conditions (data-generating process or DGP) is the solution optimal in view of the specified target (this proceeding is sometimes found in the literature when discussing the pertinence of a particular design) 
+\item For given $\hat{\Gamma}(\omega_k)$ and $S(\omega_k)$ obtain $\Gamma(\omega_k)$
+        Translation: for what kind of problems (target) is the proposed solution optimal under the given data conditions (I haven't seen this kind of evaluation in the literature because the target is mostly one-step ahead forecasting i.e. the target is fixed (not assumed to be the outcome of the optimization)).
+\end{itemize}

@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1519025114807.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "483051086",
+    "id" : "31B44F92",
+    "lastKnownWriteTime" : 1518692800,
+    "last_content_update" : 1518692800,
+    "path" : "C:/wia_desktop/2018/Blog/Tutorials/Feb 2018/DFA_MSE_criterion.R",
+    "project_path" : null,
+    "properties" : {
+        "cursorPosition" : "24,0",
+        "scrollLine" : "0"
+    },
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

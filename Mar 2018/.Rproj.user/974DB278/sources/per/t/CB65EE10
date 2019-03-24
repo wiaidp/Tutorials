@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1519024912996.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "668588110",
+    "id" : "CB65EE10",
+    "lastKnownWriteTime" : 1519035879,
+    "last_content_update" : 1519035879091,
+    "path" : "C:/wia_desktop/2018/Blog/Tutorials/Mar 2018/FX_MSE.R",
+    "project_path" : "FX_MSE.R",
+    "properties" : {
+        "cursorPosition" : "251,12",
+        "scrollLine" : "201"
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

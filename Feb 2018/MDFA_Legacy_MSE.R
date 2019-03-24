@@ -1,0 +1,584 @@
+### R code from vignette source 'C:/wia_desktop/2018/Projekte/MDFA-Legacy/Sweave/Rnw/MDFA_Legacy.Rnw'
+### Encoding: ISO8859-1
+
+###################################################
+### code chunk number 1: init
+###################################################
+#rm(list=ls())
+
+
+###################################################
+### code chunk number 2: init
+###################################################
+# Load packages: time series and xts
+#library(tseries)
+library(xts)
+# Library for tables
+library(Hmisc)
+require(xtable)
+#install.packages("devtools")
+library(devtools)
+# Load MDFA package from github
+devtools::install_github("wiaidp/MDFA")
+# MDFA package
+library(MDFA)
+
+
+
+
+
+path.pgm <- paste(getwd(),"/",sep="")
+
+
+###################################################
+### code chunk number 6: dft
+###################################################
+head(per,100)
+
+
+###################################################
+### code chunk number 7: dfa_ms
+###################################################
+# This function computes MSE DFA solutions 
+# L is the length of the MA filter,
+# periodogram is the frequency weighting function in the DFA
+# Gamma is the transfer function of the symmetric filter (target) and
+# Lag is the lag-parameter: Lag=0 implies real-time filtering, Lag=L/2
+#     implies symmetric filter
+# The function returns optimal coefficients as well as the transfer 
+#     function of the optimized real-time filter
+head(dfa_ms,100)
+
+
+###################################################
+### code chunk number 8: dfa_ms
+###################################################
+head(dfa_analytic)
+
+
+###################################################
+### code chunk number 9: dfa_ms
+###################################################
+set.seed(1)
+len <- 100
+target <- arima.sim(list(ar=0.9),n=len)
+explanatory_2 <- target+rnorm(len)
+explanatory <- cbind(target,explanatory_2)
+x <- cbind(target,explanatory)
+dimnames(x)[[2]] <- c("target","explanatory 1","explanatory 2")
+head(x)
+
+
+###################################################
+### code chunk number 10: dfa_ms
+###################################################
+x<-cbind(x[,1],lag(x[,2:3],-1))
+dimnames(x)[[2]]<-c("target","lagged explanatory 1","lagged explanatory 2")
+head(x)
+
+
+###################################################
+### code chunk number 11: dfa_ms
+###################################################
+spec_comp
+
+
+###################################################
+### code chunk number 12: dfa_ms
+###################################################
+head(mdfa_analytic)
+
+
+###################################################
+### code chunk number 13: dfa_ms
+###################################################
+weight_func <- matrix(rep(1:6,2),ncol=2)
+L <- 2
+
+
+###################################################
+### code chunk number 14: dfa_ms
+###################################################
+d<-0
+lin_eta<-F
+lambda<-0
+Lag<-0
+eta<-0
+i1<-F
+i2<-F
+weight_constraint<-rep(1/(ncol(weight_func)-1),ncol(weight_func)-1)
+lambda_cross<-lambda_smooth<-0
+lambda_decay<-c(0,0)
+lin_expweight<-F
+shift_constraint<-rep(0,ncol(weight_func)-1)
+grand_mean<-F
+b0_H0<-NULL
+c_eta<-F
+weights_only<-F
+weight_structure<-c(0,0)
+white_noise<-F
+synchronicity<-F
+cutoff<-pi
+lag_mat<-matrix(rep(0:(L-1),ncol(weight_func)),nrow=L)
+troikaner<-F
+
+
+###################################################
+### code chunk number 15: dfa_ms
+###################################################
+source(file=paste(path.pgm,"control_default.r",sep=""))
+
+
+
+###################################################
+### code chunk number 17: dfa_ms
+###################################################
+head(MDFA_mse)
+head(MDFA_mse_constraint)
+head(MDFA_cust)
+head(MDFA_cust_constraint)
+head(MDFA_reg)
+head(MDFA_reg_constraint)
+
+
+###################################################
+### code chunk number 18: exercise_dfa_ms_1
+###################################################
+# Generate series of length 2000
+lenh<-2000
+len<-120
+# Specify the AR-coefficients
+a_vec<-c(0.9,0.1,-0.9)
+xh<-matrix(nrow=lenh,ncol=length(a_vec))
+x<-matrix(nrow=len,ncol=length(a_vec))
+yhat<-x
+y<-x
+# Generate series for each AR(1)-process
+for (i in 1:length(a_vec))
+{
+  # We want the same random-seed for each process  
+  set.seed(10)
+  xh[,i]<-arima.sim(list(ar=a_vec[i]),n=lenh)
+}
+
+
+###################################################
+### code chunk number 19: exercise_dfa_ms_2
+###################################################
+# Extract 120 observations in the midddle of the longer series
+x<-xh[lenh/2+(-len/2):((len/2)-1),]
+# Compute the coefficients of the symmetric target filter
+cutoff<-pi/6
+# Order of approximation
+ord<-1000
+# Filter weights ideal trend (See DFA)
+gamma<-c(cutoff/pi,(1/pi)*sin(cutoff*1:ord)/(1:ord))
+# Compute the outputs yt of the (truncated) symmetric target filter
+for (i in 1:length(a_vec))
+{
+  for (j in 1:120)
+  {
+    y[j,i]<-gamma[1:900]%*%xh[lenh/2+(-len/2)-1+(j:(j-899)),i]+
+      gamma[2:900]%*%xh[lenh/2+(-len/2)+(j:(j+898)),i]
+  }
+}
+
+
+###################################################
+### code chunk number 20: exercise_dfa_ms_3
+###################################################
+plot_T<-F
+periodogram<-matrix(ncol=3,nrow=len/2+1)
+trffkt<-periodogram
+perf_mat<-matrix(nrow=3,ncol=2)
+dimnames(perf_mat)[[2]]<-c("Criterion Value",
+                           "Mean-Square Sample Filter Error")
+dimnames(perf_mat)[[1]]<-c("a1=0.9","a1=0.1","a1=-0.9")
+# Filter length
+L<-12
+# Real-time design
+Lag<-0
+# Target ideal trend
+Gamma<-c(1,(1:(len/2))<len/12)
+b<-matrix(nrow=L,ncol=3)
+# Compute real-time filters
+for (i in 1:3)#i<-1
+{
+  # Compute the periodogram based on the data (length 120)  
+  periodogram[,i]<-per(x[,i],plot_T)$per
+  # Optimize filters
+  filt<-dfa_ms(L,periodogram[,i],Lag,Gamma)
+  trffkt[,i]<-filt$trffkt
+  b[,i]<-filt$b
+  # Compute real-time outputs (we can use the longer series in order 
+  # to obtain estimates for time points t=1,...,11)
+  for (j in 1:len)
+    yhat[j,i]<-filt$b%*%xh[lenh/2+(-len/2)-1+j:(j-L+1),i]
+}
+
+
+###################################################
+### code chunk number 21: exercise_dfa_ms_3
+###################################################
+for (i in 1:3)
+{
+  # Compute criterion values
+  perf_mat[i,1]<-(2*pi/length(Gamma))*
+    abs(Gamma-trffkt[,i])^2%*%periodogram[,i]
+}
+perf_mat[,1]
+
+
+###################################################
+### code chunk number 22: exercise_dfa_ms_4
+###################################################
+# Compute time-domain MSE
+mse<-apply(na.exclude((yhat-y))^2,2,mean)
+perf_mat[,2]<-mse
+round(perf_mat[,2],3)
+
+
+###################################################
+### code chunk number 23: z_dfa_ar1_output.pdf
+###################################################
+library(Hmisc)
+require(xtable)
+#latex(cor_vec, dec = 1, , caption = "Example of using latex to create table",
+#center = "centering", file = "", floating = FALSE)
+xtable(perf_mat, dec = 1,digits=rep(3,dim(perf_mat)[2]+1),
+       paste("Criterion values vs. sample (mean-square) filter errors",sep=""),
+       label=paste("perf_mat",sep=""),
+       center = "centering", file = "", floating = FALSE)
+
+
+###################################################
+### code chunk number 24: z_dfa_ar1_output.pdf
+###################################################
+par(mfrow=c(3,1))
+for (i in 1:3)   #i<-1
+{
+  ymin<-min(min(y[,i]),min(na.exclude(yhat)[,i]))
+  ymax<-max(max(y[,i]),max(na.exclude(yhat)[,i]))
+  ts.plot(yhat[,i],main=paste("Time-domain MSE = ",
+                              round(mse[i],3)," , Frequency-domain MSE = ",
+                              round(perf_mat[i,1],3),", a1 = ",a_vec[i],sep=""),col="blue",
+          ylim=c(ymin,ymax),
+          gpars=list(xlab="", ylab=""))
+  lines(y[,i],col="red")
+  mtext("Real-time", side = 3, line = -1,at=len/2,col="blue")
+  mtext("target", side = 3, line = -2,at=len/2,col="red")
+}
+
+
+###################################################
+### code chunk number 25: z_dfa_ar1_output.pdf
+###################################################
+file = paste("z_dfa_ar1_sym_output", sep = "")
+cat("\\begin{figure}[H]")
+cat("\\begin{center}")
+cat("\\includegraphics[height=6in, width=6in]{", file, "}\n",sep = "")
+cat("\\caption{Real-time filter output (blue) vs. targets (red) for a1=0.9 (top), a1=0.1 (middle) and a1=-0.9 (bottom)", sep = "")
+cat("\\label{z_dfa_ar1_sym_output}}", sep = "")
+cat("\\end{center}")
+cat("\\end{figure}")
+
+
+###################################################
+### code chunk number 26: z_dfa_ar1_output.pdf
+###################################################
+
+omega_k<-pi*0:(len/2)/(len/2)
+par(mfrow=c(2,2))
+amp<-abs(trffkt)
+shift<-Arg(trffkt)/omega_k
+plot(amp[,1],type="l",main="Amplitude functions",
+     axes=F,xlab="Frequency",ylab="Amplitude",col="black",ylim=c(0,1))
+lines(amp[,2],col="orange")
+lines(amp[,3],col="green")
+lines(Gamma,col="violet")
+mtext("Amplitude a1=0.9", side = 3, line = -1,at=len/4,col="black")
+mtext("Amplitude a1=0.1", side = 3, line = -2,at=len/4,col="orange")
+mtext("Amplitude a1=-0.9", side = 3, line = -3,at=len/4,col="green")
+mtext("Target", side = 3, line = -4,at=len/4,col="violet")
+axis(1,at=c(0,1:6*len/12+1),labels=c("0","pi/6","2pi/6","3pi/6",
+                                     "4pi/6","5pi/6","pi"))
+axis(2)
+box()
+plot(shift[,1],type="l",main="Time-shifts",
+     axes=F,xlab="Frequency",ylab="Shift",col="black",
+     ylim=c(0,max(na.exclude(shift[,3]))))
+lines(shift[,2],col="orange")
+lines(shift[,3],col="green")
+lines(rep(0,len/2+1),col="violet")
+mtext("Shift a1=0.9", side = 3, line = -1,at=len/4,col="black")
+mtext("Shift a1=0.1", side = 3, line = -2,at=len/4,col="orange")
+mtext("Shift a1=-0.9", side = 3, line = -3,at=len/4,col="green")
+mtext("Target", side = 3, line = -4,at=len/4,col="violet")
+axis(1,at=c(0,1:6*len/12+1),labels=c("0","pi/6","2pi/6","3pi/6",
+                                     "4pi/6","5pi/6","pi"))
+axis(2)
+box()
+plot(periodogram[,1],type="l",main="Periodograms",
+     axes=F,xlab="Frequency",ylab="Periodogram",col="black",
+     ylim=c(0,max(periodogram[,3])/6))
+lines(periodogram[,2],col="orange")
+lines(periodogram[,3],col="green")
+mtext("Periodogram a1=0.9", side = 3, line = -1,at=len/4,col="black")
+mtext("Periodogram a1=0.1", side = 3, line = -2,at=len/4,col="orange")
+mtext("Periodogram a1=-0.9", side = 3, line = -3,at=len/4,col="green")
+axis(1,at=c(0,1:6*len/12+1),labels=c("0","pi/6","2pi/6","3pi/6",
+                                     "4pi/6","5pi/6","pi"))
+axis(2)
+box()
+
+
+###################################################
+### code chunk number 27: z_dfa_ar1_output.pdf
+###################################################
+file = paste("z_dfa_ar1_amp_shift.pdf", sep = "")
+cat("\\begin{figure}[H]")
+cat("\\begin{center}")
+cat("\\includegraphics[height=6in, width=6in]{", file, "}\n",sep = "")
+cat("\\caption{Amplitude (top left), time-shifts (top-right) and periodograms (bottom left) for
+    a1=0.9 (black), a1=0.1 (orange) and a1=-0.9 (green)", sep = "")
+cat("\\label{z_dfa_ar1_amp_shift}}", sep = "")
+cat("\\end{center}")
+cat("\\end{figure}")
+
+
+###################################################
+### code chunk number 28: dfa_ms
+###################################################
+dfa_ms
+
+
+###################################################
+### code chunk number 29: exercise_dfa_ms_4
+###################################################
+# Select the first process
+i_process<-1
+# Define the data-matrix:
+# The first column must be the target series. 
+# Columns 2,3,... are the explanatory series. In a univariate setting
+# target and explanatory variable are identical
+data_matrix<-cbind(x[,i_process],x[,i_process])
+# Determine the in-sample period (fully in sample)
+insample<-nrow(data_matrix)
+# Compute the DFT by relying on the multivariate DFT-function: 
+#   d=0 for stationary data (default settings)
+weight_func<-spec_comp(insample, data_matrix, d)$weight_func 
+
+
+head(weight_func,10)
+
+###################################################
+### code chunk number 30: exercise_dfa_ms_4
+###################################################
+# Source the default (MSE-) parameter settings
+source(file=paste(path.pgm,"control_default.r",sep=""))
+# Estimate filter coefficients:
+mdfa_obj<-mdfa_analytic(L, lambda, weight_func, Lag, Gamma, eta, cutoff, i1,i2, weight_constraint, lambda_cross, lambda_decay, lambda_smooth,lin_eta, shift_constraint, grand_mean, b0_H0, c_eta, weight_structure,white_noise, synchronicity, lag_mat, troikaner) 
+# Filter coefficients: compare MDFA and previous DFA
+b_mat<-cbind(mdfa_obj$b,b[,i_process])
+dimnames(b_mat)[[2]]<-c("MDFA","DFA")
+dimnames(b_mat)[[1]]<-paste("lag ",0:(L-1),sep="")
+as.matrix(round(b_mat,5))
+
+
+###################################################
+### code chunk number 31: exercise_dfa_ms_4
+###################################################
+mdfa_obj_mse<-MDFA_mse(L,weight_func,Lag,Gamma)$mdfa_obj 
+
+
+###################################################
+### code chunk number 32: exercise_dfa_ms_4
+###################################################
+b_mat<-cbind(b_mat,mdfa_obj_mse$b)
+dimnames(b_mat)[[2]][3]<-"MDFA_mse"
+dimnames(b_mat)[[1]]<-paste("lag ",0:(L-1),sep="")
+head(as.matrix(round(b_mat,5)))
+
+
+###################################################
+### code chunk number 33: exercise_dfa_ms_4
+###################################################
+# Criterion value
+criterion_mdfa<-mdfa_obj$MS_error  
+# DFA-numbers are stored in perf_mat
+crit_mdfa<-matrix(c(criterion_mdfa,perf_mat[i_process,1],
+                    perf_mat[i_process,2]),ncol=1)
+dimnames(crit_mdfa)[[1]]<-c("MDFA criterion",
+                            "DFA criterion","sample MSE")
+dimnames(crit_mdfa)[[2]]<-"MSE estimates"
+t(round(crit_mdfa,3))
+
+
+###################################################
+### code chunk number 34: exercise_dfa_ms_4
+###################################################
+set.seed(12)
+# Select the AR(1)-process with coefficient 0.9
+i_process<-1
+# Scaling of the idiosyncratic noise
+scale_idiosyncratic<-0.1
+eps<-rnorm(nrow(xh))
+indicator<-xh[,i_process]+scale_idiosyncratic*eps
+# Data: first column=target, second column=x, 
+#   third column=shifted (leading) indicator
+data_matrix<-cbind(xh[,i_process],xh[,i_process],c(indicator[2:nrow(xh)],NA))
+dimnames(data_matrix)[[2]]<-c("target","x","leading indicator")
+# Extract 120 observations from the long sample
+data_matrix_120<-data_matrix[lenh/2+(-len/2):((len/2)-1),]
+head(round(data_matrix_120,4))
+
+
+###################################################
+### code chunk number 35: exercise_dfa_ms_4
+###################################################
+# Fully in sample
+insample<-nrow(data_matrix_120)
+# d=0 for stationary series: see default settings
+weight_func<-spec_comp(insample, data_matrix_120, d)$weight_func 
+head(weight_func)
+
+###################################################
+### code chunk number 36: exercise_dfa_ms_4
+###################################################
+# Source the default (MSE-) parameter settings
+source(file=paste(path.pgm,"control_default.r",sep=""))
+# Estimate filter coefficients
+mdfa_obj<-MDFA_mse(L,weight_func,Lag,Gamma)$mdfa_obj 
+# Filter coefficients
+b_mat<-mdfa_obj$b
+dimnames(b_mat)[[2]]<-c("x","leading indicator")
+dimnames(b_mat)[[1]]<-paste("Lag ",0:(L-1),sep="")#dim(b_mat)
+head(b_mat)
+
+
+###################################################
+### code chunk number 37: exercise_dfa_ms_4
+###################################################
+# Criterion value
+round(mdfa_obj$MS_error,3)
+
+
+###################################################
+### code chunk number 38: exercise_dfa_ms_4
+###################################################
+yhat_multivariate_leading_indicator<-rep(NA,len)
+for (j in 1:len)
+  yhat_multivariate_leading_indicator[j]<-sum(apply(b_mat*
+                                                      data_matrix[lenh/2+(-len/2)-1+j:(j-L+1),2:3],1,sum))
+
+
+###################################################
+### code chunk number 39: exercise_dfa_ms_4
+###################################################
+y_target_leading_indicator<-y[,i_process]
+perf_mse<-matrix(c(mean(na.exclude((yhat_multivariate_leading_indicator-
+                                      y_target_leading_indicator))^2),
+                   mean(na.exclude((yhat[,i_process]-
+                                      y_target_leading_indicator))^2)),nrow=1)
+dimnames(perf_mse)[[2]]<-c("bivariate MDFA","DFA")
+dimnames(perf_mse)[[1]]<-"Sample MSE"
+round(perf_mse,3)
+
+
+###################################################
+### code chunk number 40: z_mdfadfa_ar1_output.pdf
+###################################################
+i<-1
+ymin<-min(min(y[,i]),min(na.exclude(yhat)[,i]))
+ymax<-max(max(y[,i]),max(na.exclude(yhat)[,i]))
+ts.plot(yhat[,i],main=paste("Sample MSE MDFA: ",ylab="",
+                            round(perf_mse[1],3),", DFA: ",round(perf_mse[2],3),sep=""),col="blue",
+        ylim=c(ymin,ymax))
+lines(y[,i],col="red")
+lines(yhat_multivariate_leading_indicator,col="green")
+mtext("DFA", side = 3, line = -2,at=len/2,col="blue")
+mtext("target", side = 3, line = -1,at=len/2,col="red")
+mtext("MDFA", side = 3, line = -3,at=len/2,col="green")
+
+
+###################################################
+### code chunk number 41: z_mdfadfa_ar1_output.pdf
+###################################################
+file = paste("z_mdfadfa_ar1_sym_output", sep = "")
+cat("\\begin{figure}[H]")
+cat("\\begin{center}")
+cat("\\includegraphics[height=3in, width=6in]{", file, "}\n",sep = "")
+cat("\\caption{Target (red) vs. DFA (blue) and bivariate MDFA (green) for the first process (a1=0.9)", sep = "")
+cat("\\label{z_mdfadfa_ar1_sym_output}}", sep = "")
+cat("\\end{center}")
+cat("\\end{figure}")
+
+
+###################################################
+### code chunk number 42: exercise_dfa_ms_4
+###################################################
+# Inverse SNR: the variance of the standardized noise is one: 
+#   we thus normalize by the standard deviation of the data x 
+#   (second column of the data matrix) 
+scale_idiosyncratic_vec<-c(0,0.1,0.5,1,2)/sqrt(var(data_matrix_120[,2]))
+# We select fractional leads: multiples of 0.25 
+#   A fractional lead of 0.25 corresponds roughly to a week 
+#   on a monthly time scale
+delta_vec<-0.25*0:4
+
+
+###################################################
+### code chunk number 43: exercise_dfa_ms_4
+###################################################
+# Initialize the performance matrix
+lead_snr_mat<-matrix(ncol=length(scale_idiosyncratic_vec),
+                     nrow=length(delta_vec))
+dimnames(lead_snr_mat)[[2]]<-paste("1/SNR=",
+                                   sqrt(var(data_matrix_120[,1]))*scale_idiosyncratic_vec,paste="")
+dimnames(lead_snr_mat)[[2]][1]<-paste("Univ. design: ",
+                                      dimnames(lead_snr_mat)[[2]][1],sep="")
+dimnames(lead_snr_mat)[[1]]<-paste("Lead ",delta_vec,paste="")
+# Generate the idiosyncratic noise
+set.seed(20)
+eps<-rnorm(nrow(data_matrix_120))
+# Loop over all combinations of leads and SNR-ratios
+for (i in 1:length(scale_idiosyncratic_vec))#i<-4
+{
+  for (j in 1:length(delta_vec))#j<-1
+  {
+    # Add the (suitably scaled) noise: no lead yet.    
+    indicator<-data_matrix_120[,2]+scale_idiosyncratic_vec[i]*eps
+    # Overwrite the indicator column with the new time series
+    data_matrix_120[,3]<-indicator
+    # Compute the DFTs (full in-sample, for stationary series d=0)
+    insample<-nrow(data_matrix_120)
+    weight_func<-spec_comp(insample, data_matrix_120, d)$weight_func
+    # Compute the discrete frequency-grid omega_k: from zero to pi
+    omega_k<-(0:(nrow(weight_func)-1))*pi/(nrow(weight_func)-1)
+    # Introduce the fractional time-shift by rotation of the DFT 
+    #   of the indicator (last column)
+    weight_func[,ncol(weight_func)]<-exp(-1.i*delta_vec[j]*omega_k)*
+      weight_func[,ncol(weight_func)]
+    # If the idiosyncratic noise is zero, then we use a univariate design
+    if (i==1)
+      weight_func<-weight_func[,-2]
+    # Compute optimal filters and derive the (frequency-domain) MSE
+    mdfa_obj<-MDFA_mse(L,weight_func,Lag,Gamma)$mdfa_obj #mdfa_obj$b
+    # Store the MSE
+    lead_snr_mat[j,i]<-mdfa_obj$MS_error
+  }
+}
+
+
+###################################################
+### code chunk number 44: z_dfa_ar1_output.pdf
+###################################################
+library(Hmisc)
+require(xtable)
+#latex(cor_vec, dec = 1, , caption = "Example of using latex to create table",
+#center = "centering", file = "", floating = FALSE)
+xtable(lead_snr_mat, dec = 1,digits=rep(3,dim(lead_snr_mat)[2]+1),
+       paste("Effect of lead and of (inverse) signal-to-noise ratio on filter MSE",sep=""),
+       label=paste("lead_snr_mat",sep=""),
+       center = "centering", file = "", floating = FALSE)
+

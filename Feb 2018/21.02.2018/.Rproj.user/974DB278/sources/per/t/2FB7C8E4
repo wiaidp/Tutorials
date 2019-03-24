@@ -1,0 +1,23 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1519546962014.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "1871782419",
+    "id" : "2FB7C8E4",
+    "lastKnownWriteTime" : 1553351048,
+    "last_content_update" : 1553351048035,
+    "path" : "C:/wia_desktop/Archive/2018/Blog/Tutorials/Feb 2018/21.02.2018/gain_picking.R",
+    "project_path" : "gain_picking.R",
+    "properties" : {
+        "cursorPosition" : "78,183",
+        "scrollLine" : "32",
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
