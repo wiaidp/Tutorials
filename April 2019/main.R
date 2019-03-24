@@ -11,7 +11,6 @@ library(MDFA)
 
 
 
-
 #-----------------------------------------------------------------------------------------------
 # Data: FX and SP500 (the latter has a marked trend)
 source("data_load_functions.R")
@@ -97,14 +96,14 @@ mdfa_mse_trade_obj<-mdfa_mse_trade_func(K,periodicity,L,Lag,lag_fx,x,plot_T,weig
 # Periodogram
 
 in_sample_span<-"2017-01-01"
-i_series<-7
+i_series<-1
 
 x<-na.exclude(diff(log_FX_mat[,i_series]))
 # Spectrum: periodogram
 weight_func<-cbind(per(x[paste("/",in_sample_span,sep="")],T)$DFT,per(x[paste("/",in_sample_span,sep="")],T)$DFT)
 K<-nrow(weight_func)-1
 #weight_func[1,]<-1000
-periodicity<-2.5
+periodicity<-5
 Lag<-0
 L<-100
 L<-min(2*K,L)
