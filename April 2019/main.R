@@ -19,7 +19,7 @@ data_from_IB<-T
 hour_of_day<-"16:00"
 i_series_vec<-c(1,2,3,6,7,8)
 reload_sp500<-F
-path.dat<-"C:\\wia_desktop\\2019\\Projekte\\IB\\daily_pick\\Data\\IB\\"
+path.dat<-"D:\\wia_desktop\\2019\\Projekte\\IB\\daily_pick\\Data\\IB\\"
 
 data_load_obj<-data_load_gzd_trading_func(data_from_IB,hour_of_day,reload_sp500,path.dat)
 
