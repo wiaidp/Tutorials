@@ -262,6 +262,7 @@ for (i_series in 1:ncol(log_FX_mat))# i_series<-1
 anf_plot<-paste(in_sample_span,"/",sep="")
 anf_plot<-"1918-01-01/"
 
+# Check individual filter outputs as well as aggregate (the latter is the output of MDFA)
 plot(yhat_mat[anf_plot],main="Filter outputs: aggregate in bold")
 lines(as.xts(apply(yhat_mat[anf_plot],1,mean)),lwd=6)
 
