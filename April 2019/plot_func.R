@@ -42,6 +42,53 @@ plot_weekday_func<-function(series.xts,name)
 
 
 
+
+
+
+plot_estimate_func<-function(b,mdfa_obj,weight_func)
+{
+  colo<-rainbow(ncol(b))
+  plot(b[,1],type="l",main=paste("Filter coefficients",sep=""),
+       axes=F,xlab="Lag",ylab="Coef",ylim=c(min(b),max(b)),col="black")
+  mtext(colnames(weight_func)[2],line=-1,col="black")
+  if (ncol(b)>1)
+  {
+    for (i in 2:ncol(b))
+    {
+      lines(b[,i],col=colo[i])
+      # We take the i+1 colname from weight_func because the first column is the target        
+      mtext(colnames(weight_func)[i+1],line=-i,col=colo[i])
+      
+    }
+  }
+  axis(1,at=1:L,labels=1:L)
+  axis(2)
+  box()    
+  
+  plot(abs(mdfa_obj$trffkt)[,1],type="l",main=paste("Amplitude concurrent, denseness=",K,sep=""),
+       axes=F,xlab="Frequency",ylab="Amplitude",col="black",ylim=c(0,max(abs(mdfa_obj$trffkt))))
+  # We take 2-nd colname from weight_func because the first column is the target        
+  mtext(colnames(weight_func)[2],line=-1,col="black")
+  if (ncol(abs(mdfa_obj$trffkt))>1)
+  {
+    for (i in 2:ncol(abs(mdfa_obj$trffkt)))
+    {
+      lines(abs(mdfa_obj$trffkt)[,i],col=colo[i])
+      # We take the i+1 colname from weight_func because the first column is the target        
+      mtext(colnames(weight_func)[i+1],line=-i,col=colo[i])
+      
+    }
+  }
+  axis(1,at=c(0,1:6*K/6+1),labels=c("0","pi/6","2pi/6","3pi/6",
+                                    "4pi/6","5pi/6","pi"))
+  axis(2)
+  box()
+  
+}
+
+
+
+
 perf_plot<-function(perf,sharpe,name)
 {
   par(mfrow=c(1,1))

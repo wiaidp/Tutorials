@@ -4,7 +4,7 @@ library(xts)
 #install.packages("devtools")
 library(devtools)
 # Load MDFA package from github
-devtools::install_github("wiaidp/MDFA")
+#devtools::install_github("wiaidp/MDFA")
 # MDFA package: EURUSD is now part of the data in the package
 library(MDFA)
 
@@ -124,6 +124,7 @@ diff_perf<-diff(cum_perf_sign)
 plot(cumsum(diff_perf[paste(in_sample_span,"/",sep="")]))
 
 #-----------------------------------------------------------
+# Univariate with periodogram
 # Learning to evaluate the extent of overfitting
 # Select large L and observe in-sample vs. out-of-sample performances
 # All series
@@ -136,12 +137,14 @@ for (i_series in 1:ncol(log_FX_mat))
   x<-na.exclude(diff(log_FX_mat[,i_series]))
   # Spectrum: periodogram
   weight_func<-cbind(per(x[paste("/",in_sample_span,sep="")],T)$DFT,per(x[paste("/",in_sample_span,sep="")],T)$DFT)
+  colnames(weight_func)<-rep(colnames(log_FX_mat)[i_series],2)
+  
   K<-nrow(weight_func)-1
   #weight_func[1,]<-1000
   periodicity<-5
   Lag<-0
   L<-2*periodicity
-  L<-min(2*K,L)
+  L<-min(2*K,L)#L<-900
   sign_day_of_week<-rep(1,5)
 #  sign_day_of_week[5]<--1
   plot_T<-F
@@ -179,8 +182,15 @@ plot(as.xts(apply(apply(diff_perf_mat[paste(in_sample_span,"/",sep="")],2,cumsum
 
 
 #-----------------------------------------------------------
-# Multivariate
+# Multivariate with dft
 # All series
+# Huge overfitting: try L<-200 with periodicity=5:
+#   1. Coefficients are huge
+#   2. Amplitudes are huge and very narrow i.e. far from pi/5
+#   3. However: scale of aggregate (output of multivariate filter) is fine and
+#     acf of aggregate is cyclical with periodicity 5
+# We conclude that wrong scaling cancels accross series and periodicity of 5 is obtained
+#   again by cross-sectional cancelling of low-frequency trends
 in_sample_span<-"2018-01-01"
 # Compute multivariate spectrum
 for (i_series in 1:ncol(log_FX_mat))
@@ -199,7 +209,7 @@ for (i_series in 1:ncol(log_FX_mat))
 
 
 
-for (i_series in 1:ncol(log_FX_mat))# i_series<-2
+for (i_series in 1:ncol(log_FX_mat))# i_series<-1
 {
   
 # Data for filtering: 
@@ -212,11 +222,12 @@ for (i_series in 1:ncol(log_FX_mat))# i_series<-2
 # Spectrum: first series is target, all other series are explanatory
 # Ordering of series must correspond to x (data for filtering)  
   weight_func<-cbind(weight_func_mat[,i_series],weight_func_mat[,series_ordering])
+  colnames(weight_func)<-c(colnames(log_FX_mat)[i_series],colnames(log_FX_mat)[series_ordering])
   K<-nrow(weight_func)-1
   #weight_func[1,]<-1000
   periodicity<-5
   Lag<-0
-  L<-2*periodicity
+  L<-2*periodicity#
   L<-min(2*K,L)
   sign_day_of_week<-rep(1,5)
   #  sign_day_of_week[5]<--1
@@ -230,20 +241,29 @@ for (i_series in 1:ncol(log_FX_mat))# i_series<-2
   mdfa_mse_trade_obj<-mdfa_mse_trade_func(K,periodicity,L,Lag,lag_fx,x,plot_T,weight_func,sign_day_of_week)
   
   cum_perf_sign<-mdfa_mse_trade_obj$cum_perf_sign
-  
+  yhat<-mdfa_mse_trade_obj$yhat
   diff_perf<-diff(cum_perf_sign)
   
   if (i_series==1)
   {
-    diff_perf_mat<-diff_perf  
+    diff_perf_mat<-diff_perf 
+    yhat_mat<-yhat
   } else
   {
     diff_perf_mat<-cbind(diff_perf_mat,diff_perf)
+    yhat_mat<-cbind(yhat_mat,yhat)
     
   }
   
 }
 
+anf_plot<-paste(in_sample_span,"/",sep="")
+anf_plot<-"1918-01-01/"
+
+plot(yhat_mat[anf_plot],main="Filter outputs: aggregate in bold")
+lines(as.xts(apply(yhat_mat[anf_plot],1,mean)),lwd=6)
+
+# Plot performances
 # in sample
 plot(as.xts(apply(na.exclude(diff_perf_mat[paste("/",in_sample_span,sep="")]),2,cumsum)))
 plot(as.xts(apply(apply(na.exclude(diff_perf_mat[paste("/",in_sample_span,sep="")]),2,cumsum),1,mean)))
