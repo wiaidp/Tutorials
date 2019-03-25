@@ -82,6 +82,8 @@ data_load_gzd_trading_func<-function(data_from_IB,hour_of_day,reload_sp500,path.
   # S&P500: for application towards a series with marked trend
   if (reload_sp500)
   {
+#    Quandl.api_key("yUtHvNxMBzGmnxKbQ79z")
+    
     library(Quandl)
     end_date<-format(Sys.time(), "%Y-%m-%d")
     start_date<-'1990-01-01'

@@ -136,10 +136,15 @@ mdfa_mse_trade_func<-function(K,periodicity,L,Lag,lag_fx,x,plot_T,weight_func,si
     colo<-rainbow(ncol(abs(mdfa_obj_mse$trffkt)))
     plot(abs(mdfa_obj_mse$trffkt)[,1],type="l",main=paste("Amplitude concurrent, denseness=",K,sep=""),
          axes=F,xlab="Frequency",ylab="Amplitude",col="black",ylim=c(0,max(abs(mdfa_obj_mse$trffkt))))
+    mtext(colnames(weight_func)[1],line=-1,col=colo[1])
     if (ncol(abs(mdfa_obj_mse$trffkt))>1)
     {
       for (i in 2:ncol(abs(mdfa_obj_mse$trffkt)))
+      {
         lines(abs(mdfa_obj_mse$trffkt)[,i],col=colo[i])
+        mtext(colnames(weight_func)[i],line=-i,col=colo[i])
+        
+      }
     }
     axis(1,at=c(0,1:6*K/6+1),labels=c("0","pi/6","2pi/6","3pi/6",
                                       "4pi/6","5pi/6","pi"))
