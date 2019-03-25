@@ -242,6 +242,8 @@ for (i_series in 1:ncol(log_FX_mat))# i_series<-1
   
   cum_perf_sign<-mdfa_mse_trade_obj$cum_perf_sign
   yhat<-mdfa_mse_trade_obj$yhat
+# Skip first L data points (initialization)  
+  yhat<-yhat[L:length(yhat)]
   diff_perf<-diff(cum_perf_sign)
   
   if (i_series==1)
@@ -262,6 +264,13 @@ anf_plot<-"1918-01-01/"
 
 plot(yhat_mat[anf_plot],main="Filter outputs: aggregate in bold")
 lines(as.xts(apply(yhat_mat[anf_plot],1,mean)),lwd=6)
+
+# Check periodicity of multivariate filter output: should coincide with parameter periodicity set above
+acf(as.xts(apply(yhat_mat[anf_plot],1,mean)))
+
+
+
+
 
 # Plot performances
 # in sample
