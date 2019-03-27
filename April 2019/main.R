@@ -19,7 +19,7 @@ data_from_IB<-T
 hour_of_day<-"16:00"
 i_series_vec<-c(1,2,3,6,7,8)
 reload_sp500<-F
-path.dat<-"D:\\wia_desktop\\2019\\Projekte\\IB\\daily_pick\\Data\\IB\\"
+path.dat<-"C:\\wia_desktop\\2019\\Projekte\\IB\\daily_pick\\Data\\IB\\"
 
 data_load_obj<-data_load_gzd_trading_func(data_from_IB,hour_of_day,reload_sp500,path.dat)
 
@@ -69,25 +69,50 @@ ma_cross_mse_obj<-ma_cross_mdfa_mse_trade_func(K,periodicity_short,periodicity_l
 # Univariate
 # White noise spectrum
 
-x<-na.exclude(diff(log_FX_mat[,asset]))
 K<-600
 # Spectrum: white noise assumption
 weight_func<-matrix(rep(1,2*(K+1)),ncol=2)
 #weight_func[1,]<-1000
-periodicity<-41
+periodicity<-2.5
 Lag<--1
-L<-200
+L<-20
 L<-min(2*K,L)
 sign_day_of_week<-rep(1,5)
 #sign_day_of_week[5]<--1
 plot_T<-F
-asset<-"EURUSD"
 lag_fx<-1
 plot_T<-T
 
+for (i_series in 1:ncol(log_FX_mat))#i_series<-2
+{
+  x<-na.exclude(diff(log_FX_mat[,i_series]))
+  
 # This function is in mdfa_mse_trade_func.r
 # MSE estimation and trading: sign rule and signal weighting
-mdfa_mse_trade_obj<-mdfa_mse_trade_func(K,periodicity,L,Lag,lag_fx,x,plot_T,weight_func,sign_day_of_week)
+  mdfa_mse_trade_obj<-mdfa_mse_trade_func(K,periodicity,L,Lag,lag_fx,x,plot_T,weight_func,sign_day_of_week)
+  
+  cum_perf_sign<-mdfa_mse_trade_obj$cum_perf_sign
+  
+  if (i_series==1)
+  {
+    diff_perf_mat<-diff(cum_perf_sign)
+  } else
+  {
+    diff_perf_mat<-cbind(diff_perf_mat,diff(cum_perf_sign))
+    
+  }
+}
+# in sample
+plot(as.xts(apply(na.exclude(diff_perf_mat[paste("/",in_sample_span,sep="")]),2,cumsum)))
+plot(as.xts(apply(apply(na.exclude(diff_perf_mat[paste("/",in_sample_span,sep="")]),2,cumsum),1,mean)))
+
+
+# out-of-sample
+plot(as.xts(apply(na.exclude(diff_perf_mat[paste(in_sample_span,"/",sep="")]),2,cumsum)))
+plot(as.xts(apply(apply(na.exclude(diff_perf_mat[paste(in_sample_span,"/",sep="")]),2,cumsum),1,mean)))
+
+if (F)
+  acf(na.exclude(diff(as.xts(apply(apply(na.exclude(diff_perf_mat[paste(in_sample_span,"/",sep="")]),2,cumsum),1,mean)))))
 
 #-------------------------------------------------
 # DFA-lowpass: applied to log-returns
@@ -96,16 +121,11 @@ mdfa_mse_trade_obj<-mdfa_mse_trade_func(K,periodicity,L,Lag,lag_fx,x,plot_T,weig
 # Periodogram
 
 in_sample_span<-"2017-01-01"
-i_series<-1
 
-x<-na.exclude(diff(log_FX_mat[,i_series]))
-# Spectrum: periodogram
-weight_func<-cbind(per(x[paste("/",in_sample_span,sep="")],T)$DFT,per(x[paste("/",in_sample_span,sep="")],T)$DFT)
-K<-nrow(weight_func)-1
 #weight_func[1,]<-1000
-periodicity<-5
-Lag<-0
-L<-100
+periodicity<-2.5
+Lag<--1
+L<-20
 L<-min(2*K,L)
 sign_day_of_week<-rep(1,5)
 #sign_day_of_week[5]<--1
@@ -113,22 +133,44 @@ plot_T<-F
 lag_fx<-1
 plot_T<-T
 
+for (i_series in 1:ncol(log_FX_mat))
+{
+  x<-na.exclude(diff(log_FX_mat[,i_series]))
+  # Spectrum: periodogram
+  weight_func<-cbind(per(x[paste("/",in_sample_span,sep="")],T)$DFT,per(x[paste("/",in_sample_span,sep="")],T)$DFT)
+  K<-nrow(weight_func)-1
+  
 # This function is in mdfa_mse_trade_func.r
 # MSE estimation and trading: sign rule and signal weighting
-mdfa_mse_trade_obj<-mdfa_mse_trade_func(K,periodicity,L,Lag,lag_fx,x,plot_T,weight_func,sign_day_of_week)
+  mdfa_mse_trade_obj<-mdfa_mse_trade_func(K,periodicity,L,Lag,lag_fx,x,plot_T,weight_func,sign_day_of_week)
 
-cum_perf_sign<-mdfa_mse_trade_obj$cum_perf_sign
+  cum_perf_sign<-mdfa_mse_trade_obj$cum_perf_sign
 
-diff_perf<-diff(cum_perf_sign)
+  if (i_series==1)
+  {
+    diff_perf_mat<-diff(cum_perf_sign)
+  } else
+  {
+    diff_perf_mat<-cbind(diff_perf_mat,diff(cum_perf_sign))
+    
+  }
+}
+# in sample
+plot(as.xts(apply(na.exclude(diff_perf_mat[paste("/",in_sample_span,sep="")]),2,cumsum)))
+plot(as.xts(apply(apply(na.exclude(diff_perf_mat[paste("/",in_sample_span,sep="")]),2,cumsum),1,mean)))
 
-plot(cumsum(diff_perf[paste(in_sample_span,"/",sep="")]))
+
+# out-of-sample
+plot(as.xts(apply(na.exclude(diff_perf_mat[paste(in_sample_span,"/",sep="")]),2,cumsum)))
+plot(as.xts(apply(apply(na.exclude(diff_perf_mat[paste(in_sample_span,"/",sep="")]),2,cumsum),1,mean)))
+
 
 #-----------------------------------------------------------
 # Univariate with periodogram
 # Learning to evaluate the extent of overfitting
 # Select large L and observe in-sample vs. out-of-sample performances
 # All series
-in_sample_span<-"2018-01-01"
+in_sample_span<-"2017-01-01"
 
 for (i_series in 1:ncol(log_FX_mat))
 {
@@ -141,8 +183,8 @@ for (i_series in 1:ncol(log_FX_mat))
   
   K<-nrow(weight_func)-1
   #weight_func[1,]<-1000
-  periodicity<-5
-  Lag<-0
+  periodicity<-2.5
+  Lag<--1
   L<-2*periodicity
   L<-min(2*K,L)#L<-900
   sign_day_of_week<-rep(1,5)
@@ -157,27 +199,27 @@ for (i_series in 1:ncol(log_FX_mat))
   
   cum_perf_sign<-mdfa_mse_trade_obj$cum_perf_sign
   
-  diff_perf<-diff(cum_perf_sign)
+#  diff_perf<-diff(cum_perf_sign)
   
   if (i_series==1)
   {
-    diff_perf_mat<-diff_perf  
+    perf_mat<-cum_perf_sign  
   } else
   {
-    diff_perf_mat<-cbind(diff_perf_mat,diff_perf)
+    perf_mat<-cbind(perf_mat,cum_perf_sign)
     
   }
   
 }
 
 # in sample
-plot(as.xts(apply(na.exclude(diff_perf_mat[paste("/",in_sample_span,sep="")]),2,cumsum)))
-plot(as.xts(apply(apply(na.exclude(diff_perf_mat[paste("/",in_sample_span,sep="")]),2,cumsum),1,mean)))
+plot(as.xts(apply(perf_mat[paste("/",in_sample_span,sep="")])))
+plot(as.xts(apply(perf_mat[paste("/",in_sample_span,sep="")],1,mean)))
 
 
 # out-of-sample
-plot(as.xts(apply(diff_perf_mat[paste(in_sample_span,"/",sep="")],2,cumsum)))
-plot(as.xts(apply(apply(diff_perf_mat[paste(in_sample_span,"/",sep="")],2,cumsum),1,mean)))
+plot(as.xts(perf_mat[paste(in_sample_span,"/",sep="")]))
+plot(as.xts(apply(perf_mat[paste(in_sample_span,"/",sep="")],1,mean)))
 
 
 
@@ -191,7 +233,7 @@ plot(as.xts(apply(apply(diff_perf_mat[paste(in_sample_span,"/",sep="")],2,cumsum
 #     acf of aggregate is cyclical with periodicity 5
 # We conclude that wrong scaling cancels accross series and periodicity of 5 is obtained
 #   again by cross-sectional cancelling of low-frequency trends
-in_sample_span<-"2018-01-01"
+in_sample_span<-"2017-01-01"
 # Compute multivariate spectrum
 for (i_series in 1:ncol(log_FX_mat))
 {
@@ -282,6 +324,5 @@ plot(as.xts(apply(apply(na.exclude(diff_perf_mat[paste("/",in_sample_span,sep=""
 # out-of-sample
 plot(as.xts(apply(diff_perf_mat[paste(in_sample_span,"/",sep="")],2,cumsum)))
 plot(as.xts(apply(apply(diff_perf_mat[paste(in_sample_span,"/",sep="")],2,cumsum),1,mean)))
-
 
 
