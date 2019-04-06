@@ -55,17 +55,28 @@ anf_plot<-"2000-10-01/"
 # Try various targets (periodicities)
 asset<-"EURUSD"
 x<-na.exclude(diff(log_FX_mat[,asset]))
+# K defines the frequency-grid for estimation: all frequencies omega_j=j*pi/K, j=0,1,2,...,K are considered
+# In the case of a white noise spectrum we can select arbitrary tightness of frequency grid
+#   If we use the periodogram, then K is specified by the length of the periodogram
+# Tradeoff: larger K (denser grid) means better MSE (if true process is white noise) but longer computation-time
 K<-600
 # Spectrum: white noise assumption
+#  First column is target, second column is explanatory variable: in a univariate design target and explanatory are the same
 weight_func<-matrix(rep(1,2*(K+1)),ncol=2)
-#weight_func[1,]<-1000
+# Target: specify cutoff=pi/periodicity of lowpass ideal target
 periodicity<-5
-Lag<--1
+# Nowcast (Lag=0), Backcast (Lag>0) and Forecast (Lag<0)
+Lag<-0
+# Filter length
 L<-200
+# Ensure that number of degrees of freedom does not exceed number of available equations (frequencies)
+#   Otherwise problem is not feasible (matrix cannot be inverted)
 L<-min(2*K,L)
-plot_T<-F
+# Select FX-series
 asset<-"EURUSD"
+# Lag trade execution by at least one day (must be >=1)
 lag_fx<-1
+# Allow for some plots in the function below
 plot_T<-T
 
 # This function is in mdfa_mse_reg_trade_func.r
@@ -74,24 +85,34 @@ mdfa_mse_reg_trade_obj<-mdfa_mse_reg_trade_func(K,periodicity,L,Lag,lag_fx,x,plo
 
 #-------------------------------------------------
 # Example 2: same as above but we use periodogram (instead of white noise spectrum)
+# Design
 #   MSE
 #   Univariate
 #   Periodogram
 
+# Specify in-sample span fpr estimation of spectrum (periodogram)
 in_sample_span<-"2017-01-01"
-i_series<-1
+# Select FX-series
+asset<-"EURUSD"
 
-x<-na.exclude(diff(log_FX_mat[,i_series]))
-# Spectrum: periodogram
+x<-na.exclude(diff(log_FX_mat[,asset]))
+# Spectrum: 
+#   MDFA relies on dft (periodogram is abs(dft)^2)
+#   In contrast to periodogram, the dft retains the phase information which is important in a multivariate design
+#   First column is dft of target, second column is dft of explanatory: here both series are identical (univariate design)
 weight_func<-cbind(per(x[paste("/",in_sample_span,sep="")],T)$DFT,per(x[paste("/",in_sample_span,sep="")],T)$DFT)
+# Denseness of frequency-grid is completely specified by length of periodogram (to be constrasted with example 1 where we could specify any K)
 K<-nrow(weight_func)-1
-#weight_func[1,]<-1000
+# Target
 periodicity<-5
+# Nowcast
 Lag<-0
+# Filter length
 L<-100
 L<-min(2*K,L)
-plot_T<-F
+# Delay of trade execution
 lag_fx<-1
+# Some plots
 plot_T<-T
 
 # This function is in mdfa_mse_reg_trade_func.r
@@ -100,10 +121,10 @@ mdfa_mse_reg_trade_obj<-mdfa_mse_reg_trade_func(K,periodicity,L,Lag,lag_fx,x,plo
 
 
 #-----------------------------------------------------------
-# Example 3: same as above and playing with the filter length L
-#   -Since we use the periodogram large L imply overfitting
-#   -Learning to evaluate the extent of overfitting
-#   -Select large L (for instance L=900) and 'reasonably large' L (for instance L<-2*periodicity) and observe in-sample vs. out-of-sample performances
+# Example 3: same as above; play with the filter length L
+#   -Since we use the dft large L imply overfitting
+#   -Evaluate the extent of overfitting
+#   -Select large L (for instance L=900) or 'reasonably large' L (for instance L<-2*periodicity) and observe in-sample vs. out-of-sample performances
 # We use all series
 in_sample_span<-"2018-01-01"
 
