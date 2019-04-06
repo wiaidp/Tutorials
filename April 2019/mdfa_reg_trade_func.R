@@ -41,23 +41,25 @@ filt_func<-function(x,b)
 
 
 
-
-mdfa_mse_reg_trade_func<-function(K,periodicity,L,Lag,lag_fx,x,plot_T,weight_func)
+#x<-data_filter
+mdfa_reg_trade_func<-function(K,periodicity,L,Lag,lag_fx,x,plot_T,weight_func,lambda_cross,lambda_decay,lambda_smooth,lambda,eta)
 {
   #-----------------
   # Derived settings
   cutoff<-pi/periodicity
   # Target 
   Gamma<-(0:(K))<=K*cutoff/pi+1.e-9
+  # MSE
   #----------------
-  # Estimation based on MDFA-MSE wrapper
-  mdfa_obj_mse<-MDFA_mse(L,weight_func,Lag,Gamma)$mdfa_obj 
+  # Estimation based on MDFA-Regularization wrapper
   
-  b<-mdfa_obj_mse$b
+  mdfa_obj_mse_reg<-MDFA_reg(L,weight_func,Lag,Gamma,cutoff,lambda,eta,lambda_cross,lambda_decay,lambda_smooth)$mdfa_obj
+  
+  b<-mdfa_obj_mse_reg$b
   # Plot of amplitude
   if (plot_T)
   {
-    plot_estimate_func(b,mdfa_obj_mse,weight_func)
+    plot_estimate_func(b,mdfa_obj_mse_reg,weight_func)
   }
 
   #-----------
@@ -87,10 +89,10 @@ mdfa_mse_reg_trade_func<-function(K,periodicity,L,Lag,lag_fx,x,plot_T,weight_fun
   {
     par(mfrow=c(1,1))
     print(plot(cbind(x[,1],yhat),main="Returns (black) and filtered series (red)"))
-    print(plot(cum_perf_sign,main=paste("Signum rule, ",colnames(x),", sharpe: ",round(sharpe_sign,3),sep="")))
+    print(plot(cum_perf_sign,main=paste(colnames(x)[1],", sharpe: ",round(sharpe_sign,3),sep="")))
     par(mfrow=c(1,1))
   }
-  return(list(cum_perf_sign=cum_perf_sign,yhat=yhat,mdfa_obj_mse=mdfa_obj_mse,sharpe_sign=sharpe_sign))
+  return(list(cum_perf_sign=cum_perf_sign,yhat=yhat,mdfa_obj_mse_reg=mdfa_obj_mse_reg,sharpe_sign=sharpe_sign))
 }
 
 
