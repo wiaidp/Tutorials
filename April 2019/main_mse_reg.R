@@ -1,3 +1,9 @@
+# Todos
+#   -Add a model-based example
+#   -Amplitude, shift, coeff, spectrum, target
+#   -Explain I-MDFA.r: functions available
+#     Here we use MSE function 
+
 rm(list=ls())
 
 library(xts)
@@ -38,56 +44,31 @@ anf_plot<-"2000-10-01/"
 
 #-----------------------------------------------------------------------------------------------
 source("plot_func.r")
-source("mdfa_mse_trade_func.r")
-#----------------------------------------------------------------------------------------------
-# DFA-cross: applied to log-FX
-# MSE
-# Univariate
-# White noise spectrum
-
-K<-2400
-# Spectrum: white noise assumption
-weight_func<-matrix(rep(1,2*(K+1)),ncol=2)
-#weight_func[1,]<-1000
-periodicity_short<-2.5
-periodicity_long<-20
-Lag<-0
-L<-200
-L<-min(2*K,L)
-plot_T<-F
-asset<-"EURUSD"
-lag_fx<-1
-x<-na.exclude(log_FX_mat[,asset])
-
-plot_T<-T
-
-ma_cross_mse_obj<-ma_cross_mdfa_mse_trade_func(K,periodicity_short,periodicity_long,L,Lag,lag_fx,x,plot_T,weight_func,sign_day_of_week)
-  
+source("mdfa_reg_trade_func.r")
 #-------------------------------------------------
 # DFA-lowpass: applied to log-returns
 # MSE
 # Univariate
 # White noise spectrum
-
+# Try various targets (periodicities)
+asset<-"EURUSD"
 x<-na.exclude(diff(log_FX_mat[,asset]))
 K<-600
 # Spectrum: white noise assumption
 weight_func<-matrix(rep(1,2*(K+1)),ncol=2)
 #weight_func[1,]<-1000
-periodicity<-41
+periodicity<-200
 Lag<--1
 L<-200
 L<-min(2*K,L)
-sign_day_of_week<-rep(1,5)
-#sign_day_of_week[5]<--1
 plot_T<-F
 asset<-"EURUSD"
 lag_fx<-1
 plot_T<-T
 
-# This function is in mdfa_mse_trade_func.r
+# This function is in mdfa_mse_reg_trade_func.r
 # MSE estimation and trading: sign rule and signal weighting
-mdfa_mse_trade_obj<-mdfa_mse_trade_func(K,periodicity,L,Lag,lag_fx,x,plot_T,weight_func,sign_day_of_week)
+mdfa_mse_reg_trade_obj<-mdfa_mse_reg_trade_func(K,periodicity,L,Lag,lag_fx,x,plot_T,weight_func)
 
 #-------------------------------------------------
 # DFA-lowpass: applied to log-returns
@@ -107,17 +88,15 @@ periodicity<-5
 Lag<-0
 L<-100
 L<-min(2*K,L)
-sign_day_of_week<-rep(1,5)
-#sign_day_of_week[5]<--1
 plot_T<-F
 lag_fx<-1
 plot_T<-T
 
-# This function is in mdfa_mse_trade_func.r
+# This function is in mdfa_mse_reg_trade_func.r
 # MSE estimation and trading: sign rule and signal weighting
-mdfa_mse_trade_obj<-mdfa_mse_trade_func(K,periodicity,L,Lag,lag_fx,x,plot_T,weight_func,sign_day_of_week)
+mdfa_mse_reg_trade_obj<-mdfa_mse_reg_trade_func(K,periodicity,L,Lag,lag_fx,x,plot_T,weight_func)
 
-cum_perf_sign<-mdfa_mse_trade_obj$cum_perf_sign
+cum_perf_sign<-mdfa_mse_reg_trade_obj$cum_perf_sign
 
 diff_perf<-diff(cum_perf_sign)
 
@@ -145,17 +124,15 @@ for (i_series in 1:ncol(log_FX_mat))
   Lag<-0
   L<-2*periodicity
   L<-min(2*K,L)#L<-900
-  sign_day_of_week<-rep(1,5)
-#  sign_day_of_week[5]<--1
   plot_T<-F
   lag_fx<-1
   plot_T<-T
   
-  # This function is in mdfa_mse_trade_func.r
+  # This function is in mdfa_mse_reg_trade_func.r
   # MSE estimation and trading: sign rule and signal weighting
-  mdfa_mse_trade_obj<-mdfa_mse_trade_func(K,periodicity,L,Lag,lag_fx,x,plot_T,weight_func,sign_day_of_week)
+  mdfa_mse_reg_trade_obj<-mdfa_mse_reg_trade_func(K,periodicity,L,Lag,lag_fx,x,plot_T,weight_func)
   
-  cum_perf_sign<-mdfa_mse_trade_obj$cum_perf_sign
+  cum_perf_sign<-mdfa_mse_reg_trade_obj$cum_perf_sign
   
   diff_perf<-diff(cum_perf_sign)
   
@@ -216,7 +193,7 @@ for (i_series in 1:ncol(log_FX_mat))# i_series<-1
 #   We re-order series such that first column is target variable
 #   The ordering of the data to be filtered (x) and of the xpectrum (weight_func) must correspond
 #   Note that in principle we could skip this re-ordering (the only constraint is that x and weight_func must correspond)
-#   But we use the re-ordering for the trading-part in mdfa_mse_trade_func: the first column is always the traget that must be traded
+#   But we use the re-ordering for the trading-part in mdfa_mse_reg_trade_func: the first column is always the traget that must be traded
   series_ordering<-c(i_series,(1:ncol(log_FX_mat))[-i_series])
   x<-na.exclude(diff(log_FX_mat[,series_ordering]))
 # Spectrum: first series is target, all other series are explanatory
@@ -229,19 +206,17 @@ for (i_series in 1:ncol(log_FX_mat))# i_series<-1
   Lag<-0
   L<-2*periodicity#
   L<-min(2*K,L)
-  sign_day_of_week<-rep(1,5)
-  #  sign_day_of_week[5]<--1
   plot_T<-F
   lag_fx<-1
   plot_T<-T
   
-  # This function is in mdfa_mse_trade_func.r
+  # This function is in mdfa_mse_reg_trade_func.r
   # MSE estimation and trading: sign rule and signal weighting
   
-  mdfa_mse_trade_obj<-mdfa_mse_trade_func(K,periodicity,L,Lag,lag_fx,x,plot_T,weight_func,sign_day_of_week)
+  mdfa_mse_reg_trade_obj<-mdfa_mse_reg_trade_func(K,periodicity,L,Lag,lag_fx,x,plot_T,weight_func)
   
-  cum_perf_sign<-mdfa_mse_trade_obj$cum_perf_sign
-  yhat<-mdfa_mse_trade_obj$yhat
+  cum_perf_sign<-mdfa_mse_reg_trade_obj$cum_perf_sign
+  yhat<-mdfa_mse_reg_trade_obj$yhat
 # Skip first L data points (initialization)  
   yhat<-yhat[L:length(yhat)]
   diff_perf<-diff(cum_perf_sign)

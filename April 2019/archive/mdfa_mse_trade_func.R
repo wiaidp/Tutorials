@@ -1,3 +1,6 @@
+
+
+
 ma_cross_mdfa_mse_trade_func<-function(K,periodicity_short,periodicity_long,L,Lag,lag_fx,x,plot_T,weight_func,sign_day_of_week)
 {
 #-----------------
