@@ -26,7 +26,6 @@ source("mdfa_trade_func.r")
 source("data_load_functions.R")
 
 
-
 #-----------------------------------------------------------------------------------------------
 # Data: FX and SP500 (the latter has a marked trend)
 
@@ -387,7 +386,7 @@ for (i in 1:(ncol(data)-1))
 #   In case of doubt: larger might be marginally better (freezing unnecessary degrees of freedom)
 #   We might select lambda_cross>0, too, but the coefficients look just fine 'as is'
 #------------
-# Example 5.3: as above with additional smoothness
+# Example 5.3: as above with additional strong smoothness
 
 lambda_decay<-c(0.3,0.99)
 # Cross and smooth are set to large values
@@ -422,9 +421,7 @@ for (i in 1:(ncol(data)-1))
 # Trading with the above designs
 #  Performance with strong smoothness (example 5.3) marginally (random) worse than without smoothness (example 5.2)
 
-# Specify data for filtering: all explanatory series
 data_filter<-data[,2:ncol(data)]
-# Lag for trade execution (must be >= 1)
 lag_fx<-1
 
 # Customization: 
@@ -433,7 +430,7 @@ lag_fx<-1
 lambda<-0
 eta<-0.3
 
-mdfa_reg_trade_obj<-mdfa_reg_trade_func(K,periodicity,L,Lag,lag_fx,data_filter,plot_T,weight_func,lambda_cross,lambda_decay,lambda_smooth,lambda,eta)
+mdfa_trade_obj<-mdfa_reg_trade_func(K,periodicity,L,Lag,lag_fx,data_filter,plot_T,weight_func,lambda_cross,lambda_decay,lambda_smooth,lambda,eta)
 
 # Comment
 #   EURUSD does not fare well with 'short' (weekly) signals

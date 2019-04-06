@@ -98,3 +98,62 @@ mdfa_reg_trade_func<-function(K,periodicity,L,Lag,lag_fx,x,plot_T,weight_func,la
 
 
 
+
+
+
+mdfa_mse_reg_trade_func<-function(K,periodicity,L,Lag,lag_fx,x,plot_T,weight_func)
+{
+  #-----------------
+  # Derived settings
+  cutoff<-pi/periodicity
+  # Target 
+  Gamma<-(0:(K))<=K*cutoff/pi+1.e-9
+  #----------------
+  # Estimation based on MDFA-MSE wrapper
+  mdfa_obj_mse<-MDFA_mse(L,weight_func,Lag,Gamma)$mdfa_obj 
+  
+  b<-mdfa_obj_mse$b
+  # Plot of amplitude
+  if (plot_T)
+  {
+    plot_estimate_func(b,mdfa_obj_mse,weight_func)
+  }
+  
+  #-----------
+  # Filtering
+  if (ncol(b)==1)
+  {  
+    yhat<-filt_func(x,b)$yhat
+  } else
+  {
+    yhat_mat<-x
+    for (j in 1:ncol(b))#j<-1
+    {
+      yhat_mat[,j]<-filt_func(x[,j],b[,j])$yhat
+    }
+    yhat<-as.xts(apply(yhat_mat,1,mean))
+  }
+  #-------------
+  # Compute performances: sign-rule and signal weighting
+  # First series in x is always target (the data in x is re-ordered that way)
+  
+  # Trading performance: sign-rule (don't forget to lag the signal by one day)
+  cum_perf_sign<-cumsum(na.omit(lag(sign((yhat)),lag_fx)*x[,1]))
+  sharpe_sign<-sqrt(250)*mean(diff(cum_perf_sign),na.rm=T)/sqrt(var(diff(cum_perf_sign),na.rm=T))
+  
+  # Plot
+  if (plot_T)
+  {
+    par(mfrow=c(1,1))
+    print(plot(cbind(x[,1],yhat),main="Returns (black) and filtered series (red)"))
+    print(plot(cum_perf_sign,main=paste("Signum rule, ",colnames(x),", sharpe: ",round(sharpe_sign,3),sep="")))
+    par(mfrow=c(1,1))
+  }
+  return(list(cum_perf_sign=cum_perf_sign,yhat=yhat,mdfa_obj_mse=mdfa_obj_mse,sharpe_sign=sharpe_sign))
+}
+
+
+
+
+
+

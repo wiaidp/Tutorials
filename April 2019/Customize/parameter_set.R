@@ -10,3 +10,4 @@ Lag<-0
 # Filter length
 L<-100
 L<-min(2*K,L)
+lambda<-eta<-0

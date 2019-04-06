@@ -18,17 +18,22 @@ library(devtools)
 library(MDFA)
 
 
+#-----------------------------------------------------------------------------------------------
+# Source common functions
+
+source("plot_func.r")
+source("mdfa_trade_func.r")
+source("data_load_functions.R")
 
 
 #-----------------------------------------------------------------------------------------------
 # Data: FX and SP500 (the latter has a marked trend)
-source("data_load_functions.R")
 
 data_from_IB<-T
 hour_of_day<-"16:00"
 i_series_vec<-c(1,2,3,6,7,8)
 reload_sp500<-F
-path.dat<-"D:\\wia_desktop\\2019\\Projekte\\IB\\daily_pick\\Data\\IB\\"
+path.dat<-"C:\\wia_desktop\\2019\\Projekte\\IB\\daily_pick\\Data\\IB\\"
 
 data_load_obj<-data_load_gzd_trading_func(data_from_IB,hour_of_day,reload_sp500,path.dat)
 
@@ -45,9 +50,6 @@ anf_plot<-"2000-10-01/"
 
 
 
-#-----------------------------------------------------------------------------------------------
-source("plot_func.r")
-source("mdfa_reg_trade_func.r")
 #-------------------------------------------------
 # Example 1
 # This example illustrates replication of original (unconstrained) MSE by MDFA_reg (regularization wrapper)
@@ -358,10 +360,10 @@ for (i in 1:(ncol(data)-1))
 # Example 5.2: as above with additional cross-sectional tightness
 
 lambda_decay<-c(0.3,0.99)
-# Cross is large
-lambda_cross<-0.9
-# Smooth is set to zero
+# No smoothness
 lambda_smooth<-0.
+# Strong similarity
+lambda_cross<-0.9
 # MDFA_reg: wrapper for working with regularization
 mdfa_reg_obj<-MDFA_reg(L,weight_func_mat,Lag,Gamma,cutoff,lambda,eta,lambda_cross,lambda_decay,lambda_smooth)$mdfa_obj
 
@@ -383,14 +385,16 @@ for (i in 1:(ncol(data)-1))
 #   lambda_smooth is not critical: any value in [0.5,0.99] just seems fine
 #   In case of doubt: larger might be marginally better (freezing unnecessary degrees of freedom)
 #   We might select lambda_cross>0, too, but the coefficients look just fine 'as is'
-
 #------------
-# Example 5.3: as above with additional smoothness tightness
+# Example 5.3: as above with additional strong smoothness
 
 lambda_decay<-c(0.3,0.99)
-# Cross and smooth are set to zero
+# Cross and smooth are set to large values
+#   Strong cross means that filter coefficients are similar: common multivariate filter
+#   Extract information from all series to infer the common filter coefficients 
 lambda_cross<-0.9
-lambda_smooth<-0.9
+lambda_smooth<-0.99
+
 # MDFA_reg: wrapper for working with regularization
 mdfa_reg_obj<-MDFA_reg(L,weight_func_mat,Lag,Gamma,cutoff,lambda,eta,lambda_cross,lambda_decay,lambda_smooth)$mdfa_obj
 
@@ -413,51 +417,19 @@ for (i in 1:(ncol(data)-1))
 #   In case of doubt: larger might be marginally better (freezing unnecessary degrees of freedom)
 #   We might select lambda_cross>0, too, but the coefficients look just fine 'as is'
 
-
 #----------------------------------------------------------------------------------------------------------------
-# Trading with the above design
+# Trading with the above designs
+#  Performance with strong smoothness (example 5.3) marginally (random) worse than without smoothness (example 5.2)
 
 data_filter<-data[,2:ncol(data)]
 lag_fx<-1
 
-#MSE
+# MSE: 
 lambda<-0
-eta<-0
+eta<-0.
 
+mdfa_trade_obj<-mdfa_reg_trade_func(K,periodicity,L,Lag,lag_fx,data_filter,plot_T,weight_func,lambda_cross,lambda_decay,lambda_smooth,lambda,eta)
 
-mdfa_reg_trade_obj<-mdfa_reg_trade_func(K,periodicity,L,Lag,lag_fx,data_filter,plot_T,weight_func,lambda_cross,lambda_decay,lambda_smooth,lambda,eta)
-
-# Comment
-#   EURUSD does not fare well with 'short' (weekly) signals
 
 #----------------------------------------------------------------------------------------------------------------------------------------------------------------
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# Example 6: advanced regularization: 
-# Working directly with mdfa_analytic (i.e. without the wraper)
-
-
-lin_eta<-F
-weight_constraint<-rep(1/(ncol(weight_func)-1),ncol(weight_func)-1)
-lin_expweight<-F
-shift_constraint<-rep(0,ncol(weight_func)-1)
-grand_mean<-F
-b0_H0<-NULL
-c_eta<-F
-weights_only<-F
-weight_structure<-c(0,0)
-white_noise<-F
-synchronicity<-F
-lag_mat<-matrix(rep(0:(L-1),ncol(weight_func)),nrow=L)
-troikaner<-F
-i1<-i2<-F
-
-
-
-mdfa_obj<-mdfa_analytic(L,lambda,weight_func,Lag,Gamma,eta,cutoff,i1,i2,weight_constraint,
-                        lambda_cross,lambda_decay,lambda_smooth,lin_eta,shift_constraint,grand_mean,
-                        b0_H0,c_eta,weight_structure,white_noise,
-                        synchronicity,lag_mat,troikaner)
-
-
-
-
