@@ -59,7 +59,7 @@ mdfa_reg_trade_func<-function(K,periodicity,L,Lag,lag_fx,x,plot_T,weight_func,la
   # Plot of amplitude
   if (plot_T)
   {
-    plot_estimate_func(b,mdfa_obj_mse_reg,weight_func)
+    plot_estimate_func(mdfa_obj_mse_reg,weight_func,Gamma)
   }
 
   #-----------
@@ -116,7 +116,7 @@ mdfa_mse_reg_trade_func<-function(K,periodicity,L,Lag,lag_fx,x,plot_T,weight_fun
   # Plot of amplitude
   if (plot_T)
   {
-    plot_estimate_func(b,mdfa_obj_mse,weight_func)
+    plot_estimate_func(mdfa_obj_mse,weight_func,Gamma)
   }
   
   #-----------

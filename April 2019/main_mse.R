@@ -46,12 +46,126 @@ colnames(log_FX_mat)
 plot_T<-T
 anf_plot<-"2000-10-01/"
 # Select data: FX or SP500
-
-#-------------------------------------------------
-# Example 1: DFA-lowpass applied to log-returns
+#---------------------------------------------
+# Example 0: Play with DFA
 #   MSE
 #   Univariate
-#   White noise spectrum
+
+
+# Example 0.1 White noise spectrum
+# Try
+#   -various targets (periodicities); 
+#   -various filter-lengths L; 
+#   -various Lag (negative,0,positive integers)
+# K defines the frequency-grid for estimation: all frequencies omega_j=j*pi/K, j=0,1,2,...,K are considered
+#   -In the case of a white noise spectrum we can select arbitrary tightness of frequency grid
+#   -If we use the periodogram, then K is specified by the length of the periodogram
+#   -Tradeoff: larger K (denser grid) means better MSE (if true process is white noise) but longer computation-time
+K<-600
+# Spectrum: white noise assumption
+#  First column is target, second column is explanatory variable: in a univariate design target and explanatory are the same
+weight_func<-matrix(rep(1,2*(K+1)),ncol=2)
+colnames(weight_func)<-c("target","explanatory")
+# Target: specify cutoff=pi/periodicity of lowpass ideal target
+periodicity<-5
+cutoff<-pi/periodicity
+Gamma<-(0:(K))<=K*cutoff/pi+1.e-9
+# Nowcast (Lag=0), Backcast (Lag>0) and Forecast (Lag<0)
+Lag<-0
+# Filter length
+L<-200
+
+# Estimation based on MDFA-MSE wrapper
+mdfa_obj_mse<-MDFA_mse(L,weight_func,Lag,Gamma)$mdfa_obj 
+
+b<-mdfa_obj_mse$b
+plot_estimate_func(mdfa_obj_mse,weight_func,Gamma)
+
+#---------------
+# Example 0.2 same as above but with autoregressive spectrum
+#   This design replicates classic model-based approaches (if K is 'large')
+# Try
+#   -various targets (periodicities); 
+#   -various filter-lengths L; 
+#   -various Lag (negative,0,positive integers)
+# K defines the frequency-grid for estimation: all frequencies omega_j=j*pi/K, j=0,1,2,...,K are considered
+#   -In the case of a white noise spectrum we can select arbitrary tightness of frequency grid
+#   -If we use the periodogram, then K is specified by the length of the periodogram
+#   -Tradeoff: larger K (denser grid) means better MSE (if true process is white noise) but longer computation-time
+K<-600
+# Spectrum: autoregressive spectrum
+#  First column is target, second column is explanatory variable: in a univariate design target and explanatory are the same
+a1<-0.5
+weight_func<-cbind(1/(1-a1*exp(1.i*(0:K)*pi/K)),1/(1-a1*exp(1.i*(0:K)*pi/K)))
+colnames(weight_func)<-c("target","explanatory")
+# Target: specify cutoff=pi/periodicity of lowpass ideal target
+periodicity<-5
+cutoff<-pi/periodicity
+Gamma<-(0:(K))<=K*cutoff/pi+1.e-9
+# Nowcast (Lag=0), Backcast (Lag>0) and Forecast (Lag<0)
+Lag<-0
+# Filter length
+L<-200
+
+# Estimation based on MDFA-MSE wrapper
+mdfa_obj_mse<-MDFA_mse(L,weight_func,Lag,Gamma)$mdfa_obj 
+
+b<-mdfa_obj_mse$b
+plot_estimate_func(mdfa_obj_mse,weight_func,Gamma)
+
+# Comments
+# 1. Fit of target by explanatory improves at/towards the frequencies emphasized/weighted by spectrum
+#     Examples: 
+#       for a1>0 the fit improves towards frequency zero (compared to previous white noise example)
+#       for a1<0 the fit improves towards frequency pi (compared to previous white noise example)
+# 2. Arbitrary AR(I)MA- or state-space models could be replicated by 
+#   a. Prodining the corresponding target
+#   b. Providing the corresponding spectral estimate
+#   c. see Wildi/McElroy
+# 3. Once replicated, model-based approaches could be enhanced (regularization and/or customization)
+# 4. Multivariate models can be replicated by generic MDFA
+
+#---------------------------------
+# Example 0.3 same as above but we use autoregressive spectrum based on AR(1)-model fitted to log-returns of EURUSD
+
+K<-600
+# Fit AR(1)-model to log-returns of EURUSD
+asset<-"EURUSD"
+x<-diff(log_FX_mat[,asset])
+a1<-arima(x,c(1,0,0))$coef["ar1"]
+# Derive autoregressive spectrum
+weight_func<-cbind(1/(1-a1*exp(1.i*(0:K)*pi/K)),1/(1-a1*exp(1.i*(0:K)*pi/K)))
+colnames(weight_func)<-c("target","explanatory")
+# Target: specify cutoff=pi/periodicity of lowpass ideal target
+periodicity<-5
+cutoff<-pi/periodicity
+Gamma<-(0:(K))<=K*cutoff/pi+1.e-9
+# Nowcast (Lag=0), Backcast (Lag>0) and Forecast (Lag<0)
+Lag<-0
+# Filter length
+L<-200
+
+# Estimation based on MDFA-MSE wrapper
+mdfa_obj_mse<-MDFA_mse(L,weight_func,Lag,Gamma)$mdfa_obj 
+
+b<-mdfa_obj_mse$b
+plot_estimate_func(mdfa_obj_mse,weight_func,Gamma)
+
+#-------------------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------------------------
+
+# The following examples apply (M)DFA to currency-trading
+#   The function mdfa_mse_reg_trade_func 
+#     -computes optimal MSE-filters
+#     -computes filter-outputs 
+#     -applies filters to trading according to the rule: long/short depending on sign of filter output
+#     -computes annualized sharpe ratio
+
+#-------------------------------------------------
+#-------------------------------------------------
+# Example 1: DFA-lowpass applied to log-returns; white noise spectrum
+#   MSE
+#   Univariate
 # Try various targets (periodicities)
 asset<-"EURUSD"
 x<-na.exclude(diff(log_FX_mat[,asset]))
@@ -63,6 +177,7 @@ K<-600
 # Spectrum: white noise assumption
 #  First column is target, second column is explanatory variable: in a univariate design target and explanatory are the same
 weight_func<-matrix(rep(1,2*(K+1)),ncol=2)
+colnames(weight_func)<-c("target","explanatory")
 # Target: specify cutoff=pi/periodicity of lowpass ideal target
 periodicity<-5
 # Nowcast (Lag=0), Backcast (Lag>0) and Forecast (Lag<0)
@@ -101,6 +216,7 @@ x<-na.exclude(diff(log_FX_mat[,asset]))
 #   In contrast to periodogram, the dft retains the phase information which is important in a multivariate design
 #   First column is dft of target, second column is dft of explanatory: here both series are identical (univariate design)
 weight_func<-cbind(per(x[paste("/",in_sample_span,sep="")],T)$DFT,per(x[paste("/",in_sample_span,sep="")],T)$DFT)
+colnames(weight_func)<-c("target","explanatory")
 # Denseness of frequency-grid is completely specified by length of periodogram (to be constrasted with example 1 where we could specify any K)
 K<-nrow(weight_func)-1
 # Target
@@ -136,16 +252,17 @@ for (i_series in 1:ncol(log_FX_mat))
 # Spectrum: periodogram
   weight_func<-cbind(per(x[paste("/",in_sample_span,sep="")],T)$DFT,per(x[paste("/",in_sample_span,sep="")],T)$DFT)
   colnames(weight_func)<-rep(colnames(log_FX_mat)[i_series],2)
+  colnames(weight_func)<-c("target","explanatory")
 # Length of frequency-grid (always length of spectral estimate)  
   K<-nrow(weight_func)-1
 # Target (cutoff, periodicity)
   periodicity<-5
 # Nowcast  
   Lag<-0
-# Reasonably large L  
-  L<-2*periodicity
 # Huge L  
   L<-900
+# Reasonably large L  
+  L<-2*periodicity
 # Degrees of freedom must be smaller than number of equations (otherwise problem is singular)  
   L<-min(2*K,L)#L<-900
 # Delay trade execution (must be >=1)  
@@ -243,7 +360,7 @@ for (i_series in 1:ncol(log_FX_mat))# i_series<-1
 # Large L
   L<-200
 # Reasonably large L  
-#  L<-2*periodicity#
+  L<-2*periodicity#
   L<-min(2*K,L)
 # Lag of trading execution
   lag_fx<-1
@@ -289,13 +406,13 @@ acf(as.xts(apply(yhat_mat[anf_plot],1,mean)))
 
 # Plot performances
 # in sample
-plot(as.xts(apply(na.exclude(diff_perf_mat[paste("/",in_sample_span,sep="")]),2,cumsum)))
-plot(as.xts(apply(apply(na.exclude(diff_perf_mat[paste("/",in_sample_span,sep="")]),2,cumsum),1,mean)))
+plot(as.xts(apply(na.exclude(diff_perf_mat[paste("/",in_sample_span,sep="")]),2,cumsum)),main="In sample")
+plot(as.xts(apply(apply(na.exclude(diff_perf_mat[paste("/",in_sample_span,sep="")]),2,cumsum),1,mean)),main="Aggregate in-sample")
 
 
 # out-of-sample
-plot(as.xts(apply(diff_perf_mat[paste(in_sample_span,"/",sep="")],2,cumsum)))
-plot(as.xts(apply(apply(diff_perf_mat[paste(in_sample_span,"/",sep="")],2,cumsum),1,mean)))
+plot(as.xts(apply(diff_perf_mat[paste(in_sample_span,"/",sep="")],2,cumsum)),main="Out-of-sample")
+plot(as.xts(apply(apply(diff_perf_mat[paste(in_sample_span,"/",sep="")],2,cumsum),1,mean)),main="Aggregate out-of-sample")
 
 
 

@@ -45,8 +45,10 @@ plot_weekday_func<-function(series.xts,name)
 
 
 
-plot_estimate_func<-function(b,mdfa_obj,weight_func)
+plot_estimate_func<-function(mdfa_obj,weight_func,Gamma)
 {
+  par(mfrow=c(1,1))
+  b<-mdfa_obj$b
   colo<-rainbow(ncol(b))
   plot(b[,1],type="l",main=paste("Filter coefficients",sep=""),
        axes=F,xlab="Lag",ylab="Coef",ylim=c(min(b),max(b)),col="black")
@@ -65,8 +67,9 @@ plot_estimate_func<-function(b,mdfa_obj,weight_func)
   axis(2)
   box()    
   
-  plot(abs(mdfa_obj$trffkt)[,1],type="l",main=paste("Amplitude concurrent, denseness=",K,sep=""),
-       axes=F,xlab="Frequency",ylab="Amplitude",col="black",ylim=c(0,max(abs(mdfa_obj$trffkt))))
+  
+  plot(Arg(mdfa_obj$trffkt[,1])/((0:(nrow(weight_func)-1))*pi/(nrow(weight_func)-1)),type="l",main=paste("Time-shift concurrent, denseness=",K,sep=""),
+       axes=F,xlab="Frequency",ylab="Amplitude",col="black")
   # We take 2-nd colname from weight_func because the first column is the target        
   mtext(colnames(weight_func)[2],line=-1,col="black")
   if (ncol(abs(mdfa_obj$trffkt))>1)
@@ -76,6 +79,28 @@ plot_estimate_func<-function(b,mdfa_obj,weight_func)
       lines(abs(mdfa_obj$trffkt)[,i],col=colo[i])
       # We take the i+1 colname from weight_func because the first column is the target        
       mtext(colnames(weight_func)[i+1],line=-i,col=colo[i])
+      
+    }
+  }
+  axis(1,at=c(0,1:6*K/6+1),labels=c("0","pi/6","2pi/6","3pi/6",
+                                    "4pi/6","5pi/6","pi"))
+  axis(2)
+  box()
+  plot(abs(mdfa_obj$trffkt)[,1],type="l",main=paste("Amplitude concurrent, denseness=",K,sep=""),
+       axes=F,xlab="Frequency",ylab="Amplitude",col="black",ylim=c(0,max(1,max(abs(mdfa_obj$trffkt)))))
+  # We take 2-nd colname from weight_func because the first column is the target        
+  mtext(colnames(weight_func)[2],line=-1,col="black")
+  lines(Gamma,col="violet")
+  mtext("Target Gamma",line=-2,col="violet")
+  lines(0.5*abs(weight_func[,1])/max(abs(weight_func[,1])),col="black",lwd=3)
+  mtext("Spectrum (black bold)",line=-3,col="black")
+  if (ncol(abs(mdfa_obj$trffkt))>1)
+  {
+    for (i in 2:ncol(abs(mdfa_obj$trffkt)))
+    {
+      lines(abs(mdfa_obj$trffkt)[,i],col=colo[i])
+      # We take the i+1 colname from weight_func because the first column is the target        
+      mtext(colnames(weight_func)[i+1],line=-i-2,col=colo[i])
       
     }
   }
