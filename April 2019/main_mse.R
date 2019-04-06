@@ -166,7 +166,7 @@ plot(as.xts(apply(apply(diff_perf_mat[paste(in_sample_span,"/",sep="")],2,cumsum
 # Example 4: multivariate (MDFA) with dft (discrete fourier transform)
 # We use all series as explanatory variables: 6-dimensional design (this is a bit unwise but we use the example for illustration)
 #   Number of degrees of freedom is 6*L   
-# Huge overfitting: try L<-200 with periodicity=5:
+# Huge overfitting: try L<-200 with periodicity=5 against 'reasonably large' L:
 #   1. Coefficients are huge
 #   2. Amplitudes are huge and very narrow i.e. far from pi/5
 #   3. However: scale of aggregate (output of multivariate filter) is fine and
