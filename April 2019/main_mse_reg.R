@@ -48,6 +48,195 @@ plot_T<-T
 anf_plot<-"2000-10-01/"
 # Select data: FX or SP500
 
+#-----------------------------------------------------------------
+# Example 0: illustration of regularization features (regularization troika)
+
+# Set all parameters to 'default' values
+
+in_sample_span<-"2017-01-01"
+asset<-"EURUSD"
+
+x<-na.exclude(diff(log_FX_mat[,asset]))
+# Spectrum: periodogram
+weight_func<-cbind(per(x[paste("/",in_sample_span,sep="")],T)$DFT,per(x[paste("/",in_sample_span,sep="")],T)$DFT)
+K<-nrow(weight_func)-1
+colnames(weight_func)<-c("target","explanatory")
+# Target: specify cutoff=pi/periodicity of lowpass ideal target
+periodicity<-5
+cutoff<-pi/periodicity
+Gamma<-(0:(K))<=K*cutoff/pi+1.e-9
+# Nowcast (Lag=0), Backcast (Lag>0) and Forecast (Lag<0)
+Lag<-0
+# Filter length
+L<-50
+# MSE
+lambda<-eta<-0
+# New parameters for regularization
+lambda_smooth<-lambda_cross<-0
+
+
+# Example 0.1 Decay regularization (single most important type of regularization)
+# Main idea: data in the remote past should be weighted less heavily or, stated otherwise, filter coefficients should decay towards zero with increasing lag
+# Two parameters: we here loke at first one (shape) 
+
+lambda_decay_1<-0.1*1:9
+lambda_decay_2<-0.5
+
+
+b_mat<-matrix(nrow=L,ncol=(ncol(weight_func)-1)*length(lambda_decay_1))
+for (i in 1:length(lambda_decay_1))
+{
+  lambda_decay<-c(lambda_decay_1[i],lambda_decay_2)
+  mdfa_obj_decay<-MDFA_reg(L,weight_func,Lag,Gamma,cutoff,lambda,eta,lambda_cross,lambda_decay,lambda_smooth)$mdfa_obj
+
+  b_mat[,(i-1)*(ncol(weight_func)-1)+1:(ncol(weight_func)-1)]<-mdfa_obj_decay$b
+}
+
+par(mfrow=c(1,1))
+mplot <- b_mat[,1+(0:(length(lambda_decay_1)-1)*(ncol(weight_func)-1))]
+ax <- Lag + 0 : (L-1)
+colo<-rainbow(ncol(mplot))
+insamp<-1.e+90
+plot_title <- "Series 1"
+title_more<-paste("lambda_decay=(",lambda_decay_1,",",lambda_decay_2,")",sep="")
+mplot_func(mplot, ax, plot_title, title_more, insamp, colo)
+
+
+
+
+
+# Example 0.2 Decay regularization (single most important type of regularization)
+# Two parameters: we here look at second one (strength)
+
+
+lambda_decay_1<-0.5
+lambda_decay_2hh<-0.1*0:9
+lambda_decay_2h<-c(lambda_decay_2hh,lambda_decay_2hh[length(lambda_decay_2hh)]+0.01*0:9,0.995,0.999)
+lambda_decay_2<-lambda_decay_2h[c(1+4*c(0:(length(lambda_decay_2h)/4)),length(lambda_decay_2h)-1,
+                                  length(lambda_decay_2h))]
+
+b_mat<-matrix(nrow=L,ncol=(ncol(weight_func)-1)*length(lambda_decay_2))
+for (i in 1:length(lambda_decay_2))#i<-2
+{
+  lambda_decay<-c(lambda_decay_1,lambda_decay_2[i])
+  
+  mdfa_obj_decay<-MDFA_reg(L,weight_func,Lag,Gamma,cutoff,lambda,eta,lambda_cross,lambda_decay,lambda_smooth)$mdfa_obj
+  
+  b_mat[,(i-1)*(ncol(weight_func)-1)+1:(ncol(weight_func)-1)]<-mdfa_obj_decay$b
+}
+
+par(mfrow=c(1,1))
+mplot <- b_mat[,1+(0:(length(lambda_decay_2)-1)*(ncol(weight_func)-1))]
+ax <- Lag + 0 : (L-1)
+colo<-rainbow(ncol(mplot))
+insamp<-1.e+90
+plot_title <- "Filter Coefficients Series 1"
+title_more<-paste("lambda_decay=(",lambda_decay_1,",",lambda_decay_2,")",sep="")
+mplot_func(mplot, ax, plot_title, title_more, insamp, colo)
+
+
+
+
+
+
+# Example 0.3 Smoothness regularization 
+# Main idea: filter coefficients should not be too noisy
+
+lambda_decay<-c(0,0)
+lambda_cross<-0
+
+lambda_smooth_vechh<-0.1*0:9
+lambda_smooth_vech<-c(lambda_smooth_vechh,lambda_smooth_vechh[length(lambda_smooth_vechh)]+0.01*0:9,0.995,0.999,1)
+lambda_smooth_vec<-lambda_smooth_vech[c(1+4*c(0:(length(lambda_smooth_vech)/4)),length(lambda_smooth_vech)-1,
+                                        length(lambda_smooth_vech))]
+
+
+b_mat<-matrix(nrow=L,ncol=(ncol(weight_func)-1)*length(lambda_smooth_vec))
+for (i in 1:length(lambda_smooth_vec))
+{
+  lambda_smooth<-lambda_smooth_vec[i]
+
+  mdfa_obj_decay<-MDFA_reg(L,weight_func,Lag,Gamma,cutoff,lambda,eta,lambda_cross,lambda_decay,lambda_smooth)$mdfa_obj
+  
+  b_mat[,(i-1)*(ncol(weight_func)-1)+1:(ncol(weight_func)-1)]<-mdfa_obj_decay$b
+}
+
+par(mfrow=c(1,1))
+mplot <- b_mat[,1+(0:(length(lambda_smooth_vec)-1)*(ncol(weight_func)-1))]
+ax <- Lag + 0 : (L-1)
+colo<-rainbow(ncol(mplot))
+insamp<-1.e+90
+plot_title <- "Series 1"
+title_more<-paste("lambda_smooth=",lambda_smooth_vec,sep="")
+mplot_func(mplot, ax, plot_title, title_more, insamp, colo)
+
+
+
+
+
+
+# Example 0.4 Cross-sectional tightness regularization 
+# Main idea: if series in multivariate design are similar, then filter coefficients should be similar too
+
+# We here add an explanatory series, EURJPY, to the design: we are thuis working with a bivariate design
+data_cross<-na.exclude(diff(log_FX_mat[,c("EURUSD","EURUSD","EURJPY")]))
+# Compute multivariate spectrum
+for (i_series in 1:ncol(data_cross))
+{
+  x<-data_cross[,i_series]
+  # Spectrum: white noise assumption
+  
+  if (i_series==1)
+  {
+    weight_func_mat<-per(x[paste("/",in_sample_span,sep="")],T)$DFT  
+  } else
+  {
+    weight_func_mat<-cbind(weight_func_mat,per(x[paste("/",in_sample_span,sep="")],T)$DFT)
+  }
+}
+colnames(weight_func_mat)<-colnames(data_cross)
+
+# First column is target; columns 2-3 are explanatory; columns 1 and 2 are identical because EURUSD is also explanatory
+head(weight_func_mat)
+# Set decay and smooth terms to zero
+lambda_decay<-c(0,0)
+lambda_smooth<-0
+# Select a arnge of cross values in [0,1]
+lambda_cross_vec<-c(0,0.05,0.1,0.15,0.2,0.25,0.4,1)
+b_mat<-matrix(nrow=L,ncol=(ncol(weight_func_mat)-1)*length(lambda_cross_vec))
+# Compute solutions for all cross-values
+for (i in 1:length(lambda_cross_vec))#i<-1
+{
+  lambda_cross<-lambda_cross_vec[i]
+  
+  mdfa_obj<-MDFA_reg(L,weight_func_mat,Lag,Gamma,cutoff,lambda,eta,lambda_cross,lambda_decay,lambda_smooth)$mdfa_obj
+  
+  b_mat[,(i-1)*(ncol(weight_func_mat)-1)+1:(ncol(weight_func_mat)-1)]<-mdfa_obj$b
+}
+
+tail(b_mat)
+
+# Plot
+par(mfrow=c(1,2))
+mplot <- b_mat[,1+(0:(length(lambda_cross_vec)-1)*(ncol(weight_func_mat)-1))]
+ax <- Lag + 0 : (L-1)
+colo<-rainbow(ncol(mplot))
+insamp<-1.e+90
+plot_title <- "Series 1"
+title_more<-paste("lambda_cross=",lambda_cross_vec,sep="")
+mplot_func(mplot, ax, plot_title, title_more, insamp, colo)
+mplot <- b_mat[,2+(0:(length(lambda_cross_vec)-1)*(ncol(weight_func_mat)-1))]
+ax <- Lag + 0 : (L-1)
+plot_title <- "Series 2"
+mplot_func(mplot, ax, plot_title, title_more, insamp, colo)
+
+# Comments
+#   For lambda_cross=0 we see that most weight is attributed to EURUSD (compare panel left vs. panel right in above plot)
+#   For increasing lambda_cross both filter coefficients (panels left/right) get closer together
+#   For lambda_cross=1 both coefficients are identical: the same filter is applied to both series
+
+
+
 
 
 #-------------------------------------------------

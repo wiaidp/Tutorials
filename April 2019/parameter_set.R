@@ -11,3 +11,10 @@ Lag<-0
 L<-100
 L<-min(2*K,L)
 lambda<-eta<-0
+lambda_smooth<-lambda_cross<-0
+lambda__decay<-c(0,0)
+
+
+
+
+

@@ -16,6 +16,13 @@ library(devtools)
 # MDFA package: EURUSD is now part of the data in the package
 library(MDFA)
 
+head(MDFA_mse)
+head(MDFA_mse_constraint)
+head(MDFA_cust)
+head(MDFA_cust_constraint)
+head(MDFA_reg)
+head(MDFA_reg_constraint)
+
 
 #-----------------------------------------------------------------------------------------------
 # Source common functions
