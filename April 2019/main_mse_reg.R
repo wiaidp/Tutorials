@@ -21,9 +21,9 @@ library(MDFA)
 #-----------------------------------------------------------------------------------------------
 # Source common functions
 
-source("plot_func.r")
-source("mdfa_trade_func.r")
-source("data_load_functions.R")
+source("Common functions/plot_func.r")
+source("Common functions/mdfa_trade_func.r")
+source("Common functions/data_load_functions.R")
 
 
 #-----------------------------------------------------------------------------------------------
@@ -353,7 +353,6 @@ for (i in 1:(ncol(data)-1))
 #   1. The coefficients look similar already (without imposing cross-sectional similarity)
 #   2. The amplitude functions look fine (shape corresponds to targeted cutoff)
 #   3. The shifts look OK, too
-#   4. Although quite nice overall, the coefficients appear a bit unsmooth: so we might enforce smoothness 
 
 
 #------------
