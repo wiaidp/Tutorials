@@ -236,7 +236,11 @@ mplot_func(mplot, ax, plot_title, title_more, insamp, colo)
 #   For lambda_cross=1 both coefficients are identical: the same filter is applied to both series
 
 
-
+#-------------------------------------------------
+# More examples: 
+#  Trading applications are provided at the end of the file
+#  The corresponding function mdfa_reg_trade_func is part of the file mdfa_trade_func.r
+#  This function allows more flexibility than mdfa_mse_reg_trade_func used in the previous MSE-tutorial (the latter applies MSE without regularization only)
 
 
 #-------------------------------------------------

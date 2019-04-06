@@ -1,9 +1,22 @@
 # Todos
-#   -Add a model-based example
 #   -Amplitude, shift, coeff, spectrum, target
 #   -Explain I-MDFA.r: functions available
 #     Here we use MSE function 
+#   -Add/discuss constraints
 
+
+
+# Purpose of tutorial
+# -Provide short overview of main functions in MDFA-package
+# -Illustrate DFA (univariate), MDFA (multivariate) MSE (no customization) unconstrained (no regularization)
+#   -Customization and regularization will be tackled in separate tutorials
+# -Play with (M)DFa
+#   -Illustrate explain target, spectrum, amplitude, time-shift, filter coefficients
+#   -Illustrate overfitting: univariate and multivariate
+# -Introduce/discuss potentially useful filter constraints
+
+# Disclaimer/caveat: applications to (currency-)trading are intended for illustrative purposes only 
+#   -Filter designs are deliberately 'suboptimal'
 
 
 rm(list=ls())
@@ -16,13 +29,16 @@ library(devtools)
 # MDFA package: EURUSD is now part of the data in the package
 library(MDFA)
 
+
+# Briev overview of wrappers and main function
 head(MDFA_mse)
 head(MDFA_mse_constraint)
 head(MDFA_cust)
 head(MDFA_cust_constraint)
 head(MDFA_reg)
 head(MDFA_reg_constraint)
-
+# Main estimation function
+head(mdfa_analytic)
 
 #-----------------------------------------------------------------------------------------------
 # Source common functions
