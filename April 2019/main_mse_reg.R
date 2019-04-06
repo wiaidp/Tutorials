@@ -21,9 +21,9 @@ library(MDFA)
 #-----------------------------------------------------------------------------------------------
 # Source common functions
 
-source("Common functions/plot_func.r")
-source("Common functions/mdfa_trade_func.r")
-source("Common functions/data_load_functions.R")
+source("plot_func.r")
+source("mdfa_trade_func.r")
+source("data_load_functions.R")
 
 
 #-----------------------------------------------------------------------------------------------
@@ -424,15 +424,12 @@ for (i in 1:(ncol(data)-1))
 data_filter<-data[,2:ncol(data)]
 lag_fx<-1
 
-# Customization: 
-#   Short signals (small periodicities) often require some additional smoothing
-#   We set the smoothness parameter eta<-0.3 and keep the timeliness parameter lambda<-0
+# MSE: 
 lambda<-0
-eta<-0.3
+eta<-0.
 
 mdfa_trade_obj<-mdfa_reg_trade_func(K,periodicity,L,Lag,lag_fx,data_filter,plot_T,weight_func,lambda_cross,lambda_decay,lambda_smooth,lambda,eta)
 
-# Comment
-#   EURUSD does not fare well with 'short' (weekly) signals
+
 #----------------------------------------------------------------------------------------------------------------------------------------------------------------
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------

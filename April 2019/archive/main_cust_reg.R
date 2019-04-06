@@ -21,9 +21,9 @@ library(MDFA)
 #-----------------------------------------------------------------------------------------------
 # Source common functions
 
-source("Common functions/plot_func.r")
-source("Common functions/mdfa_trade_func.r")
-source("Common functions/data_load_functions.R")
+source("plot_func.r")
+source("mdfa_trade_func.r")
+source("data_load_functions.R")
 
 
 #-----------------------------------------------------------------------------------------------
