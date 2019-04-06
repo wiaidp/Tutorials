@@ -18,17 +18,23 @@ library(devtools)
 library(MDFA)
 
 
+#-----------------------------------------------------------------------------------------------
+# Source common functions
+
+source("plot_func.r")
+source("mdfa_trade_func.r")
+source("data_load_functions.R")
+
 
 
 #-----------------------------------------------------------------------------------------------
 # Data: FX and SP500 (the latter has a marked trend)
-source("data_load_functions.R")
 
 data_from_IB<-T
 hour_of_day<-"16:00"
 i_series_vec<-c(1,2,3,6,7,8)
 reload_sp500<-F
-path.dat<-"D:\\wia_desktop\\2019\\Projekte\\IB\\daily_pick\\Data\\IB\\"
+path.dat<-"C:\\wia_desktop\\2019\\Projekte\\IB\\daily_pick\\Data\\IB\\"
 
 data_load_obj<-data_load_gzd_trading_func(data_from_IB,hour_of_day,reload_sp500,path.dat)
 
@@ -45,9 +51,6 @@ anf_plot<-"2000-10-01/"
 
 
 
-#-----------------------------------------------------------------------------------------------
-source("plot_func.r")
-source("mdfa_reg_trade_func.r")
 #-------------------------------------------------
 # Example 1
 # This example illustrates replication of original (unconstrained) MSE by MDFA_reg (regularization wrapper)
@@ -384,7 +387,7 @@ for (i in 1:(ncol(data)-1))
 #   In case of doubt: larger might be marginally better (freezing unnecessary degrees of freedom)
 #   We might select lambda_cross>0, too, but the coefficients look just fine 'as is'
 #------------
-# Example 5.3: as above with additional cross-sectional
+# Example 5.3: as above with additional smoothness
 
 lambda_decay<-c(0.3,0.99)
 # Cross and smooth are set to large values
@@ -419,7 +422,9 @@ for (i in 1:(ncol(data)-1))
 # Trading with the above designs
 #  Performance with strong smoothness (example 5.3) marginally (random) worse than without smoothness (example 5.2)
 
+# Specify data for filtering: all explanatory series
 data_filter<-data[,2:ncol(data)]
+# Lag for trade execution (must be >= 1)
 lag_fx<-1
 
 # Customization: 
