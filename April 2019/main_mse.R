@@ -1,19 +1,14 @@
 # Todos
-#   -Amplitude, shift, coeff, spectrum, target
-#   -Explain I-MDFA.r: functions available
-#     Here we use MSE function 
 #   -Add/discuss constraints
 
 
-
-# Purpose of tutorial
-# -Provide short overview of main functions in MDFA-package
-# -Illustrate DFA (univariate), MDFA (multivariate) MSE (no customization) unconstrained (no regularization)
+# Purpose of tutorial: illustrate DFA (univariate), MDFA (multivariate) MSE (no customization) unconstrained (no regularization)
 #   -Customization and regularization will be tackled in separate tutorials
-# -Play with (M)DFa
-#   -Illustrate explain target, spectrum, amplitude, time-shift, filter coefficients
-#   -Illustrate overfitting: univariate and multivariate
-# -Introduce/discuss potentially useful filter constraints
+# 1. Provide short overview of main functions in MDFA-package
+# 2. Play with (M)DFa
+#     -Illustrate explain target, spectrum, amplitude, time-shift, filter coefficients
+#     -Illustrate overfitting: univariate and multivariate
+# 3. Introduce/discuss potentially useful filter constraints
 
 # Disclaimer/caveat: applications to (currency-)trading are intended for illustrative purposes only 
 #   -Filter designs are deliberately 'suboptimal'
@@ -53,9 +48,10 @@ source("Common functions/data_load_functions.R")
 
 data_from_IB<-T
 hour_of_day<-"16:00"
+# Select most liquid pairs: all 6 pairs with USD, EUR, GBP and JPY
 i_series_vec<-c(1,2,3,6,7,8)
 reload_sp500<-F
-path.dat<-"C:\\wia_desktop\\2019\\Projekte\\IB\\daily_pick\\Data\\IB\\"
+path.dat<-paste(getwd(),"/",sep="")
 
 data_load_obj<-data_load_gzd_trading_func(data_from_IB,hour_of_day,reload_sp500,path.dat)
 

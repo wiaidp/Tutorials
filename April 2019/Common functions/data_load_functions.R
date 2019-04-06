@@ -95,7 +95,7 @@ data_load_gzd_trading_func<-function(data_from_IB,hour_of_day,reload_sp500,path.
     save(mydata,file=paste(path.dat,"sp500.Rdata",sep=""))
   } else
   {
-    load(file=paste(path.dat,"sp500.Rdata",sep=""))
+#    load(file=paste(path.dat,"sp500.Rdata",sep=""))
   }
   return(list(mydata=mydata,xts_data_mat=xts_data_mat))
 }

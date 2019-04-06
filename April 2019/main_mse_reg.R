@@ -1,10 +1,21 @@
 # Todos
-#   -Add a model-based example
 #   -Show that reg replicates MSE when all lambdas are zero
 #   -Amplitude, shift, coeff, spectrum, target
 
 
-# Here we use MDFA_reg-function
+# Purpose of tutorial: tackle overfitting by imposing shrinkage of the parameter space towards 'universally' meaningful subspace
+#   -Customization will be tackled in separate tutorials
+# 1. Show that extendend function replicates previous unconstrained MSE design(s)
+# 2. Introduce regularization troika: effect on filter coefficients (universally meaningful shrinkage)
+#     -Illustrate decay
+#     -Illustrate smoothness
+#     -Illustrate cross
+# 3. Compare unconstrained and constrained designs
+# 4. Apply to (currency-) trading
+# 5. Reconcile hard-constraints and flexible regularization (add potentially useful filter constraints)
+
+# Disclaimer/caveat: applications to (currency-)trading are intended for illustrative purposes only 
+#   -Filter designs are deliberately 'suboptimal'
 
 
 rm(list=ls())
@@ -33,7 +44,7 @@ data_from_IB<-T
 hour_of_day<-"16:00"
 i_series_vec<-c(1,2,3,6,7,8)
 reload_sp500<-F
-path.dat<-"C:\\wia_desktop\\2019\\Projekte\\IB\\daily_pick\\Data\\IB\\"
+path.dat<-paste(getwd(),"/",sep="")
 
 data_load_obj<-data_load_gzd_trading_func(data_from_IB,hour_of_day,reload_sp500,path.dat)
 
