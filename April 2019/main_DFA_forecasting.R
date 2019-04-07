@@ -1,13 +1,7 @@
-# Purpose of tutorial: illustrate DFA (univariate), MDFA (multivariate) MSE (no customization) unconstrained (no regularization)
-#   -Customization and regularization will be tackled in separate tutorials
-# 1. Provide short overview of main functions in MDFA-package
-# 2. Play with (M)DFa
-#     -Illustrate explain target, spectrum, amplitude, time-shift, filter coefficients
-#     -Illustrate overfitting: univariate and multivariate
-# 3. Introduce/discuss potentially useful filter constraints
-
-# Disclaimer/caveat: applications to (currency-)trading are intended for illustrative purposes only 
-#   -Filter designs are deliberately 'suboptimal'
+# Purpose of tutorial: 
+# DFA can replicate classic (MSE) one- and multi-step ahead forecasting by 
+#   -specifying a corresponding target (allpass) and forecast horizon (Lag) 
+#   -specifying a corresponding spectral estimate
 
 
 rm(list=ls())
@@ -39,14 +33,13 @@ source("Common functions/arma_spectrum.r")
 
 
 #-------------------------------------------------------------------------------------------------
-# Example 1: Play with target of DFA
+# Example 1: one-step ahead forecasting
 #   DFA requires the user to supply a 'target' and a 'spectrum'; DFA then returns an optimal estimate 
 #     -Optimality: Mean-square error (MSE) or beyond MSE (ATS-trilemma)
-# In this example: illustration of target
-#   This is more general than state-of-the-art forecast approaches
-# Design:
-#   MSE
-#   Univariate
+# In this example: we illustrate how to set-up one-step ahead forecasting in DFA
+# General design decisions:
+#   MSE (mean-square error criterion)
+#   Univariate design
 #   White noise spectrum
 
 # DFA is specified in the frequency-domain, see McElroy/Wildi
@@ -70,11 +63,9 @@ axis(1,at=c(0,1:6*K/6+1),labels=c("0","pi/6","2pi/6","3pi/6",
 axis(2)
 box()
 
-#-------------------
-# Example 1.1: classic one step ahead forecasting (replicates SOTA ARMA-models)
 # Target forecasting: 
-#   -We are interested in all frequencies equally
-#   -Target Gamma is a forward-looking allpass filter in the frequency-domain
+#   -When forecastin a series we are interested in all frequencies equally
+#   -Target (Gamma) is a forward-looking allpass filter in the frequency-domain
 Gamma<-rep(1,K+1)
 plot(Gamma,type="l",main=paste("Allpass forecast target, denseness=",K,sep=""),
      axes=F,xlab="Frequency",ylab="Amplitude",col="black")
@@ -130,19 +121,14 @@ plot_estimate_func(mdfa_obj,weight_func,Gamma)
 
 
 #-----------------------------------
-# Example 1.2: classic one- and multi-step ahead forecasting ARMA-process (replicates SOTA ARMA-models)
+# Example 2: classic one- and multi-step ahead forecasting ARMA-process (replicates SOTA ARMA-models)
+
+# Frequency grid
+K<-600
 # Target forecasting: 
 #   -We are interested in all frequencies equally
 #   -Target Gamma is a forward-looking allpass filter in the frequency-domain
 Gamma<-rep(1,K+1)
-plot(Gamma,type="l",main=paste("Allpass forecast target, denseness=",K,sep=""),
-     axes=F,xlab="Frequency",ylab="Amplitude",col="black")
-# We take 2-nd colname from weight_func because the first column is the target        
-mtext("Target",line=-1,col="black")
-axis(1,at=c(0,1:6*K/6+1),labels=c("0","pi/6","2pi/6","3pi/6",
-                                  "4pi/6","5pi/6","pi"))
-axis(2)
-box()
 
 # Spectrum ARMA: try various processes
 a1<-0.9
@@ -159,8 +145,11 @@ spec<-arma_spectrum_func(a1,b1,K,plot_T)$arma_spec
 weight_func<-cbind(spec,spec)
 colnames(weight_func)<-c("target","explanatory")
 
-# One step ahead: Lag=-1
-Lag<-5
+# Specify Lag
+#   1. k-step ahead forecasting: Lag<--k (negative integer or negative real number: in the latter case one forecasts between two consecutive future time points)
+#   2. Nowcast: Lag<-0
+#   3. Backcast: Lag<-k (positive integer or positive real: in the latter case one interpolates between two consecutive past time points)
+Lag<--4
 # Filter length: number of weights/coefficients of forecast filter
 L<-10
 
@@ -179,7 +168,7 @@ plot_estimate_func(mdfa_obj,weight_func,Gamma)
 
 
 # Comments
-# 1. Forecasting: Lag<0
+# 1. Forecasting: Lag<0 integer-valued
 #   -For an AR(1)-process and Lag=-1 (one-step ahead) the optimal forecast filter has weights (a1,0,0,...,0)
 #   -For an AR(1)-process and Lag=-2 (two-steps ahead) the optimal forecast filter has weights (a1^2,0,0,...,0)
 #   -For an AR(1)-process and Lag=-k (k-steps ahead) the optimal forecast filter has weights (a1^k,0,0,...,0)
@@ -199,9 +188,12 @@ plot_estimate_func(mdfa_obj,weight_func,Gamma)
 #   -For any process the optimal filter has weight 1 at 'lag' specified by Lag and otherwise 0
 #   -This is a trivial estimation problem because our target is an allpass: for lowpass/bandpass/highpass the estimation problem is nomore trivial
 
+# 4. For real-valued Lag the filter interpolates the data between consecutive (future or past) time-points
+
+
 
 #-----------------------------------
-# Example 1.3: compare DFA with classic arima R-code
+# Example 3: compare DFA with classic arima R-code
 
 # Specify forecast horizon
 
@@ -263,7 +255,7 @@ for (i in 1:h)#i<-2
 #   For large K the difference vanishes
 forecast_comparison<-cbind(c(rep(NA,21),arima_pred),c(rep(NA,21),dfa_forecast),c(x[(len-20):len],rep(NA,h)))
 ts.plot(forecast_comparison[,1],ylim=c(min(forecast_comparison,na.rm=T),max(forecast_comparison,na.rm=T)),main="Data (black); classic ARIMA forecast (red) and DFA (green)",col="red")
-lines(forecast_comparison[,2],col="green")
+lines(forecast_comparison[,2],col="green",lty=2)
 lines(c(x[(len-20):len],rep(NA,h)),col="black")
 abline(v=21)
 
