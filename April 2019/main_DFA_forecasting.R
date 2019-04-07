@@ -197,13 +197,13 @@ plot_estimate_func(mdfa_obj,weight_func,Gamma)
 
 # Specify forecast horizon
 
-h<-10
+h<-5
 
 # Data: simulate ARMA (select any coefficients)
 
 a1<-0.6
 b1<-0.7
-set.seed(1)
+set.seed(0)
 x<-arima.sim(n=len,list(ar=a1,ma=b1))
 
 # Estimate model-parameters by relying on classic arima-function
@@ -258,6 +258,55 @@ ts.plot(forecast_comparison[,1],ylim=c(min(forecast_comparison,na.rm=T),max(fore
 lines(forecast_comparison[,2],col="green",lty=2)
 lines(c(x[(len-20):len],rep(NA,h)),col="black")
 abline(v=21)
+
+
+
+#-----------------------------------
+# Example 4: use dft instead of model-based spectrum 
+
+
+# Use dft
+weight_func<-cbind(per(x,T)$DFT,per(x,T)$DFT)
+colnames(weight_func)<-c("target","explanatory")
+
+
+K<-nrow(weight_func)-1
+# Target forecasting: 
+#   -We are interested in all frequencies equally
+#   -Target Gamma is a forward-looking allpass filter in the frequency-domain
+Gamma<-rep(1,K+1)
+
+
+# Filter length: number of weights/coefficients of forecast filter
+L<-10
+
+
+# Compute one to h-steps ahead forecasts
+dfa_forecast<-rep(NA,h)
+for (i in 1:h)#i<-2
+{
+  Lag<--i
+  # Estimation based on MDFA-MSE wrapper
+  mdfa_obj<-MDFA_mse(L,weight_func,Lag,Gamma)$mdfa_obj 
+  
+  b<-mdfa_obj$b
+  # Filter data (apply forecast filter)
+  dfa_forecast[i]<-t(b)%*%x[length(x):(length(x)-L+1)]
+  
+}
+
+par(mfrow=c(1,1))
+# Compare DFA with above predict: both forecasts are virtually indistinguishable
+#   For large K the difference vanishes
+forecast_comparison<-cbind(c(rep(NA,21),arima_pred),c(rep(NA,21),dfa_forecast),c(x[(len-20):len],rep(NA,h)))
+ts.plot(forecast_comparison[,1],ylim=c(min(forecast_comparison,na.rm=T),max(forecast_comparison,na.rm=T)),main="Data (black); classic ARIMA forecast (red) and DFA (green)",col="red")
+lines(forecast_comparison[,2],col="green",lty=2)
+lines(c(x[(len-20):len],rep(NA,h)),col="black")
+abline(v=21)
+
+# Comment
+#   -Forecasts of 'non-parametric' DFA are close to (but visually different than) model-based forecasts
+#   -Overfitting for large L
 
 
 
