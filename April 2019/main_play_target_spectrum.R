@@ -1,13 +1,10 @@
+# In previous tutorial (DFA and forecasting) we emphasized a particular target: Gamma was an allpass filter
+# Here we propose generic targets, including lowpass, bandpass, highpass, Hodrick-Prescott, arbitrary,....
+
 # Purpose of tutorial: illustrate DFA (univariate), MDFA (multivariate) MSE (no customization) unconstrained (no regularization)
 #   -Customization and regularization will be tackled in separate tutorials
-# 1. Provide short overview of main functions in MDFA-package
-# 2. Play with (M)DFa
+# 1. Play with target and/or spectrum
 #     -Illustrate explain target, spectrum, amplitude, time-shift, filter coefficients
-#     -Illustrate overfitting: univariate and multivariate
-# 3. Introduce/discuss potentially useful filter constraints
-
-# Disclaimer/caveat: applications to (currency-)trading are intended for illustrative purposes only 
-#   -Filter designs are deliberately 'suboptimal'
 
 
 rm(list=ls())
