@@ -238,6 +238,7 @@ L<-10
 
 
 # Compute one to h-steps ahead forecasts
+#   Note that h-step ahead forecasts are effective multi-step ahead filters (not iterated one-step)
 dfa_forecast<-rep(NA,h)
 for (i in 1:h)#i<-2
 {
@@ -278,6 +279,8 @@ Gamma<-rep(1,K+1)
 
 
 # Filter length: number of weights/coefficients of forecast filter
+#   -The memory of most economic data is short: thus large L is not meaningful in most cases
+#   -Examples: price series are close to random-walks, log-returns are close to noise
 L<-10
 
 
@@ -305,9 +308,9 @@ lines(c(x[(len-20):len],rep(NA,h)),col="black")
 abline(v=21)
 
 # Comment
-#   -Forecasts of 'non-parametric' DFA are close to (but visually different than) model-based forecasts
-#   -Overfitting for large L
-
+#   -Forecasts of 'non-parametric' DFA are close to (but visually slightly different than) model-based forecasts
+#   -Overfitting (in particular for large L)
+#   -Overfitting will be addressed in a later tutorial about regularization
 
 
 #-------------------------------------------------------------------------
