@@ -44,8 +44,7 @@ source("Common functions/data_load_functions.R")
 
 
 #-----------------------------------------------------------------------------------------------
-# Data: FX and SP500 (the latter has a marked trend)
-
+# Data: FX 
 data_from_IB<-T
 hour_of_day<-"16:00"
 # Select most liquid pairs: all 6 pairs with USD, EUR, GBP and JPY
@@ -64,7 +63,6 @@ colnames(log_FX_mat)
 
 plot_T<-T
 anf_plot<-"2000-10-01/"
-# Select data: FX or SP500
 #---------------------------------------------
 # Example 0: Play with DFA
 #   MSE
