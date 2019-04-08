@@ -2,6 +2,8 @@
 # DFA can replicate classic (MSE) one- and multi-step ahead forecasting by 
 #   -specifying a corresponding target (allpass) and forecast horizon (Lag) 
 #   -specifying a corresponding spectral estimate
+# We illustrate, in particular, how classic ARIMA-based forecasting can be replicated. 
+#   Once rooted into well-known territory, we can deploy the additional flexibility of DFA in the following tutorials 
 
 
 rm(list=ls())
@@ -15,7 +17,7 @@ library(devtools)
 library(MDFA)
 
 
-# Briev overview of wrappers and main function
+# Brief overview of wrappers and main MDFA function
 head(MDFA_mse)
 head(MDFA_mse_constraint)
 head(MDFA_cust)
@@ -88,6 +90,8 @@ mdfa_obj<-MDFA_mse(L,weight_func,Lag,Gamma)$mdfa_obj
 #   -Our MSE-solution is close to (but not identical to) zero
 #     -This is because the filter-grid is of finite resolution (K=600 above)
 #     -Selecting a larger K will shrink estimates towards zero (but computation time increases accordingly)
+#   -For any finite K we thus observe some overfitting
+#     -As illustrated below the problem is negligible in the context of this tutorial
 par(mfrow=c(1,1))
 b<-mdfa_obj$b
 colo<-rainbow(ncol(b))
@@ -115,9 +119,9 @@ box()
 plot_estimate_func(mdfa_obj,weight_func,Gamma)
 
 # Comments
-#   -The amplitude function of the MSE-filter is close to zero, as desired 
+#   -The amplitude function of the MSE-filter is close to zero, as desired (ideally, it would equate to zero)
 #   -It is not exactly zero because K is finite
-#   -For K/L>10 mismatch is negligible by all practical means 
+#   -For K/L>10 mismatch is generally negligible  
 
 
 #-----------------------------------
@@ -172,16 +176,16 @@ plot_estimate_func(mdfa_obj,weight_func,Gamma)
 #   -For an AR(1)-process and Lag=-1 (one-step ahead) the optimal forecast filter has weights (a1,0,0,...,0)
 #   -For an AR(1)-process and Lag=-2 (two-steps ahead) the optimal forecast filter has weights (a1^2,0,0,...,0)
 #   -For an AR(1)-process and Lag=-k (k-steps ahead) the optimal forecast filter has weights (a1^k,0,0,...,0)
-#   -Our solution gets aribtrarily close for increasing K (denser grid)
-#   -For K/L>10, mismatch is negligible by all practical means 
+#   -Our solution gets arbitrarily close for increasing K (denser grid)
+#   -For K/L>10, mismatch is negligible  
 
 #   -For an MA(1)-process and Lag=-1 (one-step ahead) the optimal forecast filter has weights (b1,-(b1^2),b1^3,-(b1^4),...)
 #   -For an MA(1)-process and Lag=-2 (two-steps ahead) the optimal forecast filter has weights 0
 #   -Our solution gets aribtrarily close for increasing K (denser grid)
-#   -For K/L>10 mismatch is negligible by all practical means 
+#   -For K/L>10 mismatch is negligible 
 
 # 2. Nowcasting: Lag=0
-#   -For any process the optimal filter has weights 1,0,0,....
+#   -For any ARMA-process the optimal filter has weights 1,0,0,....
 #   -This is a trivial estimation problem because our target is an allpass: for lowpass/bandpass/highpass the estimation problem is nomore trivial
 
 # 3. Backcasting: Lag>0
@@ -234,11 +238,15 @@ weight_func<-cbind(spec,spec)
 colnames(weight_func)<-c("target","explanatory")
 
 # Filter length: number of weights/coefficients of forecast filter
+#   Typical economic data (close to random-walk or noise (after differencing)) has 'short' memory
+#   Filter-length 10 is suitable for many applications 
+#     Exception: seasonal data may require L to go back to yearly lags of the data
 L<-10
 
 
 # Compute one to h-steps ahead forecasts
-#   Note that h-step ahead forecasts are effective multi-step ahead filters (not iterated one-step)
+#   Note that h-step ahead forecasts are 'direct': effective multi-step ahead filters (not iterated one-step rules)
+#   This can make a difference when using non-ARMA-based spectra
 dfa_forecast<-rep(NA,h)
 for (i in 1:h)#i<-2
 {
@@ -312,10 +320,64 @@ abline(v=21)
 #   -Overfitting (in particular for large L)
 #   -Overfitting will be addressed in a later tutorial about regularization
 
+#-----------------------------------------------------------
+# Example 5: we compare the classic model based forecast to the DFA when using the non-parametric dft as spectral estimate
+#   Specifically we compute out-of-sample forecasts and compare both approaches
+# Note that 
+#   1. DFA based on non-parametric dft does not assume any 'a priori' knowledge  
+#   2. This framework favors the arma-based approach (because we assume knowledge of the true data-generating process for the arma-forecast)
+
+# Example 5.1
+a1<-0.6
+b1<-0.7
+# Example 5.2
+a1<-0.6
+b1<-0.7
+# Add any other processes
+set.seed(0)
+len<-300
+mse_arma<-mse_dfa<-NULL
+# Number of simulations
+anzsim<-100
+
+for (i in 1:88)
+{
+
+  x<-arima.sim(n=len,list(ar=a1,ma=b1))
+# Use in-sample span for model-estimation and for dft  
+  x_insample<-x[1:(len-1)]
+  # Estimate model-parameters by relying on classic arima-function
+  arima_obj<-arima(x_insample,order=c(1,0,1),include.mean=F)
+  # Compute forecasts
+  arima_pred<-predict(arima_obj,n.ahead=1)$pred
+# Use in-sample span for dft  
+  weight_func<-cbind(per(x_insample,T)$DFT,per(x_insample,T)$DFT)
+  colnames(weight_func)<-c("target","explanatory")
+  K<-nrow(weight_func)-1
+  Gamma<-rep(1,K+1)
+  L<-10
+  Lag<--1
+  mdfa_obj<-MDFA_mse(L,weight_func,Lag,Gamma)$mdfa_obj 
+  b<-mdfa_obj$b
+  ts.plot(b)
+  dfa_forecast<-t(b)%*%x_insample[length(x_insample):(length(x_insample)-L+1)]
+  
+# Mean-square out-of-sample forecast errors  
+  mse_arma<-c(mse_arma,(x[length(x)]-arima_pred)^2)
+  mse_dfa<-c(mse_dfa,(x[length(x)]-dfa_forecast)^2)
+}
+
+# Compute the ratio of mean-square forecast errors:
+#   Smaller than one: arma wins
+#   Larger than 1: arma looses
+mean(mse_arma)/mean(mse_dfa)
+
+
+
 
 #-------------------------------------------------------------------------
 # Wrap-up: what did we learn
 # DFA can replicate classic (MSE) one- and multi-step ahead forecasting by 
 #   -specifying a corresponding target (allpass) and forecast horizon (Lag) 
 #   -specifying a corresponding spectral estimate
- 
+
