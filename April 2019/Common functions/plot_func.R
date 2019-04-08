@@ -1,43 +1,3 @@
-# Plots performances as a function of weekday
-# series.xts<-perf_ss[start_date]
-# name<-NULL
-plot_weekday_func<-function(series.xts,name)
-{
-  mplot_diff<-diff(as.xts(series.xts))
-  weekday<-c("Monday","Tuesday","Wednesday","Thursday","Friday")
-  j<-0
-  for (i in 1:5)#i<-4
-  {
-    new_mplot_diff<-mplot_diff[.indexwday(mplot_diff) %in% i]
-    colo<-"blue"
-    if (length(new_mplot_diff)>2)
-    {
-      j<-j+1
-      mplot<-cumsum(na.exclude(new_mplot_diff))
-      ax<-rownames(mplot)
-      sharpe_vec<-sqrt(252/4)*apply(apply(mplot,2,diff),2,mean)/sqrt(apply(apply(mplot,2,diff),2,var))
-      plot_title<-paste(name,": day ",i,", sharpe: ",round(sharpe_vec,2),sep="")
-      plot(x = mplot[,1], xlab = "Time", 
-           main = plot_title,  major.ticks= "quarters",major.format="%Y-%b-%d ",
-           minor.ticks = F, col = colo[1])
-      if (j>1)
-      {
-        boxplot_mat<-rbind(boxplot_mat,cbind(new_mplot_diff,i))
-      } else
-      {
-        boxplot_mat<-cbind(new_mplot_diff,i)
-      }
-      acf(na.exclude(new_mplot_diff),demean=F)
-      
-    } else
-    {
-      print(paste("No data for day ",i,sep=""))
-    }
-  }
-  colnames(boxplot_mat)<-c("perf","day")
-  boxplot(perf ~ day, data = boxplot_mat, col = "lightgray")
-  
-}
 
 
 
@@ -109,7 +69,7 @@ plot_estimate_func<-function(mdfa_obj,weight_func,Gamma)
       
     }
   }
-  axis(1,at=1:L,labels=1:L)
+  axis(1,at=1:L,labels=0:(L-1))
   axis(2)
   box()    
   

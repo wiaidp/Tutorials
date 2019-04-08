@@ -149,7 +149,7 @@ colnames(weight_func)<-c("target","explanatory")
 #   1. k-step ahead forecasting: Lag<--k (negative integer or negative real number: in the latter case one forecasts between two consecutive future time points)
 #   2. Nowcast: Lag<-0
 #   3. Backcast: Lag<-k (positive integer or positive real: in the latter case one interpolates between two consecutive past time points)
-Lag<--4
+Lag<--1
 # Filter length: number of weights/coefficients of forecast filter
 L<-10
 
@@ -263,7 +263,7 @@ abline(v=21)
 
 
 #-----------------------------------
-# Example 4: use dft instead of model-based spectrum 
+# Example 4: use non-parametric spectrum (discrete fourier transform: dft) instead of model-based spectrum 
 
 
 # Use dft
