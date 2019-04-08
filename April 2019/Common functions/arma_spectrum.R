@@ -1,9 +1,10 @@
-
+# a1<-ar_burg
+#b1<-ma_burg
 
 arma_spectrum_func<-function(a1,b1,K,plot_T)
 {
   arma_spec<-rep(1,K+1)
-  for (j in 0:K)
+  for (j in 0:K)#j<-0
   {
 # Frequency    
     omega_j<-j*pi/K

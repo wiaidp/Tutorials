@@ -4,9 +4,11 @@
 #   -specifying a corresponding spectral estimate
 # We illustrate, in particular, how classic ARIMA-based forecasting can be replicated in the DFA framework. 
 #   Once rooted into well-known territory, we can deploy the additional flexibility of DFA in the following tutorials 
-# At the end we also illustrate pertinence of a non-parametric DFA approach based on the discrete fourier transform (dft)
-#   We show that performances of the latter are nearly as good as the universally best approach (which assumes knowledge of the true data-generating process)
-#   This result suggests pertinence of the non-parametric DFA approach in a wide range of applications and in particular when models are likely to be misspecified (which is always the case for real-world data)
+# At the end we also illustrate pertinence of a non-parametric DFA approach based on the discrete fourier transform (dft) as well as Burg's max-entropy spectral estimate
+#   We show that 
+#     1. Out-of-sample forecast performances of DFA based on dft are nearly as good as the universally best approach (which assumes knowledge of the true data-generating process)
+#     2. Performances of DFA based on dft and of DFA based on max-entropy spectrum are indistinguishable  
+#   These results suggest pertinence of the non-parametric DFA approach in a wide range of applications and in particular when models are likely to be misspecified (which is always the case for real-world data)
 
 rm(list=ls())
 
@@ -338,7 +340,7 @@ b1<-0.7
 # Example 5.2: ARMA with positive acf
 a1<-0.6
 b1<-0.7
-# Example 3: AR with negative acf
+# Example 5.3: AR with negative acf
 a1<--0.9
 b1<-0
 # Add any other processes...
@@ -362,7 +364,7 @@ for (i in 1:anzsim)
   # Compute forecasts
   arima_true_pred<-predict(arima_true_obj,n.ahead=1)$pred
 # Use in-sample span for dft  
-  weight_func<-cbind(per(x_insample,T)$DFT,per(x_insample,T)$DFT)
+  weight_func<-cbind(per(x_insample,F)$DFT,per(x_insample,F)$DFT)
   colnames(weight_func)<-c("target","explanatory")
   K<-nrow(weight_func)-1
 # Allpass target  
@@ -386,9 +388,98 @@ for (i in 1:anzsim)
 #   The ratio cannot be larger than 1 asymptotically because our particular design distinguishes arma as the universally best possible design
 # Results: 
 #   -for L=10, the ratio is typically 97% or larger: in the mean the non-parametric DFA performs as well (by all practical means) as the best possible forecast approach
-#   -for L=100 (massive overfitting) the ratio drops to about 80% (similar to fitting an AR(100)-model)
+#     Note that L=10 is fine when forecasting most 'typical' economic data (at least when data is seasonally adjusted)
+#   -for L=100 the ratio drops to about 80% 
+#     Quantification of (massive) overfitting: similar to fitting an AR(100)-model to the data (Burg max-entropy spectral estimate)
 sqrt(mean(mse_true_arma)/mean(mse_dfa))
 
+
+
+#-----------------------------------------------------------
+# Example 6: we compare two spectral estimates in DFA
+#   1. non-parametric (dft) and 
+#   2. Burg's max-entropy (AR-) spectral estimate
+#     The idea is that we do not need to identify a model for the data
+#     Instead we just fit an AR(p)-model where p is 'sufficiently large' (in the code below we set p=L)
+#     Based on the AR(p) model we can derive a (AR-based) spectrum which is used for DFA (instead of dft)
+
+
+# Example 6.1: MA(1)
+a1<-0.
+b1<-0.7
+# Example 6.2: ARMA with positive acf
+a1<-0.6
+b1<-0.7
+# Example 6.3: AR with negative acf
+a1<--0.9
+b1<-0
+# Add any other processes...
+# We generate anzsim realizations of length len of the arma-process
+set.seed(1)
+len<-300
+mse_burg<-mse_dfa<-NULL
+# Number of simulations
+anzsim<-500
+
+pb <- txtProgressBar(min = 1, max = anzsim, style = 3)
+# Loop through all simulations and collect out-of-sample forecast performances
+for (i in 1:anzsim)
+{
+  
+  x<-arima.sim(n=len,list(ar=a1,ma=b1))
+  # Use in-sample span for model-estimation and for dft  
+  x_insample<-x[1:(len-1)]
+  # Use in-sample span for dft  
+  weight_func<-cbind(per(x_insample,F)$DFT,per(x_insample,F)$DFT)
+  colnames(weight_func)<-c("target","explanatory")
+  K<-nrow(weight_func)-1
+  # Allpass target  
+  Gamma<-rep(1,K+1)
+  # Default filter length for forecasting
+  L<-10
+  # One-step ahead
+  Lag<--1
+  # Compute MSE-filter
+  mdfa_obj<-MDFA_mse(L,weight_func,Lag,Gamma)$mdfa_obj 
+  b<-mdfa_obj$b
+  # Compute out-of-sample forecast  
+  dfa_forecast<-t(b)%*%x_insample[length(x_insample):(length(x_insample)-L+1)]
+# Burg max-entropy spectrum
+#   We fit an AR(L)-model to the data and derive the spectrum from this AR(L)-model
+# Fit  
+  arima_burg_obj<-arima(x_insample,order=c(L,0,0),include.mean=F)
+  ar_burg<-arima_burg_obj$coef
+  ma_burg<-NULL
+# Note that we can set K_burg to any (positive) value since we use a model-based (AR(L)-) spectrum  
+  K_burg<-600
+  plot_T<-F
+# Derive spectrum from AR(L) model
+  weight_func_burg<-arma_spectrum_func(ar_burg,ma_burg,K_burg,plot_T)$arma_spec
+  weight_func_burg<-cbind(weight_func_burg,weight_func_burg)
+  colnames(weight_func_burg)<-c("target","explanatory")
+  # Allpass target  
+  Gamma_burg<-rep(1,K_burg+1)
+  # Default filter length for forecasting
+  L<-100
+  # One-step ahead
+  Lag<--1
+  # Compute MSE-filter
+  mdfa_burg_obj<-MDFA_mse(L,weight_func_burg,Lag,Gamma_burg)$mdfa_obj 
+  b_burg<-mdfa_burg_obj$b
+  # Compute out-of-sample forecast  
+  dfa_burg_forecast<-t(b_burg)%*%x_insample[length(x_insample):(length(x_insample)-L+1)]
+  # Mean-square out-of-sample forecast errors  
+  mse_burg<-c(mse_burg,(x[length(x)]-dfa_burg_forecast)^2)
+  mse_dfa<-c(mse_dfa,(x[length(x)]-dfa_forecast)^2)
+  setTxtProgressBar(pb, i)
+}
+
+# Compute the ratio of root mean-square forecast errors:
+#   The ratio cannot be larger than 1 asymptotically because our particular design distinguishes arma as the universally best possible design
+# Results: 
+#   -for L=10 the ratio is virtually 1 i.e. performances of both approaches are indistinguishable 
+#   -we conclude that dft (as a spectral estimate in DFA) is as good as maximum entropy spectral estimate
+sqrt(mean(mse_burg)/mean(mse_dfa))
 
 
 
