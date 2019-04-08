@@ -374,7 +374,7 @@ plot_compare_two_DFA_designs(mdfa_obj_mse,mdfa_obj_ar1_mse,weight_func_noise,wei
 weight_func_tweaked<-weight_func_ar1
 weight_func_tweaked[nrow(weight_func_tweaked)/2,]<-100
 
-# White noise: flat spectrum (all frequencies are loaded equally by the process)
+# AR(1) spectrum with a huge spike at pi/2
 plot(abs(weight_func_tweaked[,1]),type="l",main=paste("Tweaked ar(1)-spectrum, denseness=",K,sep=""),
      axes=F,xlab="Frequency",ylab="Amplitude",col="black")
 # We take 2-nd colname from weight_func because the first column is the target        
@@ -424,12 +424,11 @@ plot_compare_two_DFA_designs(mdfa_obj_tweaked_mse,mdfa_obj_ar1_mse,weight_func_t
 # Example 8: same as example 6 (AR(1) but with altered (tweaked) spectrum
 
 
-# Let's modify the spectrum at frequency zero
-
+# Let's modify the spectrum at a (arbitrary) low frequency
 weight_func_tweaked<-weight_func_ar1
 weight_func_tweaked[10,]<-100
 
-# White noise: flat spectrum (all frequencies are loaded equally by the process)
+# AR(1) spectrum with a huge spike at pi*(10-1)/600
 plot(abs(weight_func_tweaked[,1]),type="l",main=paste("Tweaked ar(1)-spectrum, denseness=",K,sep=""),
      axes=F,xlab="Frequency",ylab="Amplitude",col="black")
 # We take 2-nd colname from weight_func because the first column is the target        
@@ -483,11 +482,105 @@ plot_estimate_func(mdfa_obj_tweaked_mse,weight_func_tweaked,Gamma)
 #   Control noise-leakage (reliability of signals)
 #   Control time-shift (faster trading execution)
 
+#---------------------------------------------------------------------------------------
+# Example 9: same as previous example 8 (AR(1) with altered/tweaked) spectrum but smaller L
+# Purpose: introduction to overfitting
+
+
+# Same tweaked AR(1) spectrum as in exercise 8
+weight_func_tweaked<-weight_func_ar1
+weight_func_tweaked[10,]<-100
+
+# AR(1) spectrum with a huge spike at pi*(10-1)/600
+plot(abs(weight_func_tweaked[,1]),type="l",main=paste("Tweaked ar(1)-spectrum, denseness=",K,sep=""),
+     axes=F,xlab="Frequency",ylab="Amplitude",col="black")
+# We take 2-nd colname from weight_func because the first column is the target        
+axis(1,at=c(0,1:6*K/6+1),labels=c("0","pi/6","2pi/6","3pi/6",
+                                  "4pi/6","5pi/6","pi"))
+axis(2)
+box()
+
+# Comments
+#   1. In the previous exercise we observed that the amplitude and the time-shift functions adapted to
+#     nearly perfect fits of the target at the spike-frequency
+#   2. In most real-world applications this 'perfect fit' would be termed as overfitting
+#   3. We could overfit the target (as weighted by the spectrum) because our filter was sufficiently flexible (large L)
+#   4. What happens if we restrict the flexibility (degrees of freedom) by selecting a smaller L (filter length)?
+# Let's do and see
+
+periodicity<-5
+cutoff<-pi/periodicity
+Gamma<-(0:(K))<=K*cutoff/pi+1.e-9
+plot(Gamma,type="l",main=paste("Ideal lowpass, periodicity=",periodicity,", denseness=",K,sep=""),
+     axes=F,xlab="Frequency",ylab="Amplitude",col="black")
+# We take 2-nd colname from weight_func because the first column is the target        
+mtext("Target",line=-1,col="black")
+axis(1,at=c(0,1:6*K/6+1),labels=c("0","pi/6","2pi/6","3pi/6",
+                                  "4pi/6","5pi/6","pi"))
+axis(2)
+box()
+
+# Nowcast (Lag=0), Backcast (Lag>0) and Forecast (Lag<0)
+Lag<-0
+# Filter length: much smaller than previous exercises
+L<-2*K+1
+
+# Estimation based on MDFA-MSE wrapper
+mdfa_obj_tweaked_mse<-MDFA_mse(L,weight_func_tweaked,Lag,Gamma)$mdfa_obj 
+
+plot_estimate_func(mdfa_obj_tweaked_mse,weight_func_tweaked,Gamma)
+
+
+# Comments: assuming L<-10 has been selected
+#   In contrast to previous exercise 8 the fit of target by amplitude and by shift at spectral spike is 'less perfect'
+#   The smaller L=10 (less degrees of freedom) does not allow the filter to match arbitrary frequencies arbitrary well
+# Additional/alternative experiments
+#   1. What happens for very large L (say L<-600 or L=2*K); what happens if L>2*K
+#     Hint: if L=2*K then the fit is perfect at all frequencies
+#       The amplitude matches the target perfectly (both curves are indistinguishable)
+#       The shift is zero in the passband
+#       This is a very bad example of extreme overfitting!!!!!
+#       For L>2*K the system is singular (the numerical optimization breaks down): there are more parameters available than system-equations
+#   2. For L=10: look what happens when selecting a much larger peak-value: set weight_func_tweaked[10,]<-10000
+#     Hint: the degrees of freedom are modestly-sized so the filter cannot overfit
+#       For increasing (arbitrarily large) peak-values of the spectrum the amplitude and the shift match the target arbitrarily well towards the peak-frequency
+#       This 'perfect fit' at the peak frequency induces an increasing mismatch (of the DFA-MSE) at all other frequencies
+#       The optimization has to make a trade-off i.e. it cannot improve the fit at the peak-frequency without loosing at other frequencies
 
 
 #-------------------------------------------------------------------------
-# Wrap-up: what did we learn
-# DFA can replicate classic (MSE) one- and multi-step ahead forecasting by 
-#   -specifying a corresponding target (allpass) and forecast horizon (Lag) 
-#   -specifying a corresponding spectral estimate
- 
+# Wrap-up: what did we learn? 
+# 1. User-interface:
+#   The user-interface of the MSE-wrapper is made of L,weight_func,Lag,Gamma
+#   -Gamma is a generic target: we learned allpass (classic forecasting), lowpass, bandpass, arbitrary shapes
+#     The user is supposed to provide a target that matches his research interests
+#   -weight_func is the weighting function modulating the fit of the target
+#     weight_func has typically the meaning of a spectrum
+#     one could rely on parametric (model-based) or non-parametric (dft) spectrum estimates
+#     the user can tweak weight_func in order to obtain a filter which outperforms at particular frequencies
+#   -L is the filter length and as such it accounts for the degrees of freedom: 
+#     if L/K is 'small', then overfitting is contained/mitigated
+#     very strong overfitting is obtained for L=2*K: in this case the target is matched perfectly by the DFA-MSE solution at the discrete frequency-ordinates (but the fit is awful at all other frequencies in [0,pi])
+#   -Lag: 
+#     allows for forecasting (Lag<0), nowcasting (Lag=0) or backcasting (Lag>0) of the target  
+#     if Gamma is an allpass, then Lag<0 means ordinary (MSE-) forecasting
+#     if Gamma is an ideal lowpass, then 
+#       -Lag<0 means a forecast of the output of the ideal lowpass (not a forecast of the original series)
+#       -Lag=0 means a nowcast of the output of the ideal lowpass (this is not a trivial estimation problem, quite the contrary)
+#       -Lag>0 means a backcast of the output of the ideal lowpass (typically used when revising historical estimates: in various applications this task is called 'smoothing' in contrast to 'filtering' i.e. nowcasting: Kalman-filter is the nowcast, Kalman-smoother is the backcast)
+# 2. DFA-MSE optimization criterion 
+#   Given L, the MSE-criterion tries to achieve an optimal mix of amplitude and time-shift fitting (of the target) 
+#   The amplitude is related to noise leakage (more 'wrong' signals)
+#   The shift is related to the delay of the real-time filter (relative to the target)
+#   Ideally, the user would prefer to have no leakage and no delay
+#   Unfortunately, both requirements cannot be met simultaneously
+#     In general (though not always: see customization) a stronger noise suppression implies a larger delay (conversely: a smaller delay generally results in greater leakage) 
+#   However, in contrast to classic time series approaches, DFA allows for a customization of the optimization criterion
+#     See trilemma paper McElroy/Wildi
+#     See later tutorial
+# 3. Overfitting is potentially obtained when
+#   1. the spectrum is noisy/spiky and/or
+#   2. the target is noisy/spiky and
+#   3. L is large
+#   If the weighting-function (the spectrum) is noisy and L is large then we need additional 'constraints'
+#     Later tutorial about regularization 
