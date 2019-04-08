@@ -418,8 +418,59 @@ plot_compare_two_DFA_designs(mdfa_obj_tweaked_mse,mdfa_obj_ar1_mse,weight_func_t
 #   This is because 
 #     1. the target is zero at frequency pi (this component will be eliminated by the ideal lowpass)
 #     2. the tweaked spectrum is very large: thus DFA tries to damp that component more effectively (the amplitude approaches zero)
+#  The fit of the time-shift improves similarly, see next example
+#---------------------------------------------------------------------------------------
+# Example 8: same as example 6 (AR(1) but with altered (tweaked) spectrum
 
 
+# Let's modify the spectrum at frequency zero
+
+weight_func_tweaked<-weight_func_ar1
+weight_func_tweaked[10,]<-100
+
+# White noise: flat spectrum (all frequencies are loaded equally by the process)
+plot(abs(weight_func_tweaked[,1]),type="l",main=paste("Tweaked ar(1)-spectrum, denseness=",K,sep=""),
+     axes=F,xlab="Frequency",ylab="Amplitude",col="black")
+# We take 2-nd colname from weight_func because the first column is the target        
+axis(1,at=c(0,1:6*K/6+1),labels=c("0","pi/6","2pi/6","3pi/6",
+                                  "4pi/6","5pi/6","pi"))
+axis(2)
+box()
+
+# Comments
+#   1. We artificially enlarge the spectrum at pi/2
+#   2. We therefore expect the fit of the amplitude function to improve towards pi/2
+# Let's verify this conjecture
+
+periodicity<-5
+cutoff<-pi/periodicity
+Gamma<-(0:(K))<=K*cutoff/pi+1.e-9
+plot(Gamma,type="l",main=paste("Ideal lowpass, periodicity=",periodicity,", denseness=",K,sep=""),
+     axes=F,xlab="Frequency",ylab="Amplitude",col="black")
+# We take 2-nd colname from weight_func because the first column is the target        
+mtext("Target",line=-1,col="black")
+axis(1,at=c(0,1:6*K/6+1),labels=c("0","pi/6","2pi/6","3pi/6",
+                                  "4pi/6","5pi/6","pi"))
+axis(2)
+box()
+
+# Nowcast (Lag=0), Backcast (Lag>0) and Forecast (Lag<0)
+Lag<-0
+# Filter length
+L<-200
+
+# Estimation based on MDFA-MSE wrapper
+mdfa_obj_tweaked_mse<-MDFA_mse(L,weight_func_tweaked,Lag,Gamma)$mdfa_obj 
+
+plot_estimate_func(mdfa_obj_tweaked_mse,weight_func_tweaked,Gamma)
+
+# More generally: the fit of target by amplitude and time-shift functions improves at frequencies more heavily loalded by spectrum
+#   DFA: weighted approximation whereby weight is supplied by spectrum
+# DFA-MSE criterion makes a best possible compromise of time-shift (delay) and of amplitude (noise leakage) fitting
+
+# Customization (see later tutorial)
+#   Control noise-leakage (reliability of signals)
+#   Control time-shift (faster trading execution)
 
 
 

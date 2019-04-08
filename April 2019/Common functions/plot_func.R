@@ -78,6 +78,8 @@ plot_estimate_func<-function(mdfa_obj,weight_func,Gamma)
        axes=F,xlab="Frequency",ylab="Time shift",col="black")
   # We take 2-nd colname from weight_func because the first column is the target        
   mtext(colnames(weight_func)[2],line=-1,col="black")
+  lines(0.5*abs(weight_func[,1])/max(abs(weight_func[,1])),col="red",lwd=3)
+  mtext("Spectrum (red bold)",line=-3,col="red")
   if (ncol(abs(mdfa_obj$trffkt))>1)
   {
     for (i in 2:ncol(abs(mdfa_obj$trffkt)))
