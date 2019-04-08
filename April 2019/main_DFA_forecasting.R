@@ -2,9 +2,11 @@
 # DFA can replicate classic (MSE) one- and multi-step ahead forecasting by 
 #   -specifying a corresponding target (allpass) and forecast horizon (Lag) 
 #   -specifying a corresponding spectral estimate
-# We illustrate, in particular, how classic ARIMA-based forecasting can be replicated. 
+# We illustrate, in particular, how classic ARIMA-based forecasting can be replicated in the DFA framework. 
 #   Once rooted into well-known territory, we can deploy the additional flexibility of DFA in the following tutorials 
-
+# At the end we also illustrate pertinence of a non-parametric DFA approach based on the discrete fourier transform (dft)
+#   We show that performances of the latter are nearly as good as the universally best approach (which assumes knowledge of the true data-generating process)
+#   This result suggests pertinence of the non-parametric DFA approach in a wide range of applications and in particular when models are likely to be misspecified (which is always the case for real-world data)
 
 rm(list=ls())
 
@@ -321,26 +323,35 @@ abline(v=21)
 #   -Overfitting will be addressed in a later tutorial about regularization
 
 #-----------------------------------------------------------
-# Example 5: we compare the classic model based forecast to the DFA when using the non-parametric dft as spectral estimate
-#   Specifically we compute out-of-sample forecasts and compare both approaches
+# Example 5: we compare the non-parametric DFA, relying on the dft, to the best possible forecast approach in an out-of-sample experiment
+#   Specifically, for each realization we compute out-of-sample forecasts of non-parametric DFA and of best approach and take the mean of the squared forecast error
 # Note that 
 #   1. DFA based on non-parametric dft does not assume any 'a priori' knowledge  
-#   2. This framework favors the arma-based approach (because we assume knowledge of the true data-generating process for the arma-forecast)
+#   2. This framework favors the arma-based approach 
+#     -we assume knowledge of the true data-generating process (true model-orders) for the arma-forecast
+#     -clearly, under these conditions, arma is the best possible approach (inherited from maximum likelihood concept)
+#     -So we have a nice benchmark for the non-parametric DFA: if it performs well, then the dft is a meaningful statistic
 
-# Example 5.1
+# Example 5.1: MA(1)
+a1<-0.
+b1<-0.7
+# Example 5.2: ARMA with positive acf
 a1<-0.6
 b1<-0.7
-# Example 5.2
-a1<-0.6
-b1<-0.7
-# Add any other processes
-set.seed(0)
+# Example 3: AR with negative acf
+a1<--0.9
+b1<-0
+# Add any other processes...
+# We generate 500 realizations of length 300 of the arma-process
+set.seed(1)
 len<-300
 mse_arma<-mse_dfa<-NULL
 # Number of simulations
-anzsim<-100
+anzsim<-500
 
-for (i in 1:88)
+pb <- txtProgressBar(min = 1, max = anzsim, style = 3)
+# Loop through all simulations and collect out-of-sample forecast performances
+for (i in 1:anzsim)
 {
 
   x<-arima.sim(n=len,list(ar=a1,ma=b1))
@@ -354,23 +365,27 @@ for (i in 1:88)
   weight_func<-cbind(per(x_insample,T)$DFT,per(x_insample,T)$DFT)
   colnames(weight_func)<-c("target","explanatory")
   K<-nrow(weight_func)-1
+# Allpass target  
   Gamma<-rep(1,K+1)
+# Default filter length for forecasting
   L<-10
+# One-step ahead
   Lag<--1
+# Compute MSE-filter
   mdfa_obj<-MDFA_mse(L,weight_func,Lag,Gamma)$mdfa_obj 
   b<-mdfa_obj$b
-  ts.plot(b)
+# Compute out-of-sample forecast  
   dfa_forecast<-t(b)%*%x_insample[length(x_insample):(length(x_insample)-L+1)]
-  
 # Mean-square out-of-sample forecast errors  
   mse_arma<-c(mse_arma,(x[length(x)]-arima_pred)^2)
   mse_dfa<-c(mse_dfa,(x[length(x)]-dfa_forecast)^2)
+  setTxtProgressBar(pb, i)
 }
 
-# Compute the ratio of mean-square forecast errors:
-#   Smaller than one: arma wins
-#   Larger than 1: arma looses
-mean(mse_arma)/mean(mse_dfa)
+# Compute the ratio of root mean-square forecast errors:
+#   The ratio cannot be larger than 1 asymptotically because our particular design distinguishes arma as the universally best possible design
+#   For the above examples the ratio is 97% or better i.e. in the mean the non-parametric DFA performs as well (by all practical means) as the best possible forecast approach
+sqrt(mean(mse_arma)/mean(mse_dfa))
 
 
 
@@ -380,4 +395,4 @@ mean(mse_arma)/mean(mse_dfa)
 # DFA can replicate classic (MSE) one- and multi-step ahead forecasting by 
 #   -specifying a corresponding target (allpass) and forecast horizon (Lag) 
 #   -specifying a corresponding spectral estimate
-
+# A non-parametric DFA based on the dft performs nearly as well as the true model
