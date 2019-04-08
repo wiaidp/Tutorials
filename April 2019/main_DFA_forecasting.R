@@ -1,3 +1,5 @@
+# This tutorial is made of 6 exercises
+
 # Purpose of tutorial: 
 # DFA can replicate classic (MSE) one- and multi-step ahead forecasting by 
 #   -specifying a corresponding target (allpass) and forecast horizon (Lag) 
@@ -459,12 +461,13 @@ for (i in 1:anzsim)
   colnames(weight_func_burg)<-c("target","explanatory")
   # Allpass target  
   Gamma_burg<-rep(1,K_burg+1)
-  # Default filter length for forecasting
-  L<-100
+  # Filter length for Burg's estimate
+  # In principle this could be larger than for dft (above) because AR-spectrum is smoother (less noisy than dft)
+  L_burg<-10
   # One-step ahead
   Lag<--1
   # Compute MSE-filter
-  mdfa_burg_obj<-MDFA_mse(L,weight_func_burg,Lag,Gamma_burg)$mdfa_obj 
+  mdfa_burg_obj<-MDFA_mse(L_burg,weight_func_burg,Lag,Gamma_burg)$mdfa_obj 
   b_burg<-mdfa_burg_obj$b
   # Compute out-of-sample forecast  
   dfa_burg_forecast<-t(b_burg)%*%x_insample[length(x_insample):(length(x_insample)-L+1)]
@@ -477,7 +480,7 @@ for (i in 1:anzsim)
 # Compute the ratio of root mean-square forecast errors:
 #   The ratio cannot be larger than 1 asymptotically because our particular design distinguishes arma as the universally best possible design
 # Results: 
-#   -for L=10 the ratio is virtually 1 i.e. performances of both approaches are indistinguishable 
+#   -for L=10 the ratio is virtually 1 i.e. performances of both approaches are indistinguishable (up to random sampling error) 
 #   -we conclude that dft (as a spectral estimate in DFA) is as good as maximum entropy spectral estimate
 sqrt(mean(mse_burg)/mean(mse_dfa))
 
