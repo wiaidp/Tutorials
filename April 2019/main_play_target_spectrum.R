@@ -2,6 +2,7 @@
 # Specify target in frequency-domain and time-domain
 # Use different spectrum: flat, AR (discuss fit), customized/tweaked
 # Play with Lag
+# Try a smaller L
 
 
 
