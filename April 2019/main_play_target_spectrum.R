@@ -468,6 +468,16 @@ plot_estimate_func(mdfa_obj_tweaked_mse,weight_func_tweaked,Gamma)
 #   DFA: weighted approximation whereby weight is supplied by spectrum
 # DFA-MSE criterion makes a best possible compromise of time-shift (delay) and of amplitude (noise leakage) fitting
 
+# Target is arbitrary: 
+#   one/multi-step ahead forecasting, 
+#   lowpass: nowcast, forecast backcast
+#   bandpass, highpass, aribtrary target
+
+# Spectrum is arbitrary
+#   model-based (ARMA)
+#   non-parametric (dft)
+#   other...
+
 # Customization (see later tutorial)
 #   Control noise-leakage (reliability of signals)
 #   Control time-shift (faster trading execution)
