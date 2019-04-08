@@ -75,7 +75,7 @@ plot_estimate_func<-function(mdfa_obj,weight_func,Gamma)
   
   
   plot(Arg(mdfa_obj$trffkt[,1])/((0:(nrow(weight_func)-1))*pi/(nrow(weight_func)-1)),type="l",main=paste("Time-shift concurrent, denseness=",K,sep=""),
-       axes=F,xlab="Frequency",ylab="Amplitude",col="black")
+       axes=F,xlab="Frequency",ylab="Time shift",col="black")
   # We take 2-nd colname from weight_func because the first column is the target        
   mtext(colnames(weight_func)[2],line=-1,col="black")
   if (ncol(abs(mdfa_obj$trffkt))>1)
