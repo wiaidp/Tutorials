@@ -1,16 +1,18 @@
-# Todos
-# Specify target in frequency-domain and time-domain
-# Use different spectrum: flat, AR (discuss fit), customized/tweaked
-# Play with Lag
-# Try a smaller L
+
+# Purpose of tutorial: illustrate (M)DFA user-interface, understand and interpret MSE solutions, understand overfitting
 
 
+# In previous forecasting-tutorial we emphasized a particular target: Gamma was an allpass filter
+#   Here we propose generic targets, including lowpass, bandpass, highpass, Hodrick-Prescott, arbitrary,....
+# We also propose different spectra and illustratethe main ideas behind the MSE optimization criterion 
+# We interpret important characteristics of the MSE-solution: amplitude and time-shift functions
+# We get a thorough understanding of (the mechanism of) overfitting
+# We learn how to control the outcome of the optimization (the one-sided DFA-filter) by playing with the powerful user-interface of DFA
 
-# In previous tutorial (DFA and forecasting) we emphasized a particular target: Gamma was an allpass filter
-# Here we propose generic targets, including lowpass, bandpass, highpass, Hodrick-Prescott, arbitrary,....
-
-# Purpose of tutorial: illustrate (M)DFA user-interface
-# Design: univariate, MSE (no customization), unconstrained (no regularization)
+# Design in this tutorial: 
+#   -We restrict our analysis to univariate examples
+#   -MSE-criterion (no customization)
+#   -Unconstrained filters (no regularization)
 #   -Customization and regularization will be tackled in separate tutorials
 
 
@@ -584,3 +586,7 @@ plot_estimate_func(mdfa_obj_tweaked_mse,weight_func_tweaked,Gamma)
 #   3. L is large
 #   If the weighting-function (the spectrum) is noisy and L is large then we need additional 'constraints'
 #     Later tutorial about regularization 
+
+#---------------------------------------------------------------------------------
+# Possible additions (todos)
+#   Specify target in time-domain
