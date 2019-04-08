@@ -342,10 +342,10 @@ b1<-0.7
 a1<--0.9
 b1<-0
 # Add any other processes...
-# We generate 500 realizations of length 300 of the arma-process
+# We generate anzsim realizations of length len of the arma-process
 set.seed(1)
 len<-300
-mse_arma<-mse_dfa<-NULL
+mse_true_arma<-mse_dfa<-NULL
 # Number of simulations
 anzsim<-500
 
@@ -357,10 +357,10 @@ for (i in 1:anzsim)
   x<-arima.sim(n=len,list(ar=a1,ma=b1))
 # Use in-sample span for model-estimation and for dft  
   x_insample<-x[1:(len-1)]
-  # Estimate model-parameters by relying on classic arima-function
-  arima_obj<-arima(x_insample,order=c(1,0,1),include.mean=F)
+# True model: estimate model-parameters by relying on classic arima-function
+  arima_true_obj<-arima(x_insample,order=c(1,0,1),include.mean=F)
   # Compute forecasts
-  arima_pred<-predict(arima_obj,n.ahead=1)$pred
+  arima_true_pred<-predict(arima_true_obj,n.ahead=1)$pred
 # Use in-sample span for dft  
   weight_func<-cbind(per(x_insample,T)$DFT,per(x_insample,T)$DFT)
   colnames(weight_func)<-c("target","explanatory")
@@ -377,15 +377,17 @@ for (i in 1:anzsim)
 # Compute out-of-sample forecast  
   dfa_forecast<-t(b)%*%x_insample[length(x_insample):(length(x_insample)-L+1)]
 # Mean-square out-of-sample forecast errors  
-  mse_arma<-c(mse_arma,(x[length(x)]-arima_pred)^2)
+  mse_true_arma<-c(mse_arma,(x[length(x)]-arima_true_pred)^2)
   mse_dfa<-c(mse_dfa,(x[length(x)]-dfa_forecast)^2)
   setTxtProgressBar(pb, i)
 }
 
 # Compute the ratio of root mean-square forecast errors:
 #   The ratio cannot be larger than 1 asymptotically because our particular design distinguishes arma as the universally best possible design
-#   For the above examples the ratio is 97% or better i.e. in the mean the non-parametric DFA performs as well (by all practical means) as the best possible forecast approach
-sqrt(mean(mse_arma)/mean(mse_dfa))
+# Results: 
+#   -for L=10, the ratio is typically 97% or larger: in the mean the non-parametric DFA performs as well (by all practical means) as the best possible forecast approach
+#   -for L=100 (massive overfitting) the ratio drops to about 80% (similar to fitting an AR(100)-model)
+sqrt(mean(mse_true_arma)/mean(mse_dfa))
 
 
 
