@@ -30,7 +30,7 @@ filt_func<-function(x,b)
       yhat[i]<-as.double(b[L:1]%*%x[i:(i-L+1)])#tail(x) x[(i-L+1):i]
     } else
     {
-      yhat[i]<-as.double(b%*%x[i:(i-L+1)])#tail(x) x[(i-L+1):i]
+      yhat[i]<-as.double(as.vector(b)%*%x[i:(i-L+1)])#tail(x) x[(i-L+1):i]
     }
   }
   #  names(yhat)<-index(x)#index(yhat)  index(x)

@@ -158,3 +158,64 @@ perf_plot_old<-function(perf,sharpe,name)
   mtext(paste("Equally-weighted, sharpe=",round(sharpe_agg,3),sep=""),line=-i-1)
   return(list(perf_agg=perf_agg))
 }
+
+
+
+
+
+plot_compare_two_DFA_designs<-function(mdfa_obj,mdfa_obj_1,weight_func,weight_func_1,Gamma)
+{
+  
+  par(mfrow=c(2,1))
+  plot(abs(mdfa_obj$trffkt)[,1],type="l",main=paste("Amplitude concurrent, denseness=",K,sep=""),
+       axes=F,xlab="Frequency",ylab="Amplitude",col="black",ylim=c(0,max(1,max(abs(mdfa_obj$trffkt)))))
+  # We take 2-nd colname from weight_func because the first column is the target        
+  mtext(colnames(weight_func)[2],line=-1,col="black")
+  lines(Gamma,col="violet")
+  mtext("Target Gamma",line=-2,col="violet")
+  lines(0.5*abs(weight_func[,1])/max(abs(weight_func[,1])),col="red",lwd=3)
+  mtext("Spectrum (red bold)",line=-3,col="red")
+  if (ncol(abs(mdfa_obj$trffkt))>1)
+  {
+    for (i in 2:ncol(abs(mdfa_obj$trffkt)))
+    {
+      lines(abs(mdfa_obj$trffkt)[,i],col=colo[i])
+      # We take the i+1 colname from weight_func because the first column is the target        
+      mtext(colnames(weight_func)[i+1],line=-i-2,col=colo[i])
+      
+    }
+  }
+  axis(1,at=c(0,1:6*K/6+1),labels=c("0","pi/6","2pi/6","3pi/6",
+                                    "4pi/6","5pi/6","pi"))
+  axis(2)
+  box()
+
+  
+  plot(abs(mdfa_obj_1$trffkt)[,1],type="l",main=paste("Amplitude concurrent, denseness=",K,sep=""),
+       axes=F,xlab="Frequency",ylab="Amplitude",col="black",ylim=c(0,max(1,max(abs(mdfa_obj$trffkt)))))
+  # We take 2-nd colname from weight_func because the first column is the target        
+  mtext(colnames(weight_func_1)[2],line=-1,col="black")
+  lines(Gamma,col="violet")
+  mtext("Target Gamma",line=-2,col="violet")
+  lines(0.5*abs(weight_func_1[,1])/max(abs(weight_func_1[,1])),col="red",lwd=3)
+  mtext("Spectrum (red bold)",line=-3,col="red")
+  if (ncol(abs(mdfa_obj_1$trffkt))>1)
+  {
+    for (i in 2:ncol(abs(mdfa_obj_1$trffkt)))
+    {
+      lines(abs(mdfa_obj_1$trffkt)[,i],col=colo[i])
+      # We take the i+1 colname from weight_func because the first column is the target        
+      mtext(colnames(weight_func_1)[i+1],line=-i-2,col=colo[i])
+      
+    }
+  }
+  axis(1,at=c(0,1:6*K/6+1),labels=c("0","pi/6","2pi/6","3pi/6",
+                                    "4pi/6","5pi/6","pi"))
+  axis(2)
+  box()
+  
+  par(mfrow=c(1,1))
+  
+  
+    
+}

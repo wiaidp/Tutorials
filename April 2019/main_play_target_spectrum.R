@@ -1,7 +1,7 @@
 # Todos
 # Specify target in frequency-domain and time-domain
 # Use different spectrum: flat, AR (discuss fit), customized/tweaked
-
+# Play with Lag
 
 
 
@@ -36,6 +36,7 @@ head(MDFA_mse)
 source("Common functions/plot_func.r")
 source("Common functions/arma_spectrum.r")
 source("Common functions/ideal_filter.r")
+source("Common functions/mdfa_trade_func.r")
 
 
 #-------------------------------------------------------------------------------------------------
@@ -225,6 +226,104 @@ K<-600
 #  First column is target, second column is explanatory variable: in a univariate design target and explanatory are the same
 weight_func<-matrix(rep(1,2*(K+1)),ncol=2)
 colnames(weight_func)<-c("target","explanatory")
+weight_func_noise<-weight_func
+periodicity<-5
+cutoff<-pi/periodicity
+Gamma<-(0:(K))<=K*cutoff/pi+1.e-9
+plot(Gamma,type="l",main=paste("Ideal lowpass, periodicity=",periodicity,", denseness=",K,sep=""),
+     axes=F,xlab="Frequency",ylab="Amplitude",col="black")
+# We take 2-nd colname from weight_func because the first column is the target        
+mtext("Target",line=-1,col="black")
+axis(1,at=c(0,1:6*K/6+1),labels=c("0","pi/6","2pi/6","3pi/6",
+                                  "4pi/6","5pi/6","pi"))
+axis(2)
+box()
+
+# Nowcast (Lag=0), Backcast (Lag>0) and Forecast (Lag<0)
+Lag<-0
+# Filter length
+L<-200
+
+# Estimation based on MDFA-MSE wrapper
+mdfa_obj_noise_mse<-MDFA_mse(L,weight_func_noise,Lag,Gamma)$mdfa_obj 
+
+b<-mdfa_obj_noise_mse$b
+plot_estimate_func(mdfa_obj_noise_mse,weight_func_noise,Gamma)
+
+
+
+# Comments
+#   1. The filter coefficients in the first plot are one-sided (causal filter)
+#   2. Since the filter does not look into the future, the output will be delayed (with respect to the non-causal target)
+#     The corresponding delay/lag can be seen in the second plot (time-shift)
+#   3. The fit of the target (violet line last plot) by the (DFA-) amplitude function can be 
+#     seen in the last plot
+#   4. Amplitude and shift differ from target: 
+#     MSE-criterion in DFA makes an optimal 'mixed-fit' of both functions
+
+
+# Compare output of (non-causal) ideal filter and DFA real-time (MSE solution) 
+
+len<-1000
+set.seed(1)
+x<-rnorm(len)
+# Length of filter (true ideal filter is bi-infinite)
+M<-100
+# This function computes the filter coefficients and applies the filter to x
+id_obj<-ideal_filter_func(periodicity,M,x)
+output_ideal<-id_obj$y
+
+# DFA output
+filt_obj<-filt_func(x,b)
+  
+output_dfa<-filt_obj$yhat
+output_dfa[1:(L-1)]<-NA
+
+# The filtered series (red line in plot below) is smooth: high-frequency noise has been damped
+ts.plot(output_ideal,col="blue",main="Output of ideal lowpass (blue) vs DFA (red)")
+lines(output_dfa,col="red")
+
+# Comments: output of ideal filter (blue) is not available towards sample-end: DFA computes a 'best' (MSE) one-sided filter which runs till sample-end
+
+# Let's now zoom into the plot and have a closer look at both series
+anf<-400
+enf<-500
+ts.plot(output_ideal[anf:enf],col="blue",main="Output of ideal lowpass (blue) vs DFA (red)")
+lines(output_dfa[anf:enf],col="red")
+abline(h=0)
+
+# We can see that DFA-output (red) is noisier (amplitude does not vanish in stopband) and slightly shifted to the right (time-shift is not zero)
+#   Both effects (noise leakage and delay) can be explained/understood by looking at amplitude and time-shift functions
+#   Beyond MSE (customization): improve noise suppression and reduce lag
+
+# Play with parameters
+# 1.  one can change periodicity
+# 2.  one can modify Lag: 
+#       Lag=0: nowcast
+#       Lag<0: forecast (this is not a forecast of the original data but of the filtered target output)
+#       Lag>0: backcast (in contrast to forecasting, backcasting of ideal lowpass is not trivial)
+#               Backcasting is used when revising historical data (typically macro-economic data)
+
+# Idea: user can specify a target which matches his particular interests (more flexible than classic time series approaches)
+#   DFA derives an 'optimal' (here: MSE) real-time estimate (output is available towards sample-end)
+#   The estimate is 'as close as possible' (mean-square sense) to (output of) target
+
+#---------------------------------------------------------------------------
+# Example 6: same as above but AR(1) series instead of noise
+
+
+K<-600
+
+# Spectrum ARMA: try various processes
+a1<-0.9
+b1<-NULL
+plot_T<-T
+# This function computes the spectrum of the ARMA-process
+spec<-arma_spectrum_func(a1,b1,K,plot_T)$arma_spec
+# Fill into weight_func: target (first column) and explanatory (second column); both are identical for univariate problems
+weight_func<-cbind(spec,spec)
+colnames(weight_func)<-c("target","explanatory")
+weight_func_ar1<-weight_func
 
 periodicity<-5
 cutoff<-pi/periodicity
@@ -244,52 +343,54 @@ Lag<-0
 L<-200
 
 # Estimation based on MDFA-MSE wrapper
-mdfa_obj_mse<-MDFA_mse(L,weight_func,Lag,Gamma)$mdfa_obj 
+mdfa_obj_ar1_mse<-MDFA_mse(L,weight_func_ar1,Lag,Gamma)$mdfa_obj 
 
-b<-mdfa_obj_mse$b
-plot_estimate_func(mdfa_obj_mse,weight_func,Gamma)
+b<-mdfa_obj_ar1_mse$b
+plot_estimate_func(mdfa_obj_ar1_mse,weight_func,Gamma)
+
+# Note that we altered only the spectrum: AR(1) instead of white noise
+# We now compare the previous amplitude function (example 5,white noise) with the new one (ar(1)) and  and interpret the result
+
+plot_compare_two_DFA_designs(mdfa_obj_mse,mdfa_obj_ar1_mse,weight_func_noise,weight_func_ar1,Gamma)
+  
+# Interpretation
+#   In the top-plot (white noise) the spectrum is flat: each frequency is equally important in DFA-criterion (see Wildi/McElroy)
+#   In the bottom-plot (ar(1)) the spectrum is larger towards the lower frequencies (assuming a1>0).
+#     The lower frequencies dominate in an AR(1)-process with a1>0
+#     Therefore the match of the target (violet) and DFA-amplitude (black) is better towards the lower ferquencies for the AR(1)-process (bottom plot).
+#     In contrast, the fit towards the higher frequencies is poorer for the AR(1) (when compared to white noise)
+
+# Idea: the spectrum modulates the quality of the fit:
+#  DFA-amplitude (time-shift) are matching the target better at those frequencies which are more heavily loaded (larger spectrum)
+
+# Let's illustrate the previous idea (DFA MSE-criterion) by altering deliberately the spectrum
+#---------------------------------------------------------------------------------------
+# Example 7: same as above but with altered (tweaked) spectrum
 
 
+# Let's modify the spectrum in frequency pi/2
+
+weight_func_tweaked<-weight_func_ar1
+weight_func_tweaked[nrow(weight_func_tweaked)/2,]<-100
+
+# White noise: flat spectrum (all frequencies are loaded equally by the process)
+plot(abs(weight_func_tweaked[,1]),type="l",main=paste("Tweaked ar(1)-spectrum, denseness=",K,sep=""),
+     axes=F,xlab="Frequency",ylab="Amplitude",col="black")
+# We take 2-nd colname from weight_func because the first column is the target        
+axis(1,at=c(0,1:6*K/6+1),labels=c("0","pi/6","2pi/6","3pi/6",
+                                  "4pi/6","5pi/6","pi"))
+axis(2)
+box()
 
 # Comments
-#   1. The filter coefficients in the first plot are one-sided (causal filter)
-#   2. Since the filter does not look into the future, the output will be delayed (with respect to the non-causal target)
-#     The corresponding delay/lag can be seen in the second plot (time-shift)
-#   3. The fit of the target (violet line last plot) by the (DFA-) amplitude function can be 
-#     seen in the last plot
-#   4. Amplitude and shift differ from target
+#   1. We artificially enlarge the spectrum at pi/2
+#   2. We therefore expect the fit of the amplitude function to improve towards pi/2
+# Let's verify this conjecture
 
-
-len<-1000
-set.seed(1)
-x<-rnorm(len)
-# Length of filter (true ideal filter is bi-infinite)
-M<-100
-# This function computes the filter coefficients and applies the filter to x
-id_obj<-ideal_filter_func(periodicity,M,x)
-
-# The coefficients are symmetric: the filter is not causal (it needs future data)  
-ts.plot(id_obj$gamma)
-# The filtered series (red line in plot below) is smooth: high-frequency noise has been damped
-ts.plot(x)
-lines(id_obj$y,col="red")
-# Mean duration between consecutive zero-crossings of the filtered data (mean holding-time of an asset in trading with this filter)
-#   Higher periodicities imply stronger smoothing and thus longer holding-times (less frequent trades)
-id_obj$mean_holding_time
-
-# Idea: the user can specify a periodicity which matches his particular interests (more flexible than classic time series approaches)
-
-
-
-
-
-#-----------------------------------
-# Example 1.2: classic one- and multi-step ahead forecasting ARMA-process (replicates SOTA ARMA-models)
-# Target forecasting: 
-#   -We are interested in all frequencies equally
-#   -Target Gamma is a forward-looking allpass filter in the frequency-domain
-Gamma<-rep(1,K+1)
-plot(Gamma,type="l",main=paste("Allpass forecast target, denseness=",K,sep=""),
+periodicity<-5
+cutoff<-pi/periodicity
+Gamma<-(0:(K))<=K*cutoff/pi+1.e-9
+plot(Gamma,type="l",main=paste("Ideal lowpass, periodicity=",periodicity,", denseness=",K,sep=""),
      axes=F,xlab="Frequency",ylab="Amplitude",col="black")
 # We take 2-nd colname from weight_func because the first column is the target        
 mtext("Target",line=-1,col="black")
@@ -298,128 +399,27 @@ axis(1,at=c(0,1:6*K/6+1),labels=c("0","pi/6","2pi/6","3pi/6",
 axis(2)
 box()
 
-# Spectrum ARMA: try various processes
-a1<-0.9
-b1<-NULL
-a1<-NULL
-b1<-0.6
-
-plot_T<-T
-
-# This function computes the spectrum of the ARMA-process
-spec<-arma_spectrum_func(a1,b1,K,plot_T)$arma_spec
-
-# Fill into weight_func: target (first column) and explanatory (second column); both are identical for univariate problems
-weight_func<-cbind(spec,spec)
-colnames(weight_func)<-c("target","explanatory")
-
-# One step ahead: Lag=-1
-Lag<-5
-# Filter length: number of weights/coefficients of forecast filter
-L<-10
+# Nowcast (Lag=0), Backcast (Lag>0) and Forecast (Lag<0)
+Lag<-0
+# Filter length
+L<-200
 
 # Estimation based on MDFA-MSE wrapper
-mdfa_obj<-MDFA_mse(L,weight_func,Lag,Gamma)$mdfa_obj 
+mdfa_obj_tweaked_mse<-MDFA_mse(L,weight_func_tweaked,Lag,Gamma)$mdfa_obj 
 
-names(mdfa_obj)
-mdfa_obj$b
+plot_estimate_func(mdfa_obj_tweaked_mse,weight_func_tweaked,Gamma)
 
-# The following function plots 
-#   -the coefficients
-#   -the time-shift and
-#   -the amplitude of the filter
-plot_estimate_func(mdfa_obj,weight_func,Gamma)
+# Let's compare the original AR(1) with the tweaked one
+plot_compare_two_DFA_designs(mdfa_obj_tweaked_mse,mdfa_obj_ar1_mse,weight_func_tweaked,weight_func_ar1,Gamma)
 
 
-
-# Comments
-# 1. Forecasting: Lag<0
-#   -For an AR(1)-process and Lag=-1 (one-step ahead) the optimal forecast filter has weights (a1,0,0,...,0)
-#   -For an AR(1)-process and Lag=-2 (two-steps ahead) the optimal forecast filter has weights (a1^2,0,0,...,0)
-#   -For an AR(1)-process and Lag=-k (k-steps ahead) the optimal forecast filter has weights (a1^k,0,0,...,0)
-#   -Our solution gets aribtrarily close for increasing K (denser grid)
-#   -For K/L>10, mismatch is negligible by all practical means 
-
-#   -For an MA(1)-process and Lag=-1 (one-step ahead) the optimal forecast filter has weights (b1,-(b1^2),b1^3,-(b1^4),...)
-#   -For an MA(1)-process and Lag=-2 (two-steps ahead) the optimal forecast filter has weights 0
-#   -Our solution gets aribtrarily close for increasing K (denser grid)
-#   -For K/L>10 mismatch is negligible by all practical means 
-
-# 2. Nowcasting: Lag=0
-#   -For any process the optimal filter has weights 1,0,0,....
-#   -This is a trivial estimation problem because our target is an allpass: for lowpass/bandpass/highpass the estimation problem is nomore trivial
-
-# 3. Backcasting: Lag>0
-#   -For any process the optimal filter has weight 1 at 'lag' specified by Lag and otherwise 0
-#   -This is a trivial estimation problem because our target is an allpass: for lowpass/bandpass/highpass the estimation problem is nomore trivial
+# What happened?
+#   Both amplitude functions are quite similar except that the tweaked one approaches zero at frequenvy pi/2
+#   This is because 
+#     1. the target is zero at frequency pi (this component will be eliminated by the ideal lowpass)
+#     2. the tweaked spectrum is very large: thus DFA tries to damp that component more effectively (the amplitude approaches zero)
 
 
-#-----------------------------------
-# Example 1.3: compare DFA with classic arima R-code
-
-# Specify forecast horizon
-
-h<-10
-
-# Data: simulate ARMA (select any coefficients)
-
-a1<-0.6
-b1<-0.7
-set.seed(1)
-x<-arima.sim(n=len,list(ar=a1,ma=b1))
-
-# Estimate model-parameters by relying on classic arima-function
-arima_obj<-arima(x,order=c(1,0,1),include.mean=F)
-
-# Diagnostics: model is OK
-tsdiag(arima_obj)
-
-# Compute forecasts
-arima_pred<-predict(arima_obj,n.ahead=h)$pred
-
-K<-600
-# Target forecasting: 
-#   -We are interested in all frequencies equally
-#   -Target Gamma is a forward-looking allpass filter in the frequency-domain
-Gamma<-rep(1,K+1)
-
-# Spectrum: supply estimated filter coefficients
-a1<-arima_obj$coef["ar1"]
-b1<-arima_obj$coef["ma1"]
-plot_T<-T
-
-# This function computes the spectrum of the ARMA-process
-spec<-arma_spectrum_func(a1,b1,K,plot_T)$arma_spec
-
-# Fill spec into weight_func: target (first column) and explanatory (second column); both are identical for univariate problems
-weight_func<-cbind(spec,spec)
-colnames(weight_func)<-c("target","explanatory")
-
-# Filter length: number of weights/coefficients of forecast filter
-L<-10
-
-
-# Compute one to h-steps ahead forecasts
-dfa_forecast<-rep(NA,h)
-for (i in 1:h)#i<-2
-{
-  Lag<--i
-# Estimation based on MDFA-MSE wrapper
-  mdfa_obj<-MDFA_mse(L,weight_func,Lag,Gamma)$mdfa_obj 
-  
-  b<-mdfa_obj$b
-# Filter data (apply forecast filter)
-  dfa_forecast[i]<-t(b)%*%x[length(x):(length(x)-L+1)]
-  
-}
-
-# Compare DFA with above predict: both forecasts are virtually indistinguishable
-#   For large K the difference vanishes
-forecast_comparison<-cbind(c(rep(NA,21),arima_pred),c(rep(NA,21),dfa_forecast),c(x[(len-20):len],rep(NA,h)))
-ts.plot(forecast_comparison[,1],ylim=c(min(forecast_comparison,na.rm=T),max(forecast_comparison,na.rm=T)),main="Data (black); classic ARIMA forecast (red) and DFA (green)",col="red")
-lines(forecast_comparison[,2],col="green")
-lines(c(x[(len-20):len],rep(NA,h)),col="black")
-abline(v=21)
 
 
 
