@@ -398,7 +398,7 @@ sqrt(mean(mse_true_arma)/mean(mse_dfa))
 
 
 #-----------------------------------------------------------
-# Example 6: we compare two spectral estimates in DFA
+# Example 6: we compare two spectral estimates when plugged as weighting functions into DFA
 #   1. non-parametric (dft) and 
 #   2. Burg's max-entropy (AR-) spectral estimate
 #     The idea is that we do not need to identify a model for the data
