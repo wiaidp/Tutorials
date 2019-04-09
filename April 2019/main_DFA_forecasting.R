@@ -208,7 +208,7 @@ plot_estimate_func(mdfa_obj,weight_func,Gamma)
 # Specify forecast horizon
 
 h<-5
-
+len<-300
 # Data: simulate ARMA (select any coefficients)
 
 a1<-0.6
@@ -381,7 +381,7 @@ for (i in 1:anzsim)
 # Compute out-of-sample forecast  
   dfa_forecast<-t(b)%*%x_insample[length(x_insample):(length(x_insample)-L+1)]
 # Mean-square out-of-sample forecast errors  
-  mse_true_arma<-c(mse_arma,(x[length(x)]-arima_true_pred)^2)
+  mse_true_arma<-c(mse_true_arma,(x[length(x)]-arima_true_pred)^2)
   mse_dfa<-c(mse_dfa,(x[length(x)]-dfa_forecast)^2)
   setTxtProgressBar(pb, i)
 }

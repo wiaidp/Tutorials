@@ -541,6 +541,11 @@ plot_estimate_func(mdfa_obj_tweaked_mse,weight_func_tweaked,Gamma)
 # Comments: assuming L<-10 has been selected
 #   In contrast to previous exercise 8 the fit of target by amplitude and by shift at spectral spike is 'less perfect'
 #   The smaller L=10 (less degrees of freedom) does not allow the filter to match arbitrary frequencies arbitrary well
+#   The number of ripples (peaks/troughs) in the amplitude function is related to L
+#     -The transfer function of a filter of length L is a polynomial of order L-1 (in exp(i\omega_k))
+#     -Therefore the number of peaks/troughs is entirely determined by L
+#     -Large L imply much more ripples: in particular very narrow peaks/dips of the amplitude function could be obtained (recall the above example with L=200 and the tweaked spectrum)
+#     -Many narrow dips/peaks in the amplitude function are indicative of overfitting
 # Additional/alternative experiments
 #   1. What happens for very large L (say L<-600 or L=2*K); what happens if L>2*K
 #     Hint: if L=2*K then the fit is perfect at all frequencies
