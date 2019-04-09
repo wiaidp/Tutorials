@@ -359,7 +359,7 @@ plot_estimate_func(mdfa_obj_ar1_mse,weight_func,Gamma)
 # Note that we altered only the spectrum: AR(1) instead of white noise
 # We now compare the previous amplitude function (example 5,white noise) with the new one (ar(1)) and  and interpret the result
 
-plot_compare_two_DFA_designs(mdfa_obj_mse,mdfa_obj_ar1_mse,weight_func_noise,weight_func_ar1,Gamma)
+plot_compare_two_DFA_designs(mdfa_obj_noise_mse,mdfa_obj_ar1_mse,weight_func_noise,weight_func_ar1,Gamma)
   
 # Interpretation
 #   In the top-plot (white noise) the spectrum is flat: each frequency is equally important in DFA-criterion (see Wildi/McElroy)
@@ -530,7 +530,7 @@ box()
 # Nowcast (Lag=0), Backcast (Lag>0) and Forecast (Lag<0)
 Lag<-0
 # Filter length: much smaller than previous exercises
-L<-2*K+1
+L<-10
 
 # Estimation based on MDFA-MSE wrapper
 mdfa_obj_tweaked_mse<-MDFA_mse(L,weight_func_tweaked,Lag,Gamma)$mdfa_obj 
