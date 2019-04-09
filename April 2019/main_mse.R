@@ -2,7 +2,11 @@
 #   -Add/discuss constraints
 
 
-# Purpose of tutorial: illustrate DFA (univariate), MDFA (multivariate) MSE (no customization) unconstrained (no regularization)
+# Purpose of tutorial: apply DFA to signal extraction (lowpass/nowcasting) and compare with state-of-the-art time series approach
+
+
+
+# illustrate DFA (univariate), MDFA (multivariate) MSE (no customization) unconstrained (no regularization)
 #   -Customization and regularization will be tackled in separate tutorials
 # 1. Provide short overview of main functions in MDFA-package
 # 2. Play with (M)DFa

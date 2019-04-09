@@ -1,3 +1,8 @@
+# todos
+# -TPs
+# -overfitting with dft
+# -compare mba with non-parametric dfa for nowcasting
+
 
 # Purpose of tutorial: illustrate (M)DFA user-interface, understand and interpret MSE solutions, understand overfitting
 
