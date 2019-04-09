@@ -2,20 +2,18 @@
 #   -Add/discuss constraints
 
 
-# Purpose of tutorial: apply DFA to signal extraction (lowpass/nowcasting) and compare with state-of-the-art time series approach
-
-
-
-# illustrate DFA (univariate), MDFA (multivariate) MSE (no customization) unconstrained (no regularization)
+# Purpose of tutorial: 
+#   In first tutorial we applied DFA to forecasting
+#   Here we apply DFA to signal extraction (specifically: nowcasting of ideal lowpass) 
+#   We know how to specify target (Gamma) and weighting-function (spectrum) from previous tutorial
+#   We here compare MSE-performances of best possible one-sided filter (assuming knowledge of the true model) vs. target filter
+#   We compare best possible one-sided DFA with DFA based on dft, in- and out-of-sample
+#   We analyze overfitting (use various filter-lengths L) by
+#     1. Comparing in- and out-of-sample performances
+#     2. Analyzing important filter features: coefficients, amplitude, time-shift
+# For illustration we here analyze univariate unconstrained MSE designs only
+#   -Multivariate examples will be considered in next tutorial
 #   -Customization and regularization will be tackled in separate tutorials
-# 1. Provide short overview of main functions in MDFA-package
-# 2. Play with (M)DFa
-#     -Illustrate explain target, spectrum, amplitude, time-shift, filter coefficients
-#     -Illustrate overfitting: univariate and multivariate
-# 3. Introduce/discuss potentially useful filter constraints
-
-# Disclaimer/caveat: applications to (currency-)trading are intended for illustrative purposes only 
-#   -Filter designs are deliberately 'suboptimal'
 
 
 rm(list=ls())
@@ -55,7 +53,8 @@ source("Common functions/mdfa_trade_func.r")
 # K defines the frequency-grid for estimation: all frequencies omega_j=j*pi/K, j=0,1,2,...,K are considered
 K<-600
 # Spectrum AR(1): try various processes
-a1<-0.9
+#   Log-returns of typical economic data close to noise i.e. a1~0
+a1<-0.
 b1<-NULL
 plot_T<-T
 # This function computes the spectrum of the ARMA-process
@@ -69,8 +68,8 @@ cutoff<-pi/periodicity
 Gamma<-(0:(K))<=K*cutoff/pi+1.e-9
 # Nowcast (Lag=0), Backcast (Lag>0) and Forecast (Lag<0)
 Lag<-0
-# Filter length
-L<-200
+# Filter length: L/K should be 'small'
+L<-100
 
 # Estimation based on MDFA-MSE wrapper
 mdfa_obj_mse<-MDFA_mse(L,weight_func,Lag,Gamma)$mdfa_obj 
@@ -111,8 +110,12 @@ abline(h=0)
 
 #---------------------------------------------
 # Example 2 ARMA-process: as above but rely on dft for estimating spectrum 
-#   MSE
-#   Univariate
+# Try various L and observe in-sample and out-of-sample performances in the table at the end of the example
+#   1. L<-periodicity*2 (minimal length for removing a component with that periodicity)
+#   2. L<-periodicity*4  (a1=0.9 or a1=0: amplitude still OK, out-of-sample OK too)
+#   3. L<-periodicity*8 (a1=0.9: maybe we can observe start of overfitting... Look at amplitude for instance)
+#   4. L<-periodicity*16 (overfitting: more severe when a1=0.9 (good news since log-returns typical economic data close to noise...))
+
 
 
 in_sample<-300
@@ -127,7 +130,8 @@ Gamma_dft<-(0:(K_dft))<=K_dft*cutoff/pi+1.e-9
 # Nowcast (Lag=0), Backcast (Lag>0) and Forecast (Lag<0)
 Lag<-0
 # Filter length
-L<-periodicity*2
+#  L<-periodicity*2 is required for damping a component with that periodicity
+L<-periodicity*4
 
 # Estimation based on MDFA-MSE wrapper
 mdfa_obj_dft_mse<-MDFA_mse(L,weight_func_dft,Lag,Gamma_dft)$mdfa_obj 
@@ -179,4 +183,4 @@ colnames(mat_mse_result)<-c("Theoretically best (true model)","DFA based on dft"
 
 mat_mse_result
 
-
+#----------------------------------------------------------------------------------
