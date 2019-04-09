@@ -423,7 +423,7 @@ plot_compare_two_DFA_designs(mdfa_obj_tweaked_mse,mdfa_obj_ar1_mse,weight_func_t
 #     2. the tweaked spectrum is very large: thus DFA tries to damp that component more effectively (the amplitude approaches zero)
 #  The fit of the time-shift improves similarly, see next example
 #---------------------------------------------------------------------------------------
-# Example 8: same as example 6 (AR(1) but with altered (tweaked) spectrum
+# Example 8: same as example 6 (AR(1) but with slightly differently altered (tweaked) spectrum
 
 
 # Let's modify the spectrum at a (arbitrary) low frequency
