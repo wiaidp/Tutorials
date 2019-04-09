@@ -145,7 +145,15 @@ title_more<-paste("lambda_decay=(",lambda_decay_1,",",lambda_decay_2,")",sep="")
 mplot_func(mplot, ax, plot_title, title_more, insamp, colo)
 
 
-
+# Comments
+# The first parameter controls for the shape: 
+#   -if lambda_decay[1]=0 all lags are addressed equally
+#   -if lambda_decay[1]>0 then lags in the remote past are affected more heavily 
+# The second parameter controls for the strength
+#   -if lambda_decay[2]>0 then the coefficients are shrunken towards zero
+#     -depending on lambda_decay[1] coefficients in the remote past are shrunken more heavily
+#   -In the case of extreme regularization (lambda_decay[2]=1) all coefficients vanish
+#     -the degrees of freedom shrink from L to 0
 
 
 
@@ -180,8 +188,11 @@ plot_title <- "Series 1"
 title_more<-paste("lambda_smooth=",lambda_smooth_vec,sep="")
 mplot_func(mplot, ax, plot_title, title_more, insamp, colo)
 
-
-
+# Comments
+# For increasing lambda_smooth the coefficients appear 'smoother': reduction of degrees of freedom (less overfitting)
+# Smoothness (of the filter coefficients) is generally preferred (though not too smooth...)
+# Extreme smoothness means that coefficients are linear: the number of degrees of freedom drops from L to 2
+# Smothness does not control for decay of coefficients with increasing lag
 
 
 
@@ -241,11 +252,12 @@ plot_title <- "Series 2"
 mplot_func(mplot, ax, plot_title, title_more, insamp, colo)
 
 # Comments
-#   For lambda_cross=0 we see that most weight is attributed to EURUSD (compare panel left vs. panel right in above plot)
+#   For lambda_cross=0 we see that most weight is attributed to EURUSD (left panel corresponds to EURUSD in the above plot)
 #   For increasing lambda_cross both filter coefficients (panels left/right) get closer together
 #   For lambda_cross=1 both coefficients are identical: the same filter is applied to both series
-
-
+#     In that case, MDFA uses information from both data sets to find a common filter
+#     Possibly meaningful if both explanatory series correlate positively (otherwise this design would be a clear misspecification)
+#     Number of freely determined parameters drops from 2*L to L: less overfitting
 #-------------------------------------------------
 # More examples: 
 #  Trading applications are provided at the end of the file
@@ -316,7 +328,8 @@ ts.plot(abs(mdfa_obj$trffkt))
 # Shift
 ts.plot(Arg(mdfa_obj$trffkt)/((0:K)*pi/K))
 
-# Comparison of filter coefficients: MSE vs. regularization
+# Comparison of filter coefficients: MSE vs. regularization with zero weights
+#  Both solutions should be identical i.e. the original MSE-solution is obtained when reg-weights vanish
 cbind(mdfa_reg_obj$b,mdfa_obj$b)
 
 #---------------------------------------------------------------------------------------------
