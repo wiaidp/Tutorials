@@ -2,13 +2,13 @@
 #   -Add/discuss constraints
 
 
-# Purpose of tutorial: illustrate DFA (univariate), MDFA (multivariate) MSE (no customization) unconstrained (no regularization)
+# Purpose of tutorial: play with MSE unconstrained designs 
+#   -Apply DFA based on white noise spectrum to FX-trading (6 most liquid pairs)
+#   -Apply DFA based on dft to FX-trading 
+#   -Apply multivariate DFA (MDFA) based on dft to FX-trading
+#   -Discuss overfitting issues
 #   -Customization and regularization will be tackled in separate tutorials
-# 1. Provide short overview of main functions in MDFA-package
-# 2. Play with (M)DFa
-#     -Illustrate explain target, spectrum, amplitude, time-shift, filter coefficients
-#     -Illustrate overfitting: univariate and multivariate
-# 3. Introduce/discuss potentially useful filter constraints
+
 
 # Disclaimer/caveat: applications to (currency-)trading are intended for illustrative purposes only 
 #   -Filter designs are deliberately 'suboptimal'
@@ -63,111 +63,6 @@ colnames(log_FX_mat)
 
 plot_T<-T
 anf_plot<-"2000-10-01/"
-#---------------------------------------------
-# Example 0: Play with DFA
-#   MSE
-#   Univariate
-
-
-# Example 0.1 White noise spectrum
-# Try
-#   -various targets (periodicities); 
-#   -various filter-lengths L; 
-#   -various Lag (negative,0,positive integers)
-# K defines the frequency-grid for estimation: all frequencies omega_j=j*pi/K, j=0,1,2,...,K are considered
-#   -In the case of a white noise spectrum we can select arbitrary tightness of frequency grid
-#   -If we use the periodogram, then K is specified by the length of the periodogram
-#   -Tradeoff: larger K (denser grid) means better MSE (if true process is white noise) but longer computation-time
-K<-600
-# Spectrum: white noise assumption
-#  First column is target, second column is explanatory variable: in a univariate design target and explanatory are the same
-weight_func<-matrix(rep(1,2*(K+1)),ncol=2)
-colnames(weight_func)<-c("target","explanatory")
-# Target: specify cutoff=pi/periodicity of lowpass ideal target
-periodicity<-5
-cutoff<-pi/periodicity
-Gamma<-(0:(K))<=K*cutoff/pi+1.e-9
-# Nowcast (Lag=0), Backcast (Lag>0) and Forecast (Lag<0)
-Lag<-0
-# Filter length
-L<-200
-
-# Estimation based on MDFA-MSE wrapper
-mdfa_obj_mse<-MDFA_mse(L,weight_func,Lag,Gamma)$mdfa_obj 
-
-b<-mdfa_obj_mse$b
-plot_estimate_func(mdfa_obj_mse,weight_func,Gamma)
-
-#---------------
-# Example 0.2 same as above but with autoregressive spectrum
-#   This design replicates classic model-based approaches (if K is 'large')
-# Try
-#   -various targets (periodicities); 
-#   -various filter-lengths L; 
-#   -various Lag (negative,0,positive integers)
-# K defines the frequency-grid for estimation: all frequencies omega_j=j*pi/K, j=0,1,2,...,K are considered
-#   -In the case of a white noise spectrum we can select arbitrary tightness of frequency grid
-#   -If we use the periodogram, then K is specified by the length of the periodogram
-#   -Tradeoff: larger K (denser grid) means better MSE (if true process is white noise) but longer computation-time
-K<-600
-# Spectrum: autoregressive spectrum
-#  First column is target, second column is explanatory variable: in a univariate design target and explanatory are the same
-a1<-0.5
-weight_func<-cbind(1/(1-a1*exp(1.i*(0:K)*pi/K)),1/(1-a1*exp(1.i*(0:K)*pi/K)))
-colnames(weight_func)<-c("target","explanatory")
-# Target: specify cutoff=pi/periodicity of lowpass ideal target
-periodicity<-5
-cutoff<-pi/periodicity
-Gamma<-(0:(K))<=K*cutoff/pi+1.e-9
-# Nowcast (Lag=0), Backcast (Lag>0) and Forecast (Lag<0)
-Lag<-0
-# Filter length
-L<-200
-
-# Estimation based on MDFA-MSE wrapper
-mdfa_obj_mse<-MDFA_mse(L,weight_func,Lag,Gamma)$mdfa_obj 
-
-b<-mdfa_obj_mse$b
-plot_estimate_func(mdfa_obj_mse,weight_func,Gamma)
-
-# Comments
-# 1. Fit of target by explanatory improves at/towards the frequencies emphasized/weighted by spectrum
-#     Examples: 
-#       for a1>0 the fit improves towards frequency zero (compared to previous white noise example)
-#       for a1<0 the fit improves towards frequency pi (compared to previous white noise example)
-# 2. Arbitrary AR(I)MA- or state-space models could be replicated by 
-#   a. Prodining the corresponding target
-#   b. Providing the corresponding spectral estimate
-#   c. see Wildi/McElroy
-# 3. Once replicated, model-based approaches could be enhanced (regularization and/or customization)
-# 4. Multivariate models can be replicated by generic MDFA
-
-#---------------------------------
-# Example 0.3 same as above but we use autoregressive spectrum based on AR(1)-model fitted to log-returns of EURUSD
-
-K<-600
-# Fit AR(1)-model to log-returns of EURUSD
-asset<-"EURUSD"
-x<-diff(log_FX_mat[,asset])
-a1<-arima(x,c(1,0,0))$coef["ar1"]
-# Derive autoregressive spectrum
-weight_func<-cbind(1/(1-a1*exp(1.i*(0:K)*pi/K)),1/(1-a1*exp(1.i*(0:K)*pi/K)))
-colnames(weight_func)<-c("target","explanatory")
-# Target: specify cutoff=pi/periodicity of lowpass ideal target
-periodicity<-5
-cutoff<-pi/periodicity
-Gamma<-(0:(K))<=K*cutoff/pi+1.e-9
-# Nowcast (Lag=0), Backcast (Lag>0) and Forecast (Lag<0)
-Lag<-0
-# Filter length
-L<-200
-
-# Estimation based on MDFA-MSE wrapper
-mdfa_obj_mse<-MDFA_mse(L,weight_func,Lag,Gamma)$mdfa_obj 
-
-b<-mdfa_obj_mse$b
-plot_estimate_func(mdfa_obj_mse,weight_func,Gamma)
-
 #-------------------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------------------
 

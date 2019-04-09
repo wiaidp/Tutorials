@@ -3,12 +3,13 @@
 
 
 # Purpose of tutorial: 
-#   In first tutorial we applied DFA to forecasting
+#   In first tutorial we applied DFA to forecasting and we replicated classic SOTA time series approaches
 #   Here we apply DFA to signal extraction (specifically: nowcasting of ideal lowpass) 
-#   We know how to specify target (Gamma) and weighting-function (spectrum) from previous tutorial
+#     The examples could be straightforwardly extended to arbitrary targets and/or forecasting/backcasting of signals
+#   We know how to specify target (Gamma) and weighting-function (spectrum) from previous tutorial (main_DFA_interface.r)
 #   We here compare MSE-performances of best possible one-sided filter (assuming knowledge of the true model) vs. target filter
-#   We compare best possible one-sided DFA with DFA based on dft, in- and out-of-sample
-#   We analyze overfitting (use various filter-lengths L) by
+#   We compare best possible one-sided DFA with empirical DFA based on dft, in- and out-of-sample
+#   In the latter case, we analyze overfitting (use various filter-lengths L) by
 #     1. Comparing in- and out-of-sample performances
 #     2. Analyzing important filter features: coefficients, amplitude, time-shift
 # For illustration we here analyze univariate unconstrained MSE designs only
@@ -54,7 +55,7 @@ source("Common functions/mdfa_trade_func.r")
 K<-600
 # Spectrum AR(1): try various processes
 #   Log-returns of typical economic data close to noise i.e. a1~0
-a1<-0.
+a1<-0.1
 b1<-NULL
 plot_T<-T
 # This function computes the spectrum of the ARMA-process
