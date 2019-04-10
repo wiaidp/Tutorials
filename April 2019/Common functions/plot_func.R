@@ -50,7 +50,6 @@ mplot_func <- function(mplot, ax, plot_title, title_more, insamp, colo) {
 
 
 
-
 plot_estimate_func<-function(mdfa_obj,weight_func,Gamma)
 {
   par(mfrow=c(1,1))
@@ -77,7 +76,7 @@ plot_estimate_func<-function(mdfa_obj,weight_func,Gamma)
   plot(Arg(mdfa_obj$trffkt[,1])/((0:(nrow(weight_func)-1))*pi/(nrow(weight_func)-1)),type="l",main=paste("Time-shift concurrent, denseness=",K,sep=""),
        axes=F,xlab="Frequency",ylab="Time shift",col="black")
   # We take 2-nd colname from weight_func because the first column is the target        
-  mtext(colnames(weight_func)[2],line=-1,col="black")
+  mtext(paste("Shift ",colnames(weight_func)[2],sep=""),line=-1,col="black")
   lines(0.5*abs(weight_func[,1])/max(abs(weight_func[,1])),col="red",lwd=3)
   mtext("Spectrum (red bold)",line=-3,col="red")
   if (ncol(abs(mdfa_obj$trffkt))>1)
@@ -86,7 +85,7 @@ plot_estimate_func<-function(mdfa_obj,weight_func,Gamma)
     {
       lines(abs(mdfa_obj$trffkt)[,i],col=colo[i])
       # We take the i+1 colname from weight_func because the first column is the target        
-      mtext(colnames(weight_func)[i+1],line=-i,col=colo[i])
+      mtext(paste("Shift ",colnames(weight_func)[i+1],sep=""),line=-i,col=colo[i])
       
     }
   }
@@ -97,7 +96,7 @@ plot_estimate_func<-function(mdfa_obj,weight_func,Gamma)
   plot(abs(mdfa_obj$trffkt)[,1],type="l",main=paste("Amplitude concurrent, denseness=",K,sep=""),
        axes=F,xlab="Frequency",ylab="Amplitude",col="black",ylim=c(0,max(1,max(abs(mdfa_obj$trffkt)))))
   # We take 2-nd colname from weight_func because the first column is the target        
-  mtext(colnames(weight_func)[2],line=-1,col="black")
+  mtext(paste("Amplitude ",colnames(weight_func)[2],sep=""),line=-1,col="black")
   lines(Gamma,col="violet")
   mtext("Target Gamma",line=-2,col="violet")
   lines(0.5*abs(weight_func[,1])/max(abs(weight_func[,1])),col="red",lwd=3)
@@ -108,7 +107,7 @@ plot_estimate_func<-function(mdfa_obj,weight_func,Gamma)
     {
       lines(abs(mdfa_obj$trffkt)[,i],col=colo[i])
       # We take the i+1 colname from weight_func because the first column is the target        
-      mtext(colnames(weight_func)[i+1],line=-i-2,col=colo[i])
+      mtext(paste("Amplitude ",colnames(weight_func)[i+1],sep=""),line=-i-2,col=colo[i])
       
     }
   }

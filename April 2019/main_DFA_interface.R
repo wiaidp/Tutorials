@@ -1,5 +1,5 @@
 # todos
-# -TPs
+# -arbitrary Gamma
 # -overfitting with dft
 # -compare mba with non-parametric dfa for nowcasting
 # Poste DFA papers
@@ -13,6 +13,8 @@
 # We provide a thorough understanding of (the mechanism of) overfitting in the DFA-framework
 # We learn how to control the outcome of the optimization (the one-sided DFA-filter) by playing with 
 #   the flexible user-interface of DFA
+# A link to trading is provided by identifying maxima and minima (turning-points) of time series
+#   -tactical (short-term) and strategic (mid and long-term) positioning can be implemented by means of a single parameter (periodicity)
 
 # Design in this tutorial: 
 #   -For illustration purposes we restrict our analysis to univariate examples
@@ -67,7 +69,7 @@ K<-600
 #   -First column is spectrum of target, second column is spectrum of explanatory variable
 #   -In a univariate design target and explanatory data are the same
 weight_func<-matrix(rep(1,2*(K+1)),ncol=2)
-colnames(weight_func)<-c("spectrum target","spectrum explanatory")
+colnames(weight_func)<-c("target","explanatory")
 
 # White noise: flat spectrum (all frequencies are loaded equally by the process)
 plot(weight_func[,1],type="l",main=paste("White noise spectrum, denseness=",K,sep=""),
@@ -160,6 +162,51 @@ id_obj$mean_holding_time
 # Problem: the ideal filter cannot be applied in 'real-time' because it is not causal
 # Solution: approximate Gamma by a real-time (causal) filter i.e. use DFA (see examples below)
 
+
+# Example 2 continued: turning-points 
+#   -Assume the above x are log-returns of the data
+#   -Then cumsum(x) would correspond to (log-) prices
+#   -Trading: sell at maxima and buy at minima of (log-) 'price' 
+#   -Maximum: when local drift (ideal filter output id_obj$y) crosses zero line from above
+#   -Minimum: when local drift (ideal filter output id_obj$y) crosses zero line from below
+# Let's illustrate these ideas in the following plot: 
+#   -green vertical lines are buys (ideal trend crosses zero line from below)
+#   -red vertical lines are sells (ideal trend crosses zero line from above)
+mplot<-na.exclude(cbind(cumsum(x),id_obj$y))
+colnames(mplot)<-c("(log) price","local drift")
+plot_data<-mplot
+head(plot_data)
+ts.plot(plot_data[,1])
+mtext(colnames(plot_data)[1],line=-1)
+lines(plot_data[,2],col="blue")
+mtext(colnames(plot_data)[2],line=-2,col="blue")
+abline(h=0)
+abline(v=1+which(plot_data[1:(nrow(plot_data)-1),2]<0&plot_data[2:nrow(plot_data),2]>0),col="green")
+abline(v=1+which(plot_data[1:(nrow(plot_data)-1),2]>0&plot_data[2:nrow(plot_data),2]<0),col="red")
+
+# The above plot is a bit messy: let's zoom into the data
+anf<-400
+enf<-500
+plot_data<-mplot[anf:enf,]
+ts.plot(plot_data[,1],ylim=c(min(plot_data),max(plot_data)))
+mtext(colnames(plot_data)[1],line=-1)
+lines(plot_data[,2],col="blue")
+mtext(colnames(plot_data)[2],line=-2,col="blue")
+mtext("Buy (green vertical lines): signal (blue) crosses zero from below",line=-3,col="green")
+mtext("Sell (red vertical lines): signal (blue) crosses zero from above",line=-4,col="red")
+abline(h=0)
+abline(v=1+which(plot_data[1:(nrow(plot_data)-1),2]<0&plot_data[2:nrow(plot_data),2]>0),col="green")
+abline(v=1+which(plot_data[1:(nrow(plot_data)-1),2]>0&plot_data[2:nrow(plot_data),2]<0),col="red")
+
+# Trading: tactical (short-term) and strategic (mid and long-term) positioning
+#   -Short-term: select a small periodicity (for example weekly: periodicity<-5)
+#   -Mid-term: select a mid-sized periodicity (for example monthly: periodicity<-20)
+#   -Long-term: select a large periodicity (for example quarterly: periodicity<-60; or yearly: periodicity<-250 (in the latter case the filter-length M should be enlarged too))
+# Problem: the above ideal filter is not causal!
+#   -Idea: approximate the above non-causal filter (target) by a one-sided design 
+#   -then proceed analogously for trading: rely on zero-crossings of one-sided filter (instead of target)
+
+
 #--------------------------------------------------------------------------------------
 # Example 3: bandpass
 #   In contrast to forecasting we are not interested in all frequency-components
@@ -192,9 +239,8 @@ box()
 
 # The coefficients of the ideal bandpass can be calculated by using the previous function
 #   The coefficients of the bandpass are the difference of the two lowpass filters
-# We skip this calculation since it is not of immediate interest
-
-# As for the ideal lowpass, the ideal bandpass is not causal and can be approximated by DFA
+# We skip this calculation since it is not of further interest here (the filter is non-causal)
+#   As for the ideal lowpass, the ideal bandpass is not causal and can be approximated by DFA
 
 
 
@@ -204,14 +250,14 @@ box()
 
 # Target: specify cutoff=pi/periodicity of lowpass ideal target
 
-Gamma<-rep(1,K+1)
+Gamma_arbitrary<-rep(1,K+1)
 
-Gamma[3:20]<-0.4
-Gamma[37:98]<-0
-Gamma[167:208]<-pi
-Gamma[398:476]<-0.1
+Gamma_arbitrary[3:20]<-0.4
+Gamma_arbitrary[37:98]<-0
+Gamma_arbitrary[167:208]<-pi
+Gamma_arbitrary[398:476]<-0.1
 
-plot(Gamma,type="l",main="Arbitrary target",
+plot(Gamma_arbitrary,type="l",main="Arbitrary target",
      axes=F,xlab="Frequency",ylab="Amplitude",col="black")
 # We take 2-nd colname from weight_func because the first column is the target        
 mtext("Target",line=-1,col="black")
@@ -233,7 +279,7 @@ K<-600
 # Spectrum: white noise assumption
 #  First column is target, second column is explanatory variable: in a univariate design target and explanatory are the same
 weight_func<-matrix(rep(1,2*(K+1)),ncol=2)
-colnames(weight_func)<-c("spectrum target","spectrum explanatory")
+colnames(weight_func)<-c("target","explanatory")
 weight_func_noise<-weight_func
 periodicity<-5
 cutoff<-pi/periodicity
@@ -267,7 +313,7 @@ plot_estimate_func(mdfa_obj_noise_mse,weight_func_noise,Gamma)
 #   3. The fit of the target (violet line last plot) by the (DFA-) amplitude function can be 
 #     seen in the last plot
 #   4. Amplitude and shift differ from target: 
-#     MSE-criterion in DFA makes an optimal 'mixed-fit' of both functions
+#     MSE-criterion in DFA makes an optimal 'mixed-fit' of both functions to target
 
 
 # Compare output of (non-causal) ideal filter and DFA real-time (MSE solution) 
@@ -296,13 +342,13 @@ lines(output_dfa,col="red")
 # Let's now zoom into the plot and have a closer look at both series
 anf<-400
 enf<-500
-ts.plot(output_ideal[anf:enf],col="blue",main="Output of ideal lowpass (blue) vs DFA (red)")
+ts.plot(output_ideal[anf:enf],col="blue",main="Output of ideal lowpass (blue) vs DFA one-sided (red)")
 lines(output_dfa[anf:enf],col="red")
 abline(h=0)
 
 # We can see that DFA-output (red) is noisier (amplitude does not vanish in stopband) and slightly shifted to the right (time-shift is not zero)
 #   Both effects (noise leakage and delay) can be explained/understood by looking at amplitude and time-shift functions
-#   Beyond MSE (customization): improve noise suppression and reduce lag
+#   Later tutorial: improve noise suppression and reduce lag (customization)
 
 # Play with parameters
 # 1.  one can change periodicity
@@ -422,10 +468,10 @@ plot_compare_two_DFA_designs(mdfa_obj_tweaked_mse,mdfa_obj_ar1_mse,weight_func_t
 
 
 # What happened?
-#   Both amplitude functions are quite similar except that the tweaked one approaches zero at frequenvy pi/2
+#   Both amplitude functions are quite similar except that the tweaked one approaches zero at frequency pi/2
 #   This is because 
 #     1. the target is zero at frequency pi (this component will be eliminated by the ideal lowpass)
-#     2. the tweaked spectrum is very large: thus DFA tries to damp that component more effectively (the amplitude approaches zero)
+#     2. the tweaked spectrum is very large: thus DFA tries to damp that component more effectively (the amplitude approaches the target-value zero)
 #  The fit of the time-shift improves similarly, see next example
 #---------------------------------------------------------------------------------------
 # Example 8: same as example 6 (AR(1) but with slightly differently altered (tweaked) spectrum
@@ -445,8 +491,8 @@ axis(2)
 box()
 
 # Comments
-#   1. We artificially enlarge the spectrum at pi/2
-#   2. We therefore expect the fit of the amplitude function to improve towards pi/2
+#   1. We artificially enlarge the spectrum in the vicinity of frequency zero
+#   2. We therefore expect the fit of the amplitude function to improve at that frequency
 # Let's verify this conjecture
 
 periodicity<-5
@@ -471,7 +517,9 @@ mdfa_obj_tweaked_mse<-MDFA_mse(L,weight_func_tweaked,Lag,Gamma)$mdfa_obj
 
 plot_estimate_func(mdfa_obj_tweaked_mse,weight_func_tweaked,Gamma)
 
-# More generally: the fit of target by amplitude and time-shift functions improves at frequencies more heavily loalded by spectrum
+
+# The outcome is as expected: amplitude and shifts match the target at the tweaked frequency
+# More generally: the fit of target by amplitude and time-shift functions improves at frequencies more heavily loaded by spectrum
 #   DFA: weighted approximation whereby weight is supplied by spectrum
 # DFA-MSE criterion makes a best possible compromise of time-shift (delay) and of amplitude (noise leakage) fitting
 
