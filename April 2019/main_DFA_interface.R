@@ -519,7 +519,7 @@ plot_estimate_func(mdfa_obj_tweaked_mse,weight_func_tweaked,Gamma)
 
 
 # The outcome is as expected: amplitude and shifts match the target at the tweaked frequency
-# More generally: the fit of target by amplitude and time-shift functions improves at frequencies more heavily loaded by spectrum
+# More generally: the fit of target by amplitude and time-shift functions improves at frequencies more heavily loaded by the weighting-function (spectrum)
 #   DFA: weighted approximation whereby weight is supplied by spectrum
 # DFA-MSE criterion makes a best possible compromise of time-shift (delay) and of amplitude (noise leakage) fitting
 
@@ -558,10 +558,10 @@ box()
 # Comments
 #   1. In the previous exercise we observed that the amplitude and the time-shift functions adapted to
 #     nearly perfect fits of the target at the spike-frequency
-#   2. In most real-world applications this 'perfect fit' would be termed as overfitting
-#   3. We could overfit the target (as weighted by the spectrum) because our filter was sufficiently flexible (large L)
+#   2. In most real-world applications this 'perfect fit' would be assimilated with overfitting (fit is too good to be true)
+#   3. We could overfit the target (as weighted by the spectrum) because our filter was sufficiently flexible: large L
 #   4. What happens if we restrict the flexibility (degrees of freedom) by selecting a smaller L (filter length)?
-# Let's do and see
+# Let's do so...
 
 periodicity<-5
 cutoff<-pi/periodicity
@@ -591,9 +591,10 @@ plot_estimate_func(mdfa_obj_tweaked_mse,weight_func_tweaked,Gamma)
 #   The smaller L=10 (less degrees of freedom) does not allow the filter to match arbitrary frequencies arbitrary well
 #   The number of ripples (peaks/troughs) in the amplitude function is related to L
 #     -The transfer function of a filter of length L is a polynomial of order L-1 (in exp(i\omega_k))
-#     -Therefore the number of peaks/troughs is entirely determined by L
+#     -Therefore the number of peaks/troughs in amplitude/shift is entirely determined by L
 #     -Large L imply much more ripples: in particular very narrow peaks/dips of the amplitude function could be obtained (recall the above example with L=200 and the tweaked spectrum)
-#     -Many narrow dips/peaks in the amplitude function are indicative of overfitting
+#     -Many narrow dips/peaks in the amplitude/shift functions are indicative of overfitting
+
 # Additional/alternative experiments
 #   1. What happens for very large L (say L<-600 or L=2*K); what happens if L>2*K
 #     Hint: if L=2*K then the fit is perfect at all frequencies
@@ -606,6 +607,83 @@ plot_estimate_func(mdfa_obj_tweaked_mse,weight_func_tweaked,Gamma)
 #       For increasing (arbitrarily large) peak-values of the spectrum the amplitude and the shift match the target arbitrarily well towards the peak-frequency
 #       This 'perfect fit' at the peak frequency induces an increasing mismatch (of the DFA-MSE) at all other frequencies
 #       The optimization has to make a trade-off i.e. it cannot improve the fit at the peak-frequency without loosing at other frequencies
+#       In contrast, the filter with L=200 was able to accommodate for the tweaked-peak without loosing excessively at other frequencies
+
+
+#---------------------------------------------------------------------------------------
+# Example 10: in the above examples we assumed knowledge of the true model (true spectrum). Here we evaluate a 
+#   non-parametric DFA based on the dft as an estimate of the spectrum and we compare out-of-sample performances with the 
+#   best possible design (assuming knowledge of the true data-generating process). This example corresponds to the simulation 
+#   studies in the previous tutorial (forecasting) but Gamma is now a lowpass (not an allpass) and we emphasize nowcasting (Lag=0) 
+
+# Example 10.1: MA(1)
+a1<-0.
+b1<-0.7
+# Example 10.2: ARMA with positive acf
+a1<-0.6
+b1<-0.7
+# Example 10.3: AR with negative acf
+a1<--0.9
+b1<-0
+# Add any other processes...
+# We generate anzsim realizations of length len of the arma-process
+set.seed(1)
+len<-1000
+mse_true_arma<-mse_dfa<-NULL
+# Number of simulations
+anzsim<-500
+in_sample<-300
+
+pb <- txtProgressBar(min = 1, max = anzsim, style = 3)
+# Loop through all simulations and collect out-of-sample forecast performances
+for (i in 1:anzsim)
+{
+  
+  x<-arima.sim(n=len,list(ar=a1,ma=b1))
+  # Use in-sample span for model-estimation and for dft  
+  x_insample<-x[1:in_sample]
+  # True model: estimate model-parameters by relying on classic arima-function
+  arima_true_obj<-arima(x_insample,order=c(1,0,1),include.mean=F)
+  # Compute forecasts
+  arima_true_pred<-predict(arima_true_obj,n.ahead=1)$pred
+  # Use in-sample span for dft  
+  weight_func_dft<-cbind(per(x_insample,F)$DFT,per(x_insample,F)$DFT)
+  colnames(weight_func_dft)<-c("spectrum target","spectrum explanatory")
+  K_dft<-nrow(weight_func_dft)-1
+  # Lowpass target  
+  periodicity<-5
+  cutoff<-pi/periodicity
+  Gamma_dft<-(0:(K_dft))<=K_dft*cutoff/pi+1.e-9
+  # Default filter length for forecasting
+  L<-2*periodicity
+  # Nowcast
+  Lag<-0
+  # Compute MSE-filter
+  mdfa_dft_obj<-MDFA_mse(L,weight_func_dft,Lag,Gamma_dft)$mdfa_obj 
+  b_dft<-mdfa_dft_obj$b
+  # Compute out-of-sample forecast  
+  dfa_forecast<-t(b)%*%x_insample[length(x_insample):(length(x_insample)-L+1)]
+  # Mean-square out-of-sample forecast errors  
+  mse_true_arma<-c(mse_true_arma,(x[length(x)]-arima_true_pred)^2)
+  mse_dfa<-c(mse_dfa,(x[length(x)]-dfa_forecast)^2)
+  setTxtProgressBar(pb, i)
+}
+
+# Compute the ratio of root mean-square forecast errors:
+#   The ratio cannot be larger than 1 asymptotically because our particular design distinguishes arma as the universally best possible design
+# Results: 
+#   -for L=10, the ratio is typically 97% or larger: in the mean the non-parametric DFA performs as well (by all practical means) as the best possible forecast approach
+#     Note that L=10 is fine when forecasting most 'typical' economic data (at least when data is seasonally adjusted)
+#   -for L=100 the ratio drops to about 80% 
+#     Quantification of (massive) overfitting: similar to fitting an AR(100)-model to the data (Burg max-entropy spectral estimate)
+sqrt(mean(mse_true_arma)/mean(mse_dfa))
+
+
+
+
+
+
+
 
 
 #-------------------------------------------------------------------------
@@ -628,17 +706,23 @@ plot_estimate_func(mdfa_obj_tweaked_mse,weight_func_tweaked,Gamma)
 #       -Lag<0 means a forecast of the output of the ideal lowpass (not a forecast of the original series)
 #       -Lag=0 means a nowcast of the output of the ideal lowpass (this is not a trivial estimation problem, quite the contrary)
 #       -Lag>0 means a backcast of the output of the ideal lowpass (typically used when revising historical estimates: in various applications this task is called 'smoothing' in contrast to 'filtering' i.e. nowcasting: Kalman-filter is the nowcast, Kalman-smoother is the backcast)
-# 2. DFA-MSE optimization criterion 
+# 2. Turning-points
+#   -turning-points of a (price) series can be defined by the local maxima/minima of a smooth trend (ideal lowpass)
+#   -Alternatively, turning-points can be defined by the zero-crossings of a smooth trend (ideal lowpass) applied to first differences of the data (preference for that latter definition)
+#   -The user can specify a trend (ideal lowpass) matching his research interests by means of the parameter periodicity
+#     An analyst at a pension-fund might prefer longer-term positioning: periodicity would be large
+#     An analyst at a hedge-fund might prefer short-term positioning: periodicity would be small
+# 3. DFA-MSE optimization criterion 
 #   Given L, the MSE-criterion tries to achieve an optimal mix of amplitude and time-shift fitting (of the target) 
-#   The amplitude is related to noise leakage (more 'wrong' signals)
-#   The shift is related to the delay of the real-time filter (relative to the target)
+#     -The amplitude is related to noise leakage: more or less 'wrong' signals (reliability)
+#     -The shift is related to the delay of the real-time filter (relative to the target): delayed trading orders (entering into a position too late)
 #   Ideally, the user would prefer to have no leakage and no delay
-#   Unfortunately, both requirements cannot be met simultaneously
-#     In general (though not always: see customization) a stronger noise suppression implies a larger delay (conversely: a smaller delay generally results in greater leakage) 
-#   However, in contrast to classic time series approaches, DFA allows for a customization of the optimization criterion
+#     -Unfortunately, both requirements cannot be met simultaneously
+#     -In general (though not always: see customization) a stronger noise suppression implies a larger delay (conversely: a smaller delay generally results in greater leakage) 
+#   In contrast to classic time series approaches, DFA allows for a customization of the optimization criterion
 #     See trilemma paper McElroy/Wildi
 #     See later tutorial
-# 3. Overfitting is potentially obtained when
+# 4. Overfitting is potentially obtained when
 #   1. the spectrum is noisy/spiky and/or
 #   2. the target is noisy/spiky and
 #   3. L is large
