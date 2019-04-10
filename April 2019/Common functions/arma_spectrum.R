@@ -76,7 +76,7 @@ varma_spectrum_func<-function(a1,b1,K,plot_T)
   }
   if (plot_T)
   {
-    for (i in 1:dim(a1)[1])#i<-1
+    for (i in 1:dim(a1)[1])#i<-10
     {
       plot(abs(varma_spec[,i,i]),type="l",main=paste("ARMA-spectrum, a1=",ifelse(is.null(a1),"NULL",round(a1,3)),", b1=",ifelse(is.null(b1),"NULL",round(b1,3)),sep=""),
            axes=F,xlab="Frequency",ylab="Amplitude",col="black")
@@ -89,3 +89,5 @@ varma_spectrum_func<-function(a1,b1,K,plot_T)
   }
   return(list(varma_spec=varma_spec))
 }
+
+#varma_spec[10,,]
