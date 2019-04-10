@@ -5,12 +5,14 @@
 #   -specifying a corresponding target (allpass) and forecast horizon (Lag) 
 #   -specifying a corresponding spectral estimate
 # We illustrate, in particular, how classic ARIMA-based forecasting can be replicated in the DFA framework. 
-#   Once rooted into well-known territory, we can deploy the additional flexibility of DFA in the following tutorials 
-# At the end we also illustrate pertinence of a non-parametric DFA approach based on the discrete fourier transform (dft) as well as Burg's max-entropy spectral estimate
-#   We show that 
+#   -Once rooted into well-known territory, we can deploy the additional flexibility of DFA in the following tutorials 
+# At the end we also illustrate pertinence of a non-parametric DFA approach based on the discrete fourier transform (dft) 
+#     as well as Burg's max-entropy spectral estimate
+#   -We show that 
 #     1. Out-of-sample forecast performances of DFA based on dft are nearly as good as the universally best approach (which assumes knowledge of the true data-generating process)
 #     2. Performances of DFA based on dft and of DFA based on max-entropy spectrum are indistinguishable  
-#   These results suggest pertinence of the non-parametric DFA approach in a wide range of applications and in particular when models are likely to be misspecified (which is always the case for real-world data)
+#   -These results suggest pertinence of the non-parametric approach --DFA based on dft-- in a wide range of applications 
+#     and in particular when models are likely to be misspecified (which is always the case for real-world data)
 
 rm(list=ls())
 
@@ -59,7 +61,7 @@ K<-600
 #   -First column is spectrum of target, second column is spectrum of explanatory variable
 #   -In a univariate design target and explanatory data are the same
 weight_func<-matrix(rep(1,2*(K+1)),ncol=2)
-colnames(weight_func)<-c("target","explanatory")
+colnames(weight_func)<-c("spectrum target","spectrum explanatory")
 
 # White noise: flat spectrum (all frequencies are loaded equally by the process)
 plot(weight_func[,1],type="l",main=paste("White noise spectrum, denseness=",K,sep=""),
@@ -153,7 +155,7 @@ spec<-arma_spectrum_func(a1,b1,K,plot_T)$arma_spec
 
 # Fill into weight_func: target (first column) and explanatory (second column); both are identical for univariate problems
 weight_func<-cbind(spec,spec)
-colnames(weight_func)<-c("target","explanatory")
+colnames(weight_func)<-c("spectrum target","spectrum explanatory")
 
 # Specify Lag
 #   1. k-step ahead forecasting: Lag<--k (negative integer or negative real number: in the latter case one forecasts between two consecutive future time points)
@@ -241,7 +243,7 @@ spec<-arma_spectrum_func(a1,b1,K,plot_T)$arma_spec
 
 # Fill spec into weight_func: target (first column) and explanatory (second column); both are identical for univariate problems
 weight_func<-cbind(spec,spec)
-colnames(weight_func)<-c("target","explanatory")
+colnames(weight_func)<-c("spectrum target","spectrum explanatory")
 
 # Filter length: number of weights/coefficients of forecast filter
 #   Typical economic data (close to random-walk or noise (after differencing)) has 'short' memory
@@ -282,7 +284,7 @@ abline(v=21)
 
 # Use dft
 weight_func<-cbind(per(x,T)$DFT,per(x,T)$DFT)
-colnames(weight_func)<-c("target","explanatory")
+colnames(weight_func)<-c("spectrum target","spectrum explanatory")
 
 
 K<-nrow(weight_func)-1
@@ -367,7 +369,7 @@ for (i in 1:anzsim)
   arima_true_pred<-predict(arima_true_obj,n.ahead=1)$pred
 # Use in-sample span for dft  
   weight_func<-cbind(per(x_insample,F)$DFT,per(x_insample,F)$DFT)
-  colnames(weight_func)<-c("target","explanatory")
+  colnames(weight_func)<-c("spectrum target","spectrum explanatory")
   K<-nrow(weight_func)-1
 # Allpass target  
   Gamma<-rep(1,K+1)
@@ -433,7 +435,7 @@ for (i in 1:anzsim)
   x_insample<-x[1:(len-1)]
   # Use in-sample span for dft  
   weight_func<-cbind(per(x_insample,F)$DFT,per(x_insample,F)$DFT)
-  colnames(weight_func)<-c("target","explanatory")
+  colnames(weight_func)<-c("spectrum target","spectrum explanatory")
   K<-nrow(weight_func)-1
   # Allpass target  
   Gamma<-rep(1,K+1)
@@ -458,7 +460,7 @@ for (i in 1:anzsim)
 # Derive spectrum from AR(L) model
   weight_func_burg<-arma_spectrum_func(ar_burg,ma_burg,K_burg,plot_T)$arma_spec
   weight_func_burg<-cbind(weight_func_burg,weight_func_burg)
-  colnames(weight_func_burg)<-c("target","explanatory")
+  colnames(weight_func_burg)<-c("spectrum target","spectrum explanatory")
   # Allpass target  
   Gamma_burg<-rep(1,K_burg+1)
   # Filter length for Burg's estimate

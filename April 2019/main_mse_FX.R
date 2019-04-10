@@ -89,7 +89,7 @@ K<-600
 # Spectrum: white noise assumption
 #  First column is target, second column is explanatory variable: in a univariate design target and explanatory are the same
 weight_func<-matrix(rep(1,2*(K+1)),ncol=2)
-colnames(weight_func)<-c("target","explanatory")
+colnames(weight_func)<-c("spectrum target","spectrum explanatory")
 # Target: specify cutoff=pi/periodicity of lowpass ideal target
 periodicity<-5
 # Nowcast (Lag=0), Backcast (Lag>0) and Forecast (Lag<0)
@@ -128,7 +128,7 @@ x<-na.exclude(diff(log_FX_mat[,asset]))
 #   In contrast to periodogram, the dft retains the phase information which is important in a multivariate design
 #   First column is dft of target, second column is dft of explanatory: here both series are identical (univariate design)
 weight_func<-cbind(per(x[paste("/",in_sample_span,sep="")],T)$DFT,per(x[paste("/",in_sample_span,sep="")],T)$DFT)
-colnames(weight_func)<-c("target","explanatory")
+colnames(weight_func)<-c("spectrum target","spectrum explanatory")
 # Denseness of frequency-grid is completely specified by length of periodogram (to be constrasted with example 1 where we could specify any K)
 K<-nrow(weight_func)-1
 # Target
@@ -164,7 +164,7 @@ for (i_series in 1:ncol(log_FX_mat))
 # Spectrum: periodogram
   weight_func<-cbind(per(x[paste("/",in_sample_span,sep="")],T)$DFT,per(x[paste("/",in_sample_span,sep="")],T)$DFT)
   colnames(weight_func)<-rep(colnames(log_FX_mat)[i_series],2)
-  colnames(weight_func)<-c("target","explanatory")
+  colnames(weight_func)<-c("spectrum target","spectrum explanatory")
 # Length of frequency-grid (always length of spectral estimate)  
   K<-nrow(weight_func)-1
 # Target (cutoff, periodicity)

@@ -70,7 +70,7 @@ x<-na.exclude(diff(log_FX_mat[,asset]))
 # Spectrum: periodogram
 weight_func<-cbind(per(x[paste("/",in_sample_span,sep="")],T)$DFT,per(x[paste("/",in_sample_span,sep="")],T)$DFT)
 K<-nrow(weight_func)-1
-colnames(weight_func)<-c("target","explanatory")
+colnames(weight_func)<-c("spectrum target","spectrum explanatory")
 # Target: specify cutoff=pi/periodicity of lowpass ideal target
 periodicity<-5
 cutoff<-pi/periodicity

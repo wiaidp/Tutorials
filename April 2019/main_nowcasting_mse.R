@@ -62,7 +62,7 @@ plot_T<-T
 spec<-arma_spectrum_func(a1,b1,K,plot_T)$arma_spec
 # Fill into weight_func: target (first column) and explanatory (second column); both are identical for univariate problems
 weight_func<-cbind(spec,spec)
-colnames(weight_func)<-c("target","explanatory")
+colnames(weight_func)<-c("spectrum target","spectrum explanatory")
 # Target: specify cutoff=pi/periodicity of lowpass ideal target
 periodicity<-5
 cutoff<-pi/periodicity
@@ -124,7 +124,7 @@ in_sample<-300
 x_insample<-x[1:in_sample]
 # Use in-sample span for dft  
 weight_func_dft<-cbind(per(x_insample,F)$DFT,per(x_insample,F)$DFT)
-colnames(weight_func_dft)<-c("target","explanatory")
+colnames(weight_func_dft)<-c("spectrum target","spectrum explanatory")
 K_dft<-nrow(weight_func_dft)-1
 # Allpass target  
 Gamma_dft<-(0:(K_dft))<=K_dft*cutoff/pi+1.e-9

@@ -2,20 +2,20 @@
 # -TPs
 # -overfitting with dft
 # -compare mba with non-parametric dfa for nowcasting
-
+# Poste DFA papers
 
 # Purpose of tutorial: illustrate (M)DFA user-interface, understand and interpret MSE solutions, understand overfitting
 
-
-# In previous forecasting-tutorial we emphasized a particular target: Gamma was an allpass filter
-#   Here we propose generic targets, including lowpass, bandpass, highpass, Hodrick-Prescott, arbitrary,....
-# We also propose different spectra and illustratethe main ideas behind the MSE optimization criterion 
+# In previous forecasting-tutorial we emphasized a particular target: Gamma was an (anticipative: Lag<0) allpass filter
+#   -Here we propose generic targets, including lowpass, bandpass, highpass, Hodrick-Prescott, arbitrary,....
+# We also propose different spectra and illustrate the main ideas behind the MSE optimization criterion 
 # We interpret important characteristics of the MSE-solution: amplitude and time-shift functions
-# We get a thorough understanding of (the mechanism of) overfitting
-# We learn how to control the outcome of the optimization (the one-sided DFA-filter) by playing with the powerful user-interface of DFA
+# We provide a thorough understanding of (the mechanism of) overfitting in the DFA-framework
+# We learn how to control the outcome of the optimization (the one-sided DFA-filter) by playing with 
+#   the flexible user-interface of DFA
 
 # Design in this tutorial: 
-#   -We restrict our analysis to univariate examples
+#   -For illustration purposes we restrict our analysis to univariate examples
 #   -MSE-criterion (no customization)
 #   -Unconstrained filters (no regularization)
 #   -Customization and regularization will be tackled in separate tutorials
@@ -35,7 +35,7 @@ library(devtools)
 # MDFA package: EURUSD is now part of the data in the package
 library(MDFA)
 
-# Gamma and weight_func in the head of MDFA_mse allow for powerful interaction of the user with the estimation algorithm
+# Gamma and weight_func in the head of MDFA_mse allow for flexible interaction of the user with the estimation algorithm
 head(MDFA_mse)
 
 #-----------------------------------------------------------------------------------------------
@@ -67,7 +67,7 @@ K<-600
 #   -First column is spectrum of target, second column is spectrum of explanatory variable
 #   -In a univariate design target and explanatory data are the same
 weight_func<-matrix(rep(1,2*(K+1)),ncol=2)
-colnames(weight_func)<-c("target","explanatory")
+colnames(weight_func)<-c("spectrum target","spectrum explanatory")
 
 # White noise: flat spectrum (all frequencies are loaded equally by the process)
 plot(weight_func[,1],type="l",main=paste("White noise spectrum, denseness=",K,sep=""),
@@ -233,7 +233,7 @@ K<-600
 # Spectrum: white noise assumption
 #  First column is target, second column is explanatory variable: in a univariate design target and explanatory are the same
 weight_func<-matrix(rep(1,2*(K+1)),ncol=2)
-colnames(weight_func)<-c("target","explanatory")
+colnames(weight_func)<-c("spectrum target","spectrum explanatory")
 weight_func_noise<-weight_func
 periodicity<-5
 cutoff<-pi/periodicity
@@ -330,7 +330,7 @@ plot_T<-T
 spec<-arma_spectrum_func(a1,b1,K,plot_T)$arma_spec
 # Fill into weight_func: target (first column) and explanatory (second column); both are identical for univariate problems
 weight_func<-cbind(spec,spec)
-colnames(weight_func)<-c("target","explanatory")
+colnames(weight_func)<-c("spectrum target","spectrum explanatory")
 weight_func_ar1<-weight_func
 
 periodicity<-5
