@@ -6,7 +6,7 @@
 
 
 # Purpose of tutorial: 
-
+per
 
 rm(list=ls())
 
@@ -31,7 +31,6 @@ head(mdfa_analytic)
 
 #-----------------------------------------------------------------------------------------------
 # Source common functions
-
 source("Common functions/plot_func.r")
 source("Common functions/arma_spectrum.r")
 source("Common functions/ideal_filter.r")
@@ -113,7 +112,7 @@ Lag<-0
 L<-2*periodicity
 
 
-weight_func<-spec_comp(120,data_matrix_120,0)$weight_func
+#weight_func<-spec_comp(120,data_matrix_120,0)$weight_func
 
 # Estimate filter coefficients
 mdfa_obj<-MDFA_mse(L,weight_func,Lag,Gamma)$mdfa_obj 
