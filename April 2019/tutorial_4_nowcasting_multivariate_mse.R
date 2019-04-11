@@ -42,6 +42,144 @@ source("Common functions/mdfa_trade_func.r")
 #   MSE
 #   Bivariate
 
+
+lenh<-2000
+len<-120
+# Specify the AR-coefficients
+a_vec<-c(0.9,0.1,-0.9)
+xh<-matrix(nrow=lenh,ncol=length(a_vec))
+x<-matrix(nrow=len,ncol=length(a_vec))
+yhat<-x
+y<-x
+# Generate series for each AR(1)-process
+for (i in 1:length(a_vec))
+{
+  # We want the same random-seed for each process  
+  set.seed(10)
+  xh[,i]<-arima.sim(list(ar=a_vec[i]),n=lenh)
+}
+
+
+x<-xh[lenh/2+(-len/2):((len/2)-1),]
+# Compute the coefficients of the symmetric target filter
+periodicity<-6
+cutoff<-pi/periodicity
+# Order of approximation
+ord<-1000
+# Filter weights ideal trend (See DFA)
+gamma<-c(cutoff/pi,(1/pi)*sin(cutoff*1:ord)/(1:ord))
+# Compute the outputs yt of the (truncated) symmetric target filter
+for (i in 1:length(a_vec))
+{
+  for (j in 1:120)
+  {
+    y[j,i]<-gamma[1:900]%*%xh[lenh/2+(-len/2)-1+(j:(j-899)),i]+
+      gamma[2:900]%*%xh[lenh/2+(-len/2)+(j:(j+898)),i]
+  }
+}
+
+
+
+
+
+set.seed(12)
+# Select the AR(1)-process with coefficient 0.9
+i_process<-1
+# Scaling of the idiosyncratic noise
+scale_idiosyncratic<-0.1
+eps<-rnorm(nrow(xh))
+indicator<-xh[,i_process]+scale_idiosyncratic*eps
+# Data: first column=target, second column=x, 
+#   third column=shifted (leading) indicator
+data_matrix<-cbind(xh[,i_process],xh[,i_process],c(indicator[2:nrow(xh)],NA))
+dimnames(data_matrix)[[2]]<-c("target","x","leading indicator")
+# Extract 120 observations from the long sample
+data_matrix_120<-data_matrix[lenh/2+(-len/2):((len/2)-1),]
+head(round(data_matrix_120,4))
+
+
+insample<-nrow(data_matrix_120)
+# d=0 for stationary series: see default settings
+weight_func<-cbind(per(data_matrix_120[,1],T)$DFT,per(data_matrix_120[,2],T)$DFT,per(data_matrix_120[,3],T)$DFT)
+weight_func<-weight_func#*sqrt(2)
+K<-nrow(weight_func)-1
+
+weight_func<-Conj(weight_func)
+
+Gamma<-(0:(K))<=K*cutoff/pi
+# Nowcast (Lag=0), Backcast (Lag>0) and Forecast (Lag<0)
+Lag<-0
+# Filter length: L/K should be 'small'
+L<-2*periodicity
+
+
+weight_func<-spec_comp(120,data_matrix_120,0)$weight_func
+
+# Estimate filter coefficients
+mdfa_obj<-MDFA_mse(L,weight_func,Lag,Gamma)$mdfa_obj 
+# Filter coefficients
+b_mat<-mdfa_obj$b
+dimnames(b_mat)[[2]]<-c("x","leading indicator")
+dimnames(b_mat)[[1]]<-paste("Lag ",0:(L-1),sep="")#dim(b_mat)
+head(b_mat)
+
+
+round(mdfa_obj$MS_error,3)
+
+
+yhat_multivariate_leading_indicator<-rep(NA,len)
+for (j in 1:len)
+  yhat_multivariate_leading_indicator[j]<-sum(apply(b_mat*
+                                                      data_matrix[lenh/2+(-len/2)-1+j:(j-L+1),2:3],1,sum))
+
+
+
+y_target_leading_indicator<-y[,i_process]
+perf_mse<-matrix(c(mean(na.exclude((yhat_multivariate_leading_indicator-
+                                      y_target_leading_indicator))^2),
+                   mean(na.exclude((yhat[,i_process]-
+                                      y_target_leading_indicator))^2)),nrow=1)
+dimnames(perf_mse)[[2]]<-c("bivariate MDFA","DFA")
+dimnames(perf_mse)[[1]]<-"Sample MSE"
+round(perf_mse,3)
+
+
+
+
+
+i<-1
+ymin<-min(min(y[,i]),min(na.exclude(yhat)[,i]))
+ymax<-max(max(y[,i]),max(na.exclude(yhat)[,i]))
+ts.plot(yhat[,i],main=paste("Sample MSE MDFA: ",ylab="",
+                            round(perf_mse[1],3),", DFA: ",round(perf_mse[2],3),sep=""),col="blue",
+        ylim=c(ymin,ymax))
+lines(y[,i],col="red")
+lines(yhat_multivariate_leading_indicator,col="green")
+mtext("DFA", side = 3, line = -2,at=len/2,col="blue")
+mtext("target", side = 3, line = -1,at=len/2,col="red")
+mtext("MDFA", side = 3, line = -3,at=len/2,col="green")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # K defines the frequency-grid for estimation: all frequencies omega_j=j*pi/K, j=0,1,2,...,K are considered
 K<-600
 # Spectrum AR(1): try various processes
@@ -53,6 +191,7 @@ b1<-rbind(c(0.5,0.3),c(0.6,0.2))
 sigma<-rbind(c(1,0.5),c(0.5,1))
 
 varma_spectrum_func(a1,b1,K,plot_T)
+
   # Fill into weight_func: target (first column) and explanatory (second column); both are identical for univariate problems
 weight_func<-cbind(spec,spec)
 colnames(weight_func)<-c("spectrum target","spectrum explanatory")
