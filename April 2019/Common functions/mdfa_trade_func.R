@@ -6,8 +6,7 @@
 #   If x is xts then time ordering of b is reversed
 filt_func<-function(x,b)
 {
-  L<-length(b)
-  yhat<-x
+  L<-nrow(b)
   if (is.matrix(x))
   {  
     length_time_series<-nrow(x)
@@ -21,16 +20,29 @@ filt_func<-function(x,b)
       print("Error: x is neither a matrix nor a vector!!!!")
     }
   }
-  for (i in L:length_time_series)
+  yhat<-rep(NA,length_time_series)
+  for (i in L:length_time_series)#i<-L
   {
     # If x is an xts object then we cannot reorder x in desceding time i.e. x[i:(i-L+1)] is the same as  x[(i-L+1):i]
     #   Therefore, in this case, we have to revert the ordering of the b coefficients.    
     if (is.xts(x))
     {
-      yhat[i]<-as.double(b[L:1]%*%x[i:(i-L+1)])#tail(x) x[(i-L+1):i]
+      if (ncol(b)>1)
+      {
+        yhat[i]<-as.double(sum(apply(b[L:1,]*x[i:(i-L+1),],1,sum)))
+      } else
+      {
+        yhat[i]<-as.double(b[L:1,]%*%x[i:(i-L+1)])#tail(x) x[(i-L+1):i]
+      }
     } else
     {
-      yhat[i]<-as.double(as.vector(b)%*%x[i:(i-L+1)])#tail(x) x[(i-L+1):i]
+      if (ncol(b)>1)
+      {
+        yhat[i]<-as.double(sum(apply(b[1:L,]*x[i:(i-L+1),],1,sum)))
+      } else
+      {
+        yhat[i]<-as.double(as.vector(b)%*%x[i:(i-L+1)])#tail(x) x[(i-L+1):i]
+      }
     }
   }
   #  names(yhat)<-index(x)#index(yhat)  index(x)

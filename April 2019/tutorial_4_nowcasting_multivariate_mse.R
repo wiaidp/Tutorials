@@ -41,6 +41,7 @@ source("Common functions/mdfa_trade_func.r")
 #   Bivariate
 
 
+
 lenh<-500
 len<-121
 # Specify AR-process
@@ -64,16 +65,16 @@ eps<-rnorm(lenh)
 indicator<-x_long+scale_idiosyncratic*eps
 # Data: first column=target, second column=x, 
 #   third column=shifted (leading) indicator
-data_matrix<-cbind(x_long,x_long,c(indicator[2:lenh],NA))
+data_matrix<-na.exclude(cbind(x_long,x_long,c(indicator[2:lenh],indicator[lenh])))
 dimnames(data_matrix)[[2]]<-c("target","x","leading indicator")
 # Extract 120 observations from the long sample
 data_matrix_120<-data_matrix[lenh/2+(-len/2):((len/2)-1),]
 head(round(data_matrix_120,4))
 # Spectrum
-# One can use either function per
+# One can use either the function per
 weight_func<-cbind(per(data_matrix_120[,1],T)$DFT,per(data_matrix_120[,2],T)$DFT,per(data_matrix_120[,3],T)$DFT)
 # Or one can use spec_comp (the latter is slightly more general than per)
-#   Here we can supply the full data matrix data_matrix_120: spec_comp then returns the multivariate dft 
+#   Here we can supply the full data matrix data_matrix_120 at once: spec_comp then returns the multivariate dft 
 weight_func<-spec_comp(nrow(data_matrix_120), data_matrix_120, 0)$weight_func
 
 K<-nrow(weight_func)-1
@@ -96,37 +97,45 @@ dimnames(b_mat)[[1]]<-paste("Lag ",0:(L-1),sep="")#dim(b_mat)
 head(b_mat)
 
 
-round(mdfa_obj$MS_error,3)
-
-
-yhat_multivariate_leading_indicator<-rep(NA,len)
-for (j in 1:len)
-  yhat_multivariate_leading_indicator[j]<-sum(apply(b_mat*
-                                                      data_matrix[lenh/2+(-len/2)-1+j:(j-L+1),2:3],1,sum))
 
 
 
-y_target_leading_indicator<-y[,i_process]
-perf_mse<-matrix(c(mean(na.exclude((yhat_multivariate_leading_indicator-
+yhat_bivariate_leading_indicator<-filt_func(data_matrix[,2:ncol(data_matrix)],b_mat)$yhat
+
+
+weight_func_univariate<-weight_func[,1:2]
+mdfa_obj<-MDFA_mse(L,weight_func_univariate,Lag,Gamma)$mdfa_obj 
+# Filter coefficients
+b<-mdfa_obj$b
+
+yhat_univariate<-filt_func(as.matrix(data_matrix[,2]),b)$yhat
+
+
+length(yhat_bivariate_leading_indicator)
+length(y)
+
+
+y_target_leading_indicator<-y
+perf_mse<-matrix(c(mean(na.exclude((yhat_bivariate_leading_indicator-
                                       y_target_leading_indicator))^2),
-                   mean(na.exclude((yhat[,i_process]-
+                   mean(na.exclude((yhat_univariate-
                                       y_target_leading_indicator))^2)),nrow=1)
 dimnames(perf_mse)[[2]]<-c("bivariate MDFA","DFA")
 dimnames(perf_mse)[[1]]<-"Sample MSE"
 round(perf_mse,3)
+# Compare MSE of bivariate (time-domain) with criterion value (frequency-domain)
+round(mdfa_obj$MS_error,3)
 
 
 
-
-
-i<-1
-ymin<-min(min(y[,i]),min(na.exclude(yhat)[,i]))
-ymax<-max(max(y[,i]),max(na.exclude(yhat)[,i]))
-ts.plot(yhat[,i],main=paste("Sample MSE MDFA: ",ylab="",
+mplot<-cbind(yhat_univariate,y,yhat_bivariate_leading_indicator)
+ymin<-min(mplot,na.rm=T)
+ymax<-max(mplot,na.rm=T)
+ts.plot(mplot[,1],main=paste("Sample MSE MDFA: ",ylab="",
                             round(perf_mse[1],3),", DFA: ",round(perf_mse[2],3),sep=""),col="blue",
         ylim=c(ymin,ymax))
-lines(y[,i],col="red")
-lines(yhat_multivariate_leading_indicator,col="green")
+lines(mplot[,2],col="red")
+lines(mplot[,3],col="green")
 mtext("DFA", side = 3, line = -2,at=len/2,col="blue")
 mtext("target", side = 3, line = -1,at=len/2,col="red")
 mtext("MDFA", side = 3, line = -3,at=len/2,col="green")
