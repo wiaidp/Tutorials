@@ -4,7 +4,7 @@
 # Purpose of tutorial: illustrate (M)DFA user-interface, understand and interpret MSE solutions, understand overfitting
 
 # In previous forecasting-tutorial we emphasized a particular target: Gamma was an (anticipative: Lag<0) allpass filter
-#   -Here we propose generic targets, including lowpass, bandpass, highpass, Hodrick-Prescott, arbitrary,....
+#   -Here we propose generic targets, including lowpass, bandpass, highpass, Hodrick-Prescott (not implemented yet), arbitrary,....
 # We also propose different spectra and illustrate the main ideas behind the MSE optimization criterion 
 # We interpret important characteristics of the MSE-solution: amplitude and time-shift functions
 # We provide a thorough understanding of (the mechanism of) overfitting in the DFA-framework
@@ -166,6 +166,8 @@ id_obj$mean_holding_time
 #   -Then cumsum(x) would correspond to (log-) prices
 #   -Trading: sell at maxima and buy at minima of (log-) 'price' 
 #   -Maximum: when local drift (ideal filter output id_obj$y) crosses zero line from above
+#     Note that we applied the filter to returns i.e. maxima/minima are observed when the (local) 
+#       level of the returns or, equivalently, when the local drift of the (log-) prices vanishes
 #   -Minimum: when local drift (ideal filter output id_obj$y) crosses zero line from below
 # Let's illustrate these ideas in the following plot: 
 #   -green vertical lines are buys (ideal trend crosses zero line from below)
@@ -270,7 +272,7 @@ box()
 
 
 #-------------------------------------------------------------------------------------------
-# Example 5: approximate non-causal ideal lowpass by causal filter
+# Example 5: approximate non-causal ideal lowpass by causal filter assuming a white noise spectrum
 #   Interpret amplitude and time-shift functions
 
 K<-600

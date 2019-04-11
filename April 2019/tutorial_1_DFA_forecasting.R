@@ -391,7 +391,7 @@ for (i in 1:anzsim)
 # Compute the ratio of root mean-square forecast errors:
 #   The ratio cannot be larger than 1 asymptotically because our particular design distinguishes arma as the universally best possible design
 # Results: 
-#   -for L=10, the ratio is typically 97% or larger: in the mean the non-parametric DFA performs as well (by all practical means) as the best possible forecast approach
+#   -for L=10, the ratio is typically 98%: in the mean the non-parametric DFA performs as well (by all practical means) as the best possible forecast approach
 #     Note that L=10 is fine when forecasting most 'typical' economic data (at least when data is seasonally adjusted)
 #   -for L=100 the ratio drops to about 80% 
 #     Quantification of (massive) overfitting: similar to fitting an AR(100)-model to the data (Burg max-entropy spectral estimate)

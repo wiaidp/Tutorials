@@ -145,7 +145,7 @@ Gamma_dft<-(0:(K_dft))<=K_dft*cutoff/pi+1.e-9
 Lag<-0
 # Filter length
 #  L<-periodicity*2 is required for damping a component with that periodicity
-L<-periodicity*4
+L<-periodicity*2
 
 # Estimation based on MDFA-MSE wrapper
 mdfa_obj_dft_mse<-MDFA_mse(L,weight_func_dft,Lag,Gamma_dft)$mdfa_obj 
@@ -199,10 +199,10 @@ mat_mse_result
 
 #----------------------------------------------------------------------------------
 #---------------------------------------------------------------------------------------
-# Example 3: in the above examples we assumed knowledge of the true model (true spectrum). Here we evaluate a 
-#   non-parametric DFA based on the dft as an estimate of the spectrum and we compare out-of-sample performances with the 
-#   best possible design (assuming knowledge of the true data-generating process). This example corresponds to the simulation 
-#   studies in the previous tutorial (forecasting) but Gamma is now a lowpass (not an allpass) and we emphasize nowcasting (Lag=0) 
+# Example 3: Same as previous exercise but we conduct a simulation study based on multiple 
+# realizations of an arma-process. This example corresponds to the simulation 
+# studies in the previous tutorial (forecasting) but Gamma is now a lowpass (not an allpass) 
+# and we emphasize nowcasting (Lag=0) 
 
 # Example 3.1: MA(1)
 a1<-0.
@@ -228,13 +228,13 @@ mse_true_arma<-mse_dfa<-NULL
 # Number of simulations
 anzsim<-500
 # Length of in-sample span
-in_sample<-100
+in_sample<-300
 # Frequency grid for DFA based on true model
 K_true<-600
 # Lowpass target  
 periodicity<-5
 # Default (reasonable) filter length for nowcasting
-L<-4*periodicity
+L<-2*periodicity
 # Nowcast
 Lag<-0
 # Length of ideal filter
@@ -305,7 +305,7 @@ sqrt(mean(mse_true)/mean(mse_dft))
 
 
 #---------------------------------------------------------------------------------------
-# Example 4: Comparison of DFA-dft and DFA based on Burg's maximum entropy spectral estimate
+# Example 4: same as above but we compare DFA-dft (as above) and DFA based on Burg's maximum entropy spectral estimate
 
 # Example 4.1: MA(1)
 a1<-0.

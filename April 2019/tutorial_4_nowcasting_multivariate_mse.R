@@ -6,7 +6,6 @@
 
 
 # Purpose of tutorial: 
-per
 
 rm(list=ls())
 
@@ -42,68 +41,42 @@ source("Common functions/mdfa_trade_func.r")
 #   Bivariate
 
 
-lenh<-2000
-len<-120
-# Specify the AR-coefficients
-a_vec<-c(0.9,0.1,-0.9)
-xh<-matrix(nrow=lenh,ncol=length(a_vec))
-x<-matrix(nrow=len,ncol=length(a_vec))
-yhat<-x
-y<-x
+lenh<-500
+len<-121
+# Specify AR-process
+a1<-0.9
+a1<-0.1
 # Generate series for each AR(1)-process
-for (i in 1:length(a_vec))
-{
-  # We want the same random-seed for each process  
-  set.seed(10)
-  xh[,i]<-arima.sim(list(ar=a_vec[i]),n=lenh)
-}
-
-
-x<-xh[lenh/2+(-len/2):((len/2)-1),]
-# Compute the coefficients of the symmetric target filter
+set.seed(10)
+x_long<-arima.sim(list(ar=a1),n=lenh)
+x_short<-x_long[lenh/2+(-len/2):((len/2)-1)]
 periodicity<-6
 cutoff<-pi/periodicity
+# Ideal filter: as benchmark
 # Order of approximation
-ord<-1000
-# Filter weights ideal trend (See DFA)
-gamma<-c(cutoff/pi,(1/pi)*sin(cutoff*1:ord)/(1:ord))
-# Compute the outputs yt of the (truncated) symmetric target filter
-for (i in 1:length(a_vec))
-{
-  for (j in 1:120)
-  {
-    y[j,i]<-gamma[1:900]%*%xh[lenh/2+(-len/2)-1+(j:(j-899)),i]+
-      gamma[2:900]%*%xh[lenh/2+(-len/2)+(j:(j+898)),i]
-  }
-}
-
-
-
-
+M<-100
+y<-ideal_filter_func(periodicity,M,x_long)$y
 
 set.seed(12)
-# Select the AR(1)-process with coefficient 0.9
-i_process<-1
 # Scaling of the idiosyncratic noise
-scale_idiosyncratic<-0.1
-eps<-rnorm(nrow(xh))
-indicator<-xh[,i_process]+scale_idiosyncratic*eps
+scale_idiosyncratic<-0.
+eps<-rnorm(lenh)
+indicator<-x_long+scale_idiosyncratic*eps
 # Data: first column=target, second column=x, 
 #   third column=shifted (leading) indicator
-data_matrix<-cbind(xh[,i_process],xh[,i_process],c(indicator[2:nrow(xh)],NA))
+data_matrix<-cbind(x_long,x_long,c(indicator[2:lenh],NA))
 dimnames(data_matrix)[[2]]<-c("target","x","leading indicator")
 # Extract 120 observations from the long sample
 data_matrix_120<-data_matrix[lenh/2+(-len/2):((len/2)-1),]
 head(round(data_matrix_120,4))
-
-
-insample<-nrow(data_matrix_120)
-# d=0 for stationary series: see default settings
+# Spectrum
+# One can use either function per
 weight_func<-cbind(per(data_matrix_120[,1],T)$DFT,per(data_matrix_120[,2],T)$DFT,per(data_matrix_120[,3],T)$DFT)
-weight_func<-weight_func#*sqrt(2)
-K<-nrow(weight_func)-1
+# Or one can use spec_comp (the latter is slightly more general than per)
+#   Here we can supply the full data matrix data_matrix_120: spec_comp then returns the multivariate dft 
+weight_func<-spec_comp(nrow(data_matrix_120), data_matrix_120, 0)$weight_func
 
-weight_func<-Conj(weight_func)
+K<-nrow(weight_func)-1
 
 Gamma<-(0:(K))<=K*cutoff/pi
 # Nowcast (Lag=0), Backcast (Lag>0) and Forecast (Lag<0)
