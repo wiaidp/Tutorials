@@ -327,7 +327,7 @@ play_obj<-play_bivariate_func(a1,scale_idiosyncratic,len,L)
 
 play_obj$b__bivariate
 play_obj$perf_mse
-yhat_mat_overfitting<-play_obj$mplot
+yhat_mat_overfitting<-play_obj$mplot_all
 # Comments:
 #  1. filter coefficients (toggle point 1 ):
 #   -Not too ugly (still interpretable: the largest weight of the second filter is still assigned to the last data point)
@@ -380,16 +380,25 @@ play_obj<-play_bivariate_func(a1,scale_idiosyncratic,len,L)
 
 play_obj$b__bivariate
 play_obj$perf_mse
-yhat_mat_asymptotic<-play_obj$mplot
-
-# Comments:
-#   -MSE-performances are similar to example 6: out-of-sample MSE of bivariate are 0.057 (large L) vs. 0.061 (smaller L)
-#   -Filtered series are almost indistinguishable by eye
+yhat_mat_asymptotic<-play_obj$mplot_all
 
 
 
+# To conclude we here compare the filter outputs of the 'massively overfitted' MDFA (example 5 above) and of the 
+#   best possible 'asymptotic'  MDFA and DFA (very large in-sample span, large L)
+anf<-(nrow(yhat_mat_asymptotic)-100)
+enf<-nrow(yhat_mat_asymptotic)
+mplot<-cbind(yhat_mat_asymptotic[,3],yhat_mat_overfitting[,3],yhat_mat_asymptotic[,1])[anf:enf,]
+ts.plot(mplot[,1],ylim=c(min(mplot),max(mplot)),main="Asymptotic MDFA (blue) and DFA (green) with large L vs. massively overfittef (red) bivariate MDFAs",col="blue")
+lines(mplot[,2],col="red")
+lines(mplot[,3],col="green")
+mtext("Asymptotic MDFA",line=-1,col="blue")
+mtext("Asymptotic DFA (univariate)",line=-2,col="green")
+mtext("Massively overfitted MDFA",line=-3,col="red")
+abline(h=0)
 
-
+# Comment:
+#   The overfitted design performs remarkably well... 
 
 
 
