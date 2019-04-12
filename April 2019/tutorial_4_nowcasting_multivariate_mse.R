@@ -181,17 +181,187 @@ mtext("MDFA", side = 3, line = -3,at=len/2,col="green")
 
 #--------------------------------------------------------------------------------
 # Example 1
-#   This example replicates the above lengthy code: we 
+#   This example replicates the above lengthy code
+#   For that purpose we stiffed the above lengthy code into a function play_bivariate_func and we play with
+#     -a1, scale_idiosyncratic (noisiness of leading indicator), len (in-sample span) and L (filter length: bivariate filter requires 2*L degrees of freedom) 
 
+# Strong autocorrelation
 a1<-0.9
+# Noisy but not too much so
 scale_idiosyncratic<-0.4
+# Fairly long in-sample span
 len<-300
+# Modest filter length (periodicity is 6 so L=12 is needed to damp components in the stopband)
 L<-12
 
 play_obj<-play_bivariate_func(a1,scale_idiosyncratic,len,L)
   
 play_obj$b__bivariate
 play_obj$perf_mse
+
+# Comments:
+#  1. filter coefficients (toggle point 1 ):
+#   The coefficients applied to the first series look like an 'ordinary' (one-sided) lowpass
+#   The coefficients applied to the second series (leading indicator) assign most weight to last data point
+#     This is meaningful because last data-point looks into the future (leading)
+#     but since the series is noisy, the weight (coefficient) is not dominating
+#  2. MSE performances (toggle point 2):
+#   -Both in-sample measures (row 2: time-domain; row 3: frequency-domain criterion value) are close as desired
+#     -A heavy mismatch is indicative of overfitting: the frequency-grid would not be dense enough (K/L too small, ill-conditioned)
+#   -Out-of-sample performances of both filters are worse (overfitting)
+#   -Bivariate filter (first column) outperforms univariate (sedond column) in-sample as well as out-of-sample
+#     -This last result is expected at least in-sample; however, out-of-sample outperformance is less trivial because
+#      of increased overfitting by the bivariate design (requiring 2*L degrees of freedom)
+#  3. Plot of filter outputs (toggle point 3):
+#   -The output of the bivariate filter is generally anticipating turning-points, as expected
+#   -Both outputs (of one-sided filters) are slightly delayed with respect to target (though sometimes the one-sided filters seem to anticipate target)
+#     -This is because the data is smooth already (strong autocorrelation) so that the filtering-task is not too difficult
+#--------------------------------------------------------------------------------
+# Example 2: same as above but we make the filtering task more difficult by specifying a 'close to white' process
+# Almost white noise (close to fitting an ARMA-model to log-returns of EURUSD)
+a1<-0.08
+# Noisy but not too much so
+scale_idiosyncratic<-0.4
+# Fairly long in-sample span
+len<-300
+# Modest filter length (periodicity is 6 so L=12 is needed to damp components in the stopband)
+L<-12
+
+play_obj<-play_bivariate_func(a1,scale_idiosyncratic,len,L)
+
+play_obj$b__bivariate
+play_obj$perf_mse
+
+# Comments:
+#  1. filter coefficients (toggle point 1 ):
+#   The coefficients applied to the first series are decaying more slowly than in example 1: heavier smoothing of the noise
+#   As previously, the coefficients applied to the second series (leading indicator) assign most weight to last data point
+#     This is meaningful because last data-point looks into the future (leading)
+#     but since the series is noisy, the weight (coefficient) is not dominating
+#  2. MSE performances (toggle point 2):
+#   -Both in-sample measures (row 2: time-domain; row 3: frequency-domain criterion value) are tightly matched, as desired
+#     -A heavy mismatch is indicative of overfitting: the frequency-grid would not be dense enough (K/L too small, ill-conditioned)
+#   -Out-of-sample performances of both filters are worse (overfitting) but less so (proportionally) than in example 1
+#     Heavier smoothing mitigates (a bit) overfitting
+#   -Efficiency gains by bivariate design are commensurate with example 1
+#  3. Plot of filter outputs (toggle point 3):
+#   -Filtered series of one-sided designs are less smooth than in example 1 (input data is much noisier) and slightly more delayed (due to heavier smoothing)
+#   -bivariate filter generally leads univariate design by one time unit, as desired
+
+#--------------------------------------------------------------------------------
+# Example 3: same as example 2 (noisy data) but we make the leading indicator very noisy: thus we expect the univariate DFA to work as well as bivariate MDFA
+# Almost white noise (close to fitting an ARMA-model to log-returns of EURUSD)
+a1<-0.08
+# Very noisy leading indicator
+scale_idiosyncratic<-10
+# Fairly long in-sample span
+len<-300
+# Modest filter length (periodicity is 6 so L=12 is needed to damp components in the stopband)
+L<-12
+
+play_obj<-play_bivariate_func(a1,scale_idiosyncratic,len,L)
+
+play_obj$b__bivariate
+play_obj$perf_mse
+
+# Comments:
+#  1. filter coefficients (toggle point 1 ):
+#   The coefficients applied to the first series are decaying similarly to example 2
+#   In contrast to previous example 2, the coefficients applied to the second series are close to zero
+#     This is meaningful because the second explanatory series is independent noise: there is no useful information for improving estimation
+#  2. MSE performances (toggle point 2):
+#   -Both in-sample measures (row 2: time-domain; row 3: frequency-domain criterion value) are tightly matched, as desired
+#     -A heavy mismatch is indicative of overfitting: the frequency-grid would not be dense enough (K/L too small, ill-conditioned)
+#   -Out-of-sample performances of both filters are worse (overfitting) as in example 2 
+#   -The bivariate filter marginally outperforms the univariate filter in-sample; but it is marginally outperformed out-of-sample
+#     -This is 'as expected' due to overfitting
+#     -However we note that the loss of out-of-sample performance is small which is fine (the more general bivariate design does not loose much when 'unnecessary' explanatory data is added) 
+#  3. Plot of filter outputs (toggle point 3):
+#   -Both one-sided filter outputs nearly overlap, as expected ideally
+
+#--------------------------------------------------------------------------------
+# Example 4: same as example 2 but we make the in-sample span much shorter in order to magnify overfitting
+# Almost white noise (close to fitting an ARMA-model to log-returns of EURUSD)
+a1<-0.08
+# Noisy but not too much so
+scale_idiosyncratic<-0.4
+# Short sample: might be useful for non-stationary data where the generating process changes over time
+len<-100
+# Modest filter length (periodicity is 6 so L=12 is needed to damp components in the stopband)
+#   But note that we fit 2*12=24 coefficients to 100 observations only (49 complex-valued frequency-domain equations + 2 real-valued at frequencies 0 and pi which gives 49*2+2=100 frequency-domain observations)
+L<-12
+
+play_obj<-play_bivariate_func(a1,scale_idiosyncratic,len,L)
+
+play_obj$b__bivariate
+play_obj$perf_mse
+
+# Comments:
+#  1. filter coefficients (toggle point 1 ):
+#   -Remarkably close to results in example 2
+#  2. MSE performances (toggle point 2):
+#   -In-sample measures (row 2: time-domain; row 3: frequency-domain criterion value) differ: 
+#     -the criteria values (third row) are too small because both filters overfit the coarse freqeuncy-grid (only 50 frequencies available)
+#     -the bivariate filter (first column) 'overfits' more hevaily, as expected
+#   -Out-of-sample performances of both filters are worse (overfitting) as in example 2 
+#     -However, a comparison of out-of-sample MSEs (example 2 and here) reveals pretty similar performances: which is rather unexpected but welcome
+#     -Efficiency gains of the bivariate filter are similar to example 2 above which is, once again, rather unexpected but welcome
+#  3. Plot of filter outputs (toggle point 3):
+#   -The bivariate design is faster out-of-sample, es desired (but not necessarily as expected given that we estimate 24 coefficients on a sample of length 100)
+
+#--------------------------------------------------------------------------------
+# Example 5: same as example 2 but 'extreme' overfitting: 2*L/len=0.5 i.e. the bivariate design fits 50 coefficients to 100 data-points 
+#   What happens with out-of-sample performances?
+
+# Almost white noise (close to fitting an ARMA-model to log-returns of EURUSD)
+a1<-0.08
+# Noisy but not too much so
+scale_idiosyncratic<-0.4
+# Short sample (a bit more than a quarter of daily data): 
+#   might be interesting in the context of non-stationary data where the generating process changes rapidly over time
+len<-100
+# Too much...
+L<-25
+
+play_obj<-play_bivariate_func(a1,scale_idiosyncratic,len,L)
+
+play_obj$b__bivariate
+play_obj$perf_mse
+
+# Comments:
+#  1. filter coefficients (toggle point 1 ):
+#   -Not too ugly (still interpretable: the largest weight of the second filter is still assigned to the last data point)
+#  2. MSE performances (toggle point 2):
+#   -Out-of-sample performances of bivariate still a smidge better than univariate 
+#  3. Plot of filter outputs (toggle point 3):
+#   -The bivariate design is still faster out-of-sample, es desired (but not necessarily as expected given that we estimate 50 coefficients on a sample of length 100)
+
+#--------------------------------------------------------------------------------
+# Example 6: to be contrasted with example 5 above
+#   As example 5 (or 2) but we use a very long sample in order to reveal 'asymptotic' behaviour
+#   Expectation: for each filter all MSE-numbers should be tightly matched
+
+# Almost white noise (close to fitting an ARMA-model to log-returns of EURUSD)
+a1<-0.08
+# Noisy but not too much so
+scale_idiosyncratic<-0.4
+# Very long sample (more than 10 years of daily data)
+len<-3000
+# moderate filter length
+L<-12
+
+play_obj<-play_bivariate_func(a1,scale_idiosyncratic,len,L)
+
+play_obj$b__bivariate
+play_obj$perf_mse
+
+# Comments:
+#  1. filter coefficients (toggle point 1 ):
+#   -as expected 
+#  2. MSE performances (toggle point 2):
+#   -as expected: all MSE numbers are tightly matched 
+#  3. Plot of filter outputs (toggle point 3):
+#   -as expected
 
 
 
