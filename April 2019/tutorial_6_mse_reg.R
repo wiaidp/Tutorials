@@ -190,10 +190,10 @@ mplot_func(mplot, ax, plot_title, title_more, insamp, colo)
 
 # Comments
 # For increasing lambda_smooth the coefficients appear 'smoother': reduction of degrees of freedom (less overfitting)
-# Smoothness (of the filter coefficients) is generally preferred (though not too smooth...)
+# Smoothness (of the filter coefficients) is generally prefered (though not too smooth...)
 # Extreme smoothness means that coefficients are linear: the number of degrees of freedom drops from L to 2
 # Smothness does not control for decay of coefficients with increasing lag
-
+# Strong smoothness can conflict with rapid/enforced decay
 
 
 # Example 0.4 Cross-sectional tightness regularization 
@@ -306,14 +306,13 @@ mdfa_reg_obj<-MDFA_reg(L,weight_func,Lag,Gamma,cutoff,lambda,eta,lambda_cross,la
 
 
 names(mdfa_reg_obj)
-# Filter coefficients
+par(mfrow=c(1,1))
+# Filter coefficients: they decay slowly and their appearance is noisy
 ts.plot(mdfa_reg_obj$b)
-# Amplitude
+# Amplitude: very noisy (overfitting)
 ts.plot(abs(mdfa_reg_obj$trffkt))
-# Shift
+# Shift: noisy too
 ts.plot(Arg(mdfa_reg_obj$trffkt)/((0:K)*pi/K))
-# Degrees of freedom
-print(paste("Degrees of freedom: ",mdfa_reg_obj$rever,sep=""))
 
 
 # Same as above but using unconstrained MSE-wrapper
@@ -346,7 +345,7 @@ cbind(mdfa_reg_obj$b,mdfa_obj$b)
 #   -Or use constraints (i1<-T)
 
 # Set all remaining parameters as in example above
-source("parameter_set.r")
+source("Common functions/parameter_set.r")
 
 # Example 2.0: no decay
 lambda_decay<-c(0,0)
@@ -360,7 +359,7 @@ lambda_decay<-c(0.7,0.9)
 # very strong and fast decay
 lambda_decay<-c(0.7,0.999)
 # Example 2.4
-# very strong and very slow decay
+# very strong and slow decay
 lambda_decay<-c(0.01,0.999)
 
 # MDFA_reg: wrapper for working with regularization
@@ -389,7 +388,7 @@ ts.plot(Arg(mdfa_reg_obj$trffkt/scaler)/((0:K)*pi/K))
 #   Fundamental idea: filter coefficients should be smoothly changing over time (exception: seasonality)
 
 # Set all remaining parameters as in example above
-source("parameter_set.r")
+source("Common functions/parameter_set.r")
 
 # Set lambda_decay back to zero
 lambda_decay<-c(0,0)
@@ -401,8 +400,8 @@ lambda_smooth<-0
 # Mild smoothness
 lambda_smooth<-0.5
 # Strong smoothness
-lambda_smooth<-0.9
-# Very strong smoothness: coefficients are 'linear'
+lambda_smooth<-0.95
+# Extremely strong (maximum) smoothness: coefficients are 'linear'
 lambda_smooth<-1
 
 
@@ -447,7 +446,7 @@ head(weight_func_mat)
 
 
 # Set all remaining parameters as in example above
-source("parameter_set.r")
+source("Common functions/parameter_set.r")
 
 # Set lambda_decay and lambda_smooth back to zero
 lambda_decay<-c(0,0)
@@ -470,7 +469,7 @@ lambda_cross<-1
 # MDFA_reg: wrapper for working with regularization
 mdfa_reg_obj<-MDFA_reg(L,weight_func_mat,Lag,Gamma,cutoff,lambda,eta,lambda_cross,lambda_decay,lambda_smooth)$mdfa_obj
 
-
+par(mfrow=c(1,1))
 # Filter coefficients
 ts.plot(mdfa_reg_obj$b,col=rainbow(ncol(data)-1))
 for (i in 1:(ncol(data)-1))
@@ -535,7 +534,7 @@ head(weight_func_mat)
 weight_func<-weight_func_mat
 
 # Set all remaining parameters as in example above
-source("parameter_set.r")
+source("Common functions/parameter_set.r")
 
 # Imposing regularity: 
 #-------------------------
@@ -551,12 +550,12 @@ lambda_smooth<-0.
 # MDFA_reg: wrapper for working with regularization
 mdfa_reg_obj<-MDFA_reg(L,weight_func_mat,Lag,Gamma,cutoff,lambda,eta,lambda_cross,lambda_decay,lambda_smooth)$mdfa_obj
 
-
-# Filter coefficients
+par(mfrow=c(1,1))
+# Filter coefficients: largest weight is attributed to EURUSD, coefficients are not excessively noisy and the decay rapidly
 ts.plot(mdfa_reg_obj$b,col=rainbow(ncol(data)-1))
 for (i in 1:(ncol(data)-1))
   mtext(colnames(data)[i+1],side=3,line=-i,col=rainbow(ncol(data)-1)[i])
-# Amplitude
+# Amplitude: amplitudes are intuitively appealing
 ts.plot(abs(mdfa_reg_obj$trffkt),col=rainbow(ncol(data)-1))
 for (i in 1:(ncol(data)-1))
   mtext(colnames(data)[i+1],side=3,line=-i,col=rainbow(ncol(data)-1)[i])
@@ -582,8 +581,8 @@ lambda_cross<-0.9
 # MDFA_reg: wrapper for working with regularization
 mdfa_reg_obj<-MDFA_reg(L,weight_func_mat,Lag,Gamma,cutoff,lambda,eta,lambda_cross,lambda_decay,lambda_smooth)$mdfa_obj
 
-
-# Filter coefficients
+par(mfrow=c(1,1))
+# Filter coefficients: very similar across series, decay papidly, fairly smooth
 ts.plot(mdfa_reg_obj$b,col=rainbow(ncol(data)-1))
 for (i in 1:(ncol(data)-1))
   mtext(colnames(data)[i+1],side=3,line=-i,col=rainbow(ncol(data)-1)[i])
@@ -613,8 +612,8 @@ lambda_smooth<-0.99
 # MDFA_reg: wrapper for working with regularization
 mdfa_reg_obj<-MDFA_reg(L,weight_func_mat,Lag,Gamma,cutoff,lambda,eta,lambda_cross,lambda_decay,lambda_smooth)$mdfa_obj
 
-
-# Filter coefficients
+par(mfrow=c(1,1))
+# Filter coefficients: decay rapidly, are smooth and similar
 ts.plot(mdfa_reg_obj$b,col=rainbow(ncol(data)-1))
 for (i in 1:(ncol(data)-1))
   mtext(colnames(data)[i+1],side=3,line=-i,col=rainbow(ncol(data)-1)[i])
@@ -641,7 +640,7 @@ lag_fx<-1
 
 # MSE: 
 lambda<-0
-eta<-0.
+eta<-0
 
 mdfa_trade_obj<-mdfa_reg_trade_func(K,periodicity,L,Lag,lag_fx,data_filter,plot_T,weight_func,lambda_cross,lambda_decay,lambda_smooth,lambda,eta)
 

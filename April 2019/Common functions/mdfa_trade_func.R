@@ -82,18 +82,7 @@ mdfa_reg_trade_func<-function(K,periodicity,L,Lag,lag_fx,x,plot_T,weight_func,la
 
   #-----------
   # Filtering
-  if (ncol(b)==1)
-  {  
-    yhat<-filt_func(x,b)$yhat
-  } else
-  {
-    yhat_mat<-x
-    for (j in 1:ncol(b))#j<-1
-    {
-      yhat_mat[,j]<-filt_func(x[,j],b[,j])$yhat
-    }
-    yhat<-as.xts(apply(yhat_mat,1,mean))
-  }
+  yhat<-filt_func(x,b)$yhat
   #-------------
   # Compute performances: sign-rule and signal weighting
   # First series in x is always target (the data in x is re-ordered that way)
