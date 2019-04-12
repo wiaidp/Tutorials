@@ -20,7 +20,13 @@ filt_func<-function(x,b)
       print("Error: x is neither a matrix nor a vector!!!!")
     }
   }
-  yhat<-rep(NA,length_time_series)
+  if (is.xts(x))
+  {
+    yhat<-x[,1]
+  } else
+  {
+    yhat<-rep(NA,length_time_series)
+  }
   for (i in L:length_time_series)#i<-L
   {
     # If x is an xts object then we cannot reorder x in desceding time i.e. x[i:(i-L+1)] is the same as  x[(i-L+1):i]
@@ -111,8 +117,7 @@ mdfa_reg_trade_func<-function(K,periodicity,L,Lag,lag_fx,x,plot_T,weight_func,la
 
 
 
-
-
+#x<-data_filt
 mdfa_mse_reg_trade_func<-function(K,periodicity,L,Lag,lag_fx,x,plot_T,weight_func)
 {
   #-----------------
@@ -130,27 +135,18 @@ mdfa_mse_reg_trade_func<-function(K,periodicity,L,Lag,lag_fx,x,plot_T,weight_fun
   {
     plot_estimate_func(mdfa_obj_mse,weight_func,Gamma)
   }
-  
+  yhat<-filt_func(x,b)$yhat
   #-----------
   # Filtering
-  if (ncol(b)==1)
+#  if (ncol(b)==1)
   {  
     yhat<-filt_func(x,b)$yhat
-  } else
-  {
-    yhat_mat<-x
-    for (j in 1:ncol(b))#j<-1
-    {
-      yhat_mat[,j]<-filt_func(x[,j],b[,j])$yhat
-    }
-    yhat<-as.xts(apply(yhat_mat,1,mean))
-  }
+  } 
   #-------------
   # Compute performances: sign-rule and signal weighting
   # First series in x is always target (the data in x is re-ordered that way)
-  
   # Trading performance: sign-rule (don't forget to lag the signal by one day)
-  cum_perf_sign<-cumsum(na.omit(lag(sign((yhat)),lag_fx)*x[,1]))
+  cum_perf_sign<-cumsum(na.omit(as.xts(lag(sign((yhat)),lag_fx)*x[,1])))
   sharpe_sign<-sqrt(250)*mean(diff(cum_perf_sign),na.rm=T)/sqrt(var(diff(cum_perf_sign),na.rm=T))
   
   # Plot
