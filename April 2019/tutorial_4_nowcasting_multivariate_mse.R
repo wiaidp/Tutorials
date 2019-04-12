@@ -327,7 +327,7 @@ play_obj<-play_bivariate_func(a1,scale_idiosyncratic,len,L)
 
 play_obj$b__bivariate
 play_obj$perf_mse
-
+yhat_mat_overfitting<-play_obj$mplot
 # Comments:
 #  1. filter coefficients (toggle point 1 ):
 #   -Not too ugly (still interpretable: the largest weight of the second filter is still assigned to the last data point)
@@ -348,7 +348,7 @@ scale_idiosyncratic<-0.4
 # Very long sample (more than 10 years of daily data)
 len<-3000
 # moderate filter length
-L<-12
+L<-50
 
 play_obj<-play_bivariate_func(a1,scale_idiosyncratic,len,L)
 
@@ -359,33 +359,34 @@ play_obj$perf_mse
 #  1. filter coefficients (toggle point 1 ):
 #   -as expected 
 #  2. MSE performances (toggle point 2):
-#   -as expected: all MSE numbers are tightly matched 
+#   -as expected: all MSE numbers are tightly matched (per filter)
 #  3. Plot of filter outputs (toggle point 3):
 #   -as expected
 
+#--------------------------------------------------------------------------------
+# Example 7: same as example 6 (asymptotics) above but we illustrate that longer filter lengths do not improve performances much asymptotically
+#   As a consequence our rule of selecting L<-2*periodicity is OK in particular in cases where data is sparse and/or the generating-process is non-stationary (changing rapidly over time)
 
-
-
-
-
-
-
-a1<-0.1
-a1<-0.9
-
-scale_idiosyncratic<-10.# weights of second series are zero, in-sample MDFA better, out-of-sample worse
+# Almost white noise (close to fitting an ARMA-model to log-returns of EURUSD)
+a1<-0.08
+# Noisy but not too much so
 scale_idiosyncratic<-0.4
-scale_idiosyncratic<-0.
+# Very long sample (more than 10 years of daily data)
+len<-3000
+# moderate filter length
+L<-50
+
+play_obj<-play_bivariate_func(a1,scale_idiosyncratic,len,L)
+
+play_obj$b__bivariate
+play_obj$perf_mse
+yhat_mat_asymptotic<-play_obj$mplot
+
+# Comments:
+#   -MSE-performances are similar to example 6: out-of-sample MSE of bivariate are 0.057 (large L) vs. 0.061 (smaller L)
+#   -Filtered series are almost indistinguishable by eye
 
 
-
-len<-120
-len<-300
-len<-1000
-
-L<-2*periodicity
-L<-4*periodicity
-L<-8*periodicity
 
 
 

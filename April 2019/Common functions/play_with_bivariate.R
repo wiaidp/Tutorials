@@ -118,5 +118,5 @@ play_bivariate_func<-function(a1,scale_idiosyncratic,len,L)
   mtext("DFA", side = 3, line = -2,at=len/2,col="blue")
   mtext("target", side = 3, line = -1,at=len/2,col="red")
   mtext("MDFA", side = 3, line = -3,at=len/2,col="green")
-  return(list(b__bivariate=b__bivariate,perf_mse=perf_mse))
+  return(list(b__bivariate=b__bivariate,perf_mse=perf_mse,mplot=mplot))
 }
