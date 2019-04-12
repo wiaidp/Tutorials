@@ -34,9 +34,10 @@ source("Common functions/plot_func.r")
 source("Common functions/arma_spectrum.r")
 source("Common functions/ideal_filter.r")
 source("Common functions/mdfa_trade_func.r")
+source("Common functions/play_with_bivariate.r")
 
 #---------------------------------------------
-# Example 1 bivariate leading indicator design
+# Explaining the experiment: bivariate leading indicator design
 # -multivariate designs are particularly useful when incorporating a leading indicator into the set of explanatory variables 
 #   (assuming that such a series exists...)
 # -we here propose a simulation experiment based on a bivariate design where the leading indicator is a noisy version
@@ -57,10 +58,9 @@ source("Common functions/mdfa_trade_func.r")
 lenh<-10000
 # In-sample span: for increasing ratios L/len overfitting will be magnified: 
 #   note that bivariate filter requires 2*L coefficients: more prone to overfitting than univariate (for identical L)
-len<-120
+len<-300
 # Specify AR-process: positive, none, negative autocorrelation (though the latter is rather uncommon in typical economic data: negative autocorrelation may arise from overdifferencing the data)
 a1<-0.9
-a1<-0.1
 # Generate series for each AR(1)-process
 set.seed(1)
 # We generate lenh+1 data points because construction of the leading indicator will consume one observation
@@ -69,7 +69,7 @@ set.seed(2)
 # Generate a leading indicator as second explanatory variable: leading indicator is x_long+scale_idiosyncratic*noise shifted
 #   one time point in the future
 # Scaling of the idiosyncratic noise
-scale_idiosyncratic<-10.4
+scale_idiosyncratic<-.4
 if (abs(scale_idiosyncratic)==0)
   print("Design is not uniquely specified since both explanatory series are identical (up to a shift)")
 eps<-rnorm(lenh+1)
@@ -153,7 +153,7 @@ par(mfrow=c(1,1))
 mplot<-mplot_all<-cbind(yhat_univariate,y,yhat_bivariate_leading_indicator)
 ymin<-min(mplot,na.rm=T)
 ymax<-max(mplot,na.rm=T)
-ts.plot(mplot[,1],main=paste("Sample MSE MDFA: ",ylab="",
+ts.plot(mplot[,1],main=paste("Out-of-sample MSE MDFA: ",ylab="",
                             round(perf_mse[1],3),", DFA: ",round(perf_mse[2],3),sep=""),col="blue",
         ylim=c(ymin,ymax))
 lines(mplot[,2],col="red")
@@ -169,7 +169,7 @@ enf<-400
 mplot<-mplot_all[anf:enf,]
 ymin<-min(mplot,na.rm=T)
 ymax<-max(mplot,na.rm=T)
-ts.plot(mplot[,1],main=paste("Sample MSE MDFA: ",ylab="",
+ts.plot(mplot[,1],main=paste("Out-of-sample MSE MDFA: ",ylab="",
                              round(perf_mse[1],3),", DFA: ",round(perf_mse[2],3),sep=""),col="blue",
         ylim=c(ymin,ymax))
 lines(mplot[,2],col="red")
@@ -178,18 +178,35 @@ mtext("DFA", side = 3, line = -2,at=len/2,col="blue")
 mtext("target", side = 3, line = -1,at=len/2,col="red")
 mtext("MDFA", side = 3, line = -3,at=len/2,col="green")
 
-# Comments
-#   -Bivariate leading indicator design (MDFA, green line) tends to anticipate turning-points (lies to the left of univariate DFA, blue line)
-#   -Both outputs of causal filters (blue/green) are noisier than target (red) and are delayed
-# Customization
-#   -Reduce delay
-#   -Reduce noise leakage
-#   -Both?
 
+#--------------------------------------------------------------------------------
+# Example 1
+#   This example replicates the above lengthy code: we 
 
-
-scale_idiosyncratic<-10.4# weights of second series are zero, in-sample MDFA better, out-of-sample worse
+a1<-0.9
 scale_idiosyncratic<-0.4
+len<-300
+L<-12
+
+play_obj<-play_bivariate_func(a1,scale_idiosyncratic,len,L)
+  
+play_obj$b__bivariate
+play_obj$perf_mse
+
+
+
+
+
+
+
+
+a1<-0.1
+a1<-0.9
+
+scale_idiosyncratic<-10.# weights of second series are zero, in-sample MDFA better, out-of-sample worse
+scale_idiosyncratic<-0.4
+scale_idiosyncratic<-0.
+
 
 
 len<-120
