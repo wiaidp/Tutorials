@@ -1,6 +1,5 @@
 # Todos
-#   -Add/discuss constraints
-
+#   link to data
 
 # Purpose of tutorial: play with MSE unconstrained designs 
 #   -Apply DFA based on white noise spectrum to FX-trading (6 most liquid pairs)

@@ -1,11 +1,13 @@
-# Todos
-#   -Example with leading indicator
-#   -Add/discuss constraints
-
-
+# To do: link to paper
 
 
 # Purpose of tutorial: 
+# Illustrate multivaraite designs: we rely on an artificial bivariate leading-indicator design
+# Compare (MSE-, in-sample and out-sample) performances of univariate DFA and bivariate design
+# Explore overfitting issues
+# Analyze pertinence of bivariate approach under multiple secnarios (data generating process, noise of indicator, filter-lengths, sample-lengths,... )
+# Establish a link between optimization criterion (MSE in the frequency-domain) and in-sample (classic time-domain) MSE
+
 
 rm(list=ls())
 

@@ -1,6 +1,6 @@
 # Todos
-#   -Show that reg replicates MSE when all lambdas are zero
-#   -Amplitude, shift, coeff, spectrum, target
+#   -link to data
+#   -advanced regularization with mdfa_analytic
 
 
 # Purpose of tutorial: tackle overfitting by imposing shrinkage of the parameter space towards 'universally' meaningful subspace
