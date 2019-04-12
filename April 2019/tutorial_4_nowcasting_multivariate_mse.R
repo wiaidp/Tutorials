@@ -398,7 +398,7 @@ mtext("Massively overfitted MDFA",line=-3,col="red")
 abline(h=0)
 
 # Comment:
-#   The overfitted design performs remarkably well... 
+#   The overfitted design performs remarkably well (in particular at zero-crossings...) 
 
 
 
