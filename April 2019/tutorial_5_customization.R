@@ -283,8 +283,8 @@ box()
 
 
 #-----------------------------------------------------------------------------------------------
-# Example 6: simulation exercise
-#   Empirical distributions of MSEs, peak-correlation and cusrvature, in-sample and out-of-sample, for all processes specified in a_vec
+# Example 5: simulation exercise
+#   Empirical distributions of MSEs, peak-correlation and curvature, in-sample and out-of-sample, for all processes specified in a_vec
 anzsim<-100
 # Specify the processes: ar(1) with coefficients -0.9,0.1 and 0.9
 a_vec<-c(0.9,0.1,-0.9)
@@ -390,7 +390,7 @@ box()
 
 
 #---------------------------------------------------------------------------------------------------------
-# Example 5: compare bivariate leading indicator and univariate customized
+# Example 6: compare bivariate leading indicator and univariate customized
 #   See previous tutorial for a background to the play_bivariate_func function below
 #     This function sets-up a MDFA-experiment based on a bivariate noisy leading-indicator design
 
