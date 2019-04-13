@@ -41,6 +41,7 @@ source("Common functions/arma_spectrum.r")
 source("Common functions/ideal_filter.r")
 source("Common functions/mdfa_trade_func.r")
 source("Common functions/play_with_bivariate.r")
+source("Common functions/functions_trilemma.r")
 #---------------------------------------------------------------------------------------------
 # Example 1: emphasizing Timeliness
 # Univariate
