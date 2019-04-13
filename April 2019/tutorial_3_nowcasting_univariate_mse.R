@@ -66,7 +66,7 @@ source("Common functions/mdfa_trade_func.r")
 
 # K defines the frequency-grid for estimation: all frequencies omega_j=j*pi/K, j=0,1,2,...,K are considered
 K<-600
-# Spectrum AR(1): try various processes
+# Spectrum ARMA(1,1): try various processes
 #   Log-returns of typical economic data close to noise i.e. a1~0
 a1<-0.1
 b1<-NULL

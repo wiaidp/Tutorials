@@ -104,7 +104,7 @@ weight_func_bivariate<-spec_comp(nrow(data_matrix_in_sample), data_matrix_in_sam
 # Resolution of frequency-grid
 K<-nrow(weight_func_bivariate)-1
 # Target (in frequency domain)
-Gamma<-(0:(K))<=K*cutoff/pi
+Gamma<-(0:(K))<=K*cutoff/pi+1.e-9
 # Nowcast (Lag=0), Backcast (Lag>0) and Forecast (Lag<0)
 Lag<-0
 # Filter length: L/K should be 'small'
