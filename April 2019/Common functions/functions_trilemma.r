@@ -394,7 +394,7 @@ mdfa_mse_leading_indicator_vs_dfa_customized<-function(anzsim,a1,cutoff,L,lambda
                                                        eta_vec,len1,len,i1,i2,Lag,lambda_mdfa,eta_mdfa,troikaner)
 {
 
-
+  lenh<-len1
   b_mat<-vector(mode="list")
   mdfa_list<-vector(mode="list")
   weight_func<-matrix(rep(0:(len/2),3),ncol=3)
@@ -407,7 +407,7 @@ mdfa_mse_leading_indicator_vs_dfa_customized<-function(anzsim,a1,cutoff,L,lambda
 
 # MSE-settings for DFA and MDFA
   d<-0
-
+  lin_eta<-F
   weight_constraint<-rep(1/(ncol(weight_func)-1),ncol(weight_func)-1)
   lambda_cross<-lambda_smooth<-0
   lambda_decay<-c(0,0)
