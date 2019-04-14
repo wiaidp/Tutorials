@@ -335,16 +335,17 @@ box()
 #   -Expectations: 
 #     1. MSE designs    
 #      -Benchmark (best MSE assuming knowledge of true model) will outperform all other designs in terms of MSE out-of-sample
-#       -DFA-MSE (based on periodogram) will outperform all customized designs in terms of MSE out-of-sample
-#       -DFA-MSE (based on periodogram) will outperform benchmark in terms of MSE in-sample; but it will losse out-of-sample (overfitting)
+#      -DFA-MSE (based on periodogram) will outperform all customized designs in terms of MSE out-of-sample
+#      -DFA-MSE (based on periodogram) will outperform benchmark in terms of MSE in-sample; but it will loose out-of-sample (overfitting)
 #     2. Customized designs
 #       -Emphasizing mainly T (fourth design below) will outperform all other filters in terms of 'peak correlation' (smallest delay with respect to target: ideally zero-shift)
 #         But... this specialized design will be outperformed by classic MSE-design in terms of S (stronger leakage, noisy)
 #       -Emphasizing mainly S (second design below) will outperform all other filters in terms of 'curvature' (smoothest output, strongest noise suppression) 
 #         But... this specialized design will be outperformed by classic MSE-design in terms of T (larger lag)
-#       -Best mix of S&T will outperform classic MSE in terms of peak-correlation (faster) AND curvature (stronger noise suppression)
+#       -Best mix of S&T will outperform best possible MSE in terms of peak-correlation (faster) AND curvature (stronger noise suppression)
 #         This double score is not possible in a classic MSE-perspective
-#         The ATS-trilemma allow to improve both S and T (peak-cor and curvature) at the expense of A (and MSE)
+#         The ATS-trilemma allow to improve both S and T (peak-cor and curvature) at the expense of A (and MSE): a trilemma is needed...
+
 # Let's start
 
 # Number of realizations for computing empirical distributions
@@ -364,6 +365,7 @@ scaled_ATS<-F
 # Use periodogram
 mba<-F
 estim_MBA<-T
+# Length symmetric filter
 L_sym<-1000
 # Length of long data (for computing the target)
 len1<-3000
@@ -383,14 +385,9 @@ i1<-i2<-F
 # Use original (not differenced) data
 dif<-F
 
-
-
-
-
-# Proceed to simulation run
+# Proceed to simulation
 for_sim_obj<-for_sim_out(a_vec,len1,len,cutoff,L,mba,estim_MBA,L_sym,Lag,
-                         i1,i2,scaled_ATS,lambda_vec,eta_vec,anzsim,M,dif)
-
+                         i1,i2,scaled_ATS,lambda_vec,eta_vec,anzsim,K,dif)
 
 # Extract sample performances
 amp_shift_mat_sim<-for_sim_obj$amp_shift_mat_sim
@@ -401,7 +398,7 @@ xff_sim_sym<-for_sim_obj$xff_sim_sym
 ats_sym<-for_sim_obj$ats_sym
 dim_names<-for_sim_obj$dim_names
 
-dim(amp_shift_mat_sim)
+
 
 # Plot: empirical distributions of MSEs, peak-correlation and curvature, in-sample and out-of-sample, for all processes specified in a_vec
 colo<-c("red","orange","yellow","green","blue")#rainbow(length(lambda_vec)+1)
@@ -427,6 +424,8 @@ for (DGP in 1:length(a_vec))#DGP<-2
 
 
 # Comparison: MSE vs. customized filter outputs
+
+DGP<-2
 par(mfrow=c(1,1))
 amp_shift_mat_sim<-for_sim_obj$amp_shift_mat_sim
 amp_sim_per<-for_sim_obj$amp_sim_per
@@ -435,7 +434,6 @@ xff_sim<-for_sim_obj$xff_sim
 xff_sim_sym<-for_sim_obj$xff_sim_sym
 ats_sym<-for_sim_obj$ats_sym
 dim_names<-for_sim_obj$dim_names
-DGP<-2
 xf_per<-xff_sim[940:(940+2*len),,DGP,10]
 dimnames(xf_per)[[2]]<-dim_names[[1]]
 anf<-1
@@ -461,43 +459,72 @@ box()
 
 #---------------------------------------------------------------------------------------------------------
 # Example 6: compare bivariate leading indicator and univariate customized
-#   See previous tutorial for a background to the play_bivariate_func function below
-#     This function sets-up a MDFA-experiment based on a bivariate noisy leading-indicator design
+#   -See previous tutorial for a background to the play_bivariate_func function below
+#     The bivariate design relies on a leading indicator
+#     It outperformed the univariate DFA in terms of MSE in-sample (of course) and also out-of-sample (expected)
+#   -Given the above outcome (of simulation experiment) we can conclude that bivariate design will also outperform 
+#     all customized designs in terms of MSE (in- and out-of-sample)
+#   -Question: 
+#     Can the 'best-mix' customized design outperform the bivariate MSE (with leading indicator) in terms of lead/curvature?
+# Experimental design
+#   -The function mdfa_mse_leading_indicator_vs_dfa_customized sets-up a corresponding experiment 
+#   -It compares 
+#     1. a univariate DFA-MSE (lambda=eta=0)
+#     2  a univariate 'best-mix' customized DFA (see above experiment)
+#     3. a bivariate MSE design based which adds a noisy leading-indicator to the set of explanatory series
 
-a1<-0.1
-# Customization settings DFA
+# Select data generating process (ar(1)-coefficient)
+a1<-0.08
+# Number replications
+anzsim<-500
+# Customization settings DFA: MSE and 'best-mix'
 lambda_vec<-c(0,30)
 eta_vec<-c(0,1)
 # target
-cutoff<-pi/12
-len1<-2000
-len<-120
-L<-24
+periodicity<-12
+cutoff<-pi/periodicity
+# Full sample lengt (for applying symmetric ideal lowpass)
+len1<-3000
+# In-sample span (for estimation of spectrum: dft)
+len<-240
+L<-2*periodicity
+# Nowcast
 Lag<-0
+# No restrictions
 i1<-i2<-F
 # MDFA: MSE design
 lambda_mdfa<-eta_mdfa<-0
+# Boolean for speeding up simulation (some statistics in MDFA are omitted: does not impact calculations (only computation time))
 troikaner<-F
 
-# Run the competition: the new function handles the multivariate case
-cust_leading_obj<-mdfa_mse_leading_indicator_vs_dfa_customized(anzsim,
-                                                               a1,cutoff,L,lambda_vec,eta_vec,len1,len,i1,i2,Lag,
-                                                               lambda_mdfa,eta_mdfa,troikaner)  
+# Run the competition: univariate MSE and customized vs. bivariate leading indicator
+cust_leading_obj<-mdfa_mse_leading_indicator_vs_dfa_customized(anzsim,a1,cutoff,L,lambda_vec,eta_vec,len1,len,i1,i2,Lag,lambda_mdfa,eta_mdfa,troikaner)  
+
+# The following comments assume a1<-0.08 (almost white noise i.e. log-returns of typical (positive) economic time series)
+# 1. Curvature
+#     -Best-mix customized (gren) outperforms bivariate (brown) out-of-sample (stronger noise suppression)
+#     -Bivariate (brown) marginally better than univariate MSE (orange) out-of-sample 
 par(mfrow=c(1,2))
 boxplot(list(cust_leading_obj$perf_in_sample[,1,1],cust_leading_obj$perf_in_sample[,1,2],cust_leading_obj$perf_in_sample[,1,3]),outline=T,names=c(paste("DFA(",lambda_vec,",",eta_vec,")",sep=""),"MDFA-MSE Leading Indicator"),main=paste("Curvature in-sample, a1=",a1,sep=""),cex.axis=0.8,col=c("orange","green","brown"))
 boxplot(list(cust_leading_obj$perf_out_sample[,1,1],cust_leading_obj$perf_out_sample[,1,2],cust_leading_obj$perf_out_sample[,1,3]),outline=T,names=c(paste("DFA(",lambda_vec,",",eta_vec,")",sep=""),"MDFA-MSE Leading Indicator"),main=paste("Curvature out-of-sample, a1=",a1,sep=""),cex.axis=0.8,col=c("orange","green","brown"))
 
+# 2. Lag at peak-correlation
+#     -Best-mix customized (gren) outperforms bivariate (brown) out-of-sample (lead by one time-point)
+#       This outcome is both unexpected and remarkable
+#     -Bivariate (brown) outperforms univariate MSE (orange) out-of-sample by one time-point 
+#       Expected outcome (because of leading indicator in bivariate design)
 par(mfrow=c(1,2))
 boxplot(list(cust_leading_obj$perf_in_sample[,2,1],cust_leading_obj$perf_in_sample[,2,2],cust_leading_obj$perf_in_sample[,2,3]),outline=T,names=c(paste("DFA(",lambda_vec,",",eta_vec,")",sep=""),"MDFA-MSE Leading Indicator"),main=paste("Peak-Correlation in-sample, a1=",a1,sep=""),cex.axis=0.8,col=c("orange","green","brown"))
 boxplot(list(cust_leading_obj$perf_out_sample[,2,1],cust_leading_obj$perf_out_sample[,2,2],cust_leading_obj$perf_out_sample[,2,3]),outline=T,names=c(paste("DFA(",lambda_vec,",",eta_vec,")",sep=""),"MDFA-MSE Leading Indicator"),main=paste("Peak-Correlation out-of-sample, a1=",a1,sep=""),cex.axis=0.8,col=c("orange","green","brown"))
 
-par(mfrow=c(1,2))
+# 3. MSE
+#     No surprise i.e. everything as expected
 boxplot(list(cust_leading_obj$perf_in_sample[,3,1],cust_leading_obj$perf_in_sample[,3,2],cust_leading_obj$perf_in_sample[,3,3]),outline=T,names=c(paste("DFA(",lambda_vec,",",eta_vec,")",sep=""),"MDFA-MSE Leading Indicator"),main=paste("MSE in-sample, a1=",a1,sep=""),cex.axis=0.8,col=c("orange","green","brown"))
 boxplot(list(cust_leading_obj$perf_out_sample[,3,1],cust_leading_obj$perf_out_sample[,3,2],cust_leading_obj$perf_out_sample[,3,3]),outline=T,names=c(paste("DFA(",lambda_vec,",",eta_vec,")",sep=""),"MDFA-MSE Leading Indicator"),main=paste("MSE out-of-sample, a1=",a1,sep=""),cex.axis=0.8,col=c("orange","green","brown"))
 
 
+# Compare filter outputs
 par(mfrow=c(1,1))
-
 mplot<-scale(cust_leading_obj$filter_output_in_sample) 
 dimnames(mplot)[[2]]<-dimnames(cust_leading_obj$filter_output_in_sample)[[2]]
 colo_cust<-c("orange","green","brown")
@@ -513,8 +540,46 @@ axis(1,at=c(1,rep(0,6))+as.integer((0:6)*nrow(mplot)/6),
 axis(2)
 box()
 
+#---------------------------------------------------------------------------------------------------------
+# Example 7: same as example 6 but we now allow for customization of the bivariate design
 
 
+# Use the same settings as above but add a 'best-mix' customized for the bivariate filter
+lambda_mdfa<-c(0,30)
+eta_mdfa<-c(0,1.)
+
+
+cust_leading_obj<-mdfa_mse_leading_indicator_vs_dfa_customized(anzsim,a1,
+                                                               cutoff,L,lambda_vec,eta_vec,len1,len,i1,i2,Lag,lambda_mdfa,eta_mdfa,troikaner)  
+
+
+colo<-rainbow(length(lambda_mdfa)+length(lambda_vec))
+par(mfrow=c(1,2))
+# 1. Curvature
+#   in-sample
+boxplot(list(cust_leading_obj$perf_in_sample[,1,1],cust_leading_obj$perf_in_sample[,1,2],cust_leading_obj$perf_in_sample[,1,3],cust_leading_obj$perf_in_sample[,1,4]),outline=T,names=c(paste("DFA(",lambda_vec,",",eta_vec,")",sep=""),paste("MDFA(",lambda_mdfa,",",eta_mdfa,")",sep="")),main=paste("Curvature in-sample, a1=",a1,sep=""),cex.axis=0.8,col=colo)
+#   out-of-sample
+boxplot(list(cust_leading_obj$perf_out_sample[,1,1],cust_leading_obj$perf_out_sample[,1,2],cust_leading_obj$perf_out_sample[,1,3],cust_leading_obj$perf_out_sample[,1,4]),outline=T,names=c(paste("DFA(",lambda_vec,",",eta_vec,")",sep=""),paste("MDFA(",lambda_mdfa,",",eta_mdfa,")",sep="")),main=paste("Curvature out-of-sample, a1=",a1,sep=""),cex.axis=0.8,col=colo)
+
+
+
+# 2. Peak correlation 
+#   in-sample
+boxplot(list(cust_leading_obj$perf_in_sample[,2,1],cust_leading_obj$perf_in_sample[,2,2],cust_leading_obj$perf_in_sample[,2,3],cust_leading_obj$perf_in_sample[,2,4]),outline=T,names=c(paste("DFA(",lambda_vec,",",eta_vec,")",sep=""),paste("MDFA(",lambda_mdfa,",",eta_mdfa,")",sep="")),main=paste("Peak Correlation in-sample, a1=",a1,sep=""),cex.axis=0.8,col=colo)
+#   out-of-sample 
+boxplot(list(cust_leading_obj$perf_out_sample[,2,1],cust_leading_obj$perf_out_sample[,2,2],cust_leading_obj$perf_out_sample[,2,3],cust_leading_obj$perf_out_sample[,2,4]),outline=T,names=c(paste("DFA(",lambda_vec,",",eta_vec,")",sep=""),paste("MDFA(",lambda_mdfa,",",eta_mdfa,")",sep="")),main=paste("Peak Correlation out-of-sample, a1=",a1,sep=""),cex.axis=0.8,col=colo)
+
+
+# 3. MSE 
+#   in sample
+boxplot(list(cust_leading_obj$perf_in_sample[,3,1],cust_leading_obj$perf_in_sample[,3,2],cust_leading_obj$perf_in_sample[,3,3],cust_leading_obj$perf_in_sample[,3,4]),outline=T,names=c(paste("DFA(",lambda_vec,",",eta_vec,")",sep=""),paste("MDFA(",lambda_mdfa,",",eta_mdfa,")",sep="")),main=paste("MSE in-sample, a1=",a1,sep=""),cex.axis=0.8,col=colo)
+#   out-of-sample 
+boxplot(list(cust_leading_obj$perf_out_sample[,3,1],cust_leading_obj$perf_out_sample[,3,2],cust_leading_obj$perf_out_sample[,3,3],cust_leading_obj$perf_out_sample[,3,4]),outline=T,names=c(paste("DFA(",lambda_vec,",",eta_vec,")",sep=""),paste("MDFA(",lambda_mdfa,",",eta_mdfa,")",sep="")),main=paste("MSE out-of-sample, a1=",a1,sep=""),cex.axis=0.8,col=colo)
+
+# Multivariate customized 
+#   outperforms all other contenders with respect to lead and curvature out-of-sample
+#   outperforms customized univariate in terms of MSE out-of-sample
+#   is outperformed in terms of MSE by both MSE-designs out-of-sample
 
 
 

@@ -215,7 +215,6 @@ cutoff,L,L_sym,a1,mba,scaled_ATS,estim_MBA,Lag,i1,i2)
 
 for_sim_out<-function(a_vec,len1,len,cutoff,L,mba,estim_MBA,L_sym,Lag,i1,i2,scaled_ATS,lambda_vec,eta_vec,anzsim,M,dif)
 {
-
   amp_sim<-array(dim=c(len/2+1,length(lambda_vec)+1,length(a_vec),anzsim))
   shift_sim<-amp_sim
   amp_shift_mat_sim<-array(dim=c(length(lambda_vec)+1,10,length(a_vec),anzsim))
@@ -237,11 +236,13 @@ for_sim_out<-function(a_vec,len1,len,cutoff,L,mba,estim_MBA,L_sym,Lag,i1,i2,scal
   shift_eper<-amp_eper
   b_sim<-array(dim=c(L,length(eta_vec)+1,length(a_vec),anzsim))
   b_array<-array(dim=c(L,length(eta_vec)+1,length(a_vec)))
-  pb <- txtProgressBar(min = 1, max = anzsim, style = 3)
+  if (anzsim>1)
+    pb <- txtProgressBar(min = 1, max = anzsim, style = 3)
   
   for (i in 1:anzsim) #i<-1
   {
-    setTxtProgressBar(pb, i)
+    if (anzsim>1)
+      setTxtProgressBar(pb, i)
     
     for (ki in 1:length(a_vec))    #ki<-1
     {
@@ -425,10 +426,14 @@ mdfa_mse_leading_indicator_vs_dfa_customized<-function(anzsim,a1,cutoff,L,lambda
   synchronicity<-F
 # 26.11
   lag_mat<-matrix(rep(0:(L-1),ncol(weight_func)),nrow=L)
-
+  if (anzsim>1)
+    pb <- txtProgressBar(min = 1, max = anzsim, style = 3)
+  
   for (i_loop in 1:anzsim)#i_loop<-100
   {
-
+    if (anzsim>1)
+      setTxtProgressBar(pb, i_loop)
+    
 # Generate series
     set.seed(i_loop)
     xh<-arima.sim(list(ar=a1),n=len1)
@@ -486,7 +491,7 @@ mdfa_mse_leading_indicator_vs_dfa_customized<-function(anzsim,a1,cutoff,L,lambda
 # In order to replicate code in McElroy-Wildi we set all coefficients to zero for lags>470 (reconciliation)
     gamma[471:length(gamma)]<-0
 # Compute the outputs yt of the (truncated) symmetric target filter
-    for (j in 1:120)# j<-120
+    for (j in 1:len)# j<-120
     {
       y_insample[j]<-gamma[1:700]%*%data_matrix[len1/2+(-len/2)-1+(j:(j-699)),2]+gamma[2:700]%*%data_matrix[len1/2+(-len/2)+(j:(j+698)),2]
       y_outsample[j]<-gamma[1:700]%*%data_matrix[len+len1/2+(-len/2)-1+(j:(j-699)),2]+gamma[2:700]%*%data_matrix[len+len1/2+(-len/2)+(j:(j+698)),2]
