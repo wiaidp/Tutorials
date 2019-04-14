@@ -182,47 +182,56 @@ compute_customized_designs_func(lambda_vec,eta_vec,L,weight_func,Lag,Gamma,cutof
 
 #------------------------------------------------------------------------------------------------
 # Example 4: the following function was used in the trilemma paper (McElroy/Wildi) 
-#   It computes much more statistics and it can be used for simulations
-#   It relies on DFA-code (which is the same as MDFA-univariate)
+#   It computes the full set of ATS-statistics and it performs complete simulation runs with detailed in-sample/out-of-sample results
+#   It relies on DFA-code (which is replicated one-to-one by MDFA-univariate but which is much simpler/shorter)
 
 eta_vec<-c(0,1.8)
 # Specify the fixed lambda
 lambda_vec<-c(0,128)
 
 # Specify the processes: ar(1) with coefficients -0.9,0.1 and 0.9
-a_vec<-0.9
+#   One can specify different processes at once and the code will loop through 
+#   For simplicity we here use positive and nearly zero autocorrelation
+a_vec<-c(0.9,0.08,-0.9)
 # Ordinary ATS-components
 scaled_ATS<-F
 # Generate a single realization of the processes
 anzsim<-1
-# Specify filter length
-L<-24
 # Use periodogram
 mba<-F
 estim_MBA<-T
-M<-len/2
 L_sym<-1000
 # Length of long data (for computing the target)
 len1<-3000
-# Length of estimation sample
+# Length of in-sample span
 len<-120
-# cutoff
-cutoff<-pi/12
+# Frequency grid: length of periodogram i.e. len/2
+K<-len/2
+# Periodicity
+periodicity<-12
+cutoff<-pi/periodicity
+# Specify filter length
+L<-2*periodicity
 # Real-time design
 Lag<-0
 # no constraints
 i1<-i2<-F
-# difference data
+# Use original (not differenced) data
 dif<-F
 
 
 # Proceed to estimation
 for_sim_obj<-for_sim_out(a_vec,len1,len,cutoff,L,mba,estim_MBA,L_sym,
-                         Lag,i1,i2,scaled_ATS,lambda_vec,eta_vec,anzsim,M,dif)
+                         Lag,i1,i2,scaled_ATS,lambda_vec,eta_vec,anzsim,K,dif)
 
 
 
-# 1 ATS
+# ATS-components
+#   -Decomposition of MSE into Accuracy (A), Timeliness (T) and Smoothness (S), see trilemma paper Wildi/Mcelroy
+#   -Customization here emphasizes T (lambda>0) and S (eta>0) simultaneously at cost of A
+#   -As can be seen in table below: A (of customized design) degrades massiveley in favour of substantial improvements by T and S
+#   -MSE (of customized) degrades obviously, since customization is a deliberate departure of MSE-performances
+#     A degrades overproportionally when improving S/T
 ats_sym_ST<-for_sim_obj$ats_sym
 # 2 Curvature, Peak Correlation, ...
 amp_shift_mat_sim<-for_sim_obj$amp_shift_mat_sim
@@ -234,11 +243,11 @@ xff_sim<-for_sim_obj$xff_sim
 # 5. Peak correlation and Curvature
 amp_shift_mat_sim_ST<-for_sim_obj$amp_shift_mat_sim
 dim_names<-for_sim_obj$dim_names
-i_process<-1
-
-ats_sym_ST[-1,,i_process,1]
-
+# Process 1 (positive acf) or 2 (zero acf) 
 DGP<-1
+ats_sym_ST[-1,,DGP,1]
+
+# Amplitude and time shift
 par(mfrow=c(1,2))
 mplot<-amp_sim_per[,-1,DGP,1]
 dimnames(mplot)[[2]]<-paste("Amplitude (",lambda_vec,",",eta_vec,")",sep="")
@@ -261,15 +270,14 @@ mplot_func(mplot, ax, plot_title, title_more, insamp, colo)
 
 par(mfrow=c(1,1))
 series_vec<-c(2,3)
-ki<-1
-xf_per<-xff_sim[940:(940+len),,ki,1]#dim(xff_sim)
+xf_per<-xff_sim[940:(940+len),,DGP,1]#dim(xff_sim)
 dimnames(xf_per)[[2]]<-dim_names[[1]]
 anf<-1
 enf<-len
 mplot<-scale(cbind(xf_per[,series_vec[1]],xf_per[,series_vec[2]])[anf:enf,])  #head(xf_per)
 plot(as.ts(mplot[,1]),type="l",axes=F,col="red",ylim=c(min(na.exclude(mplot)),
                                                          max(na.exclude(mplot))),ylab="",xlab="",
-main=paste("MSE (red) vs. Customized (cyan): a1=",a_vec[ki],sep=""),lwd=1)
+main=paste("MSE (red) vs. Customized (cyan): a1=",a_vec[DGP],sep=""),lwd=1)
 mtext("MSE", side = 3, line = -1,at=(enf-anf)/2,col=colo[1])
 i<-2
 lines(as.ts(mplot[,i]),col=colo[2],lwd=2)
@@ -284,36 +292,98 @@ box()
 
 #-----------------------------------------------------------------------------------------------
 # Example 5: simulation exercise
-#   Empirical distributions of MSEs, peak-correlation and curvature, in-sample and out-of-sample, for all processes specified in a_vec
+#   -The ATS components are 'new' and therefore it's not immediately clear what they mean
+#     -What does smaller S and T mean or: how has the practitioner to interpret these measures? 
+#     -Explanations will be provided in new book but we here instead rely on well-known/established alternative statistics
+#   -Alternative statistics: 
+#     1. Instead of T we propose to look at peak-correlation
+#       -Shift filter outputs of a specific one-sided design (for example classic MSE) with respect to target 
+#         (output of symmetric filter) until the correlation between both series is maximized
+#       -A smaller shift implies that the corresponding design is faster (smaller lag)
+#       -Note that this concept (peak correlation) is scale invariant (scaling the filter output does not affect the measure)
+#       -Expectation: emphasizing T (lambda>0) will result in faster filters (smaller shift at peak correlation)
+#     2. Instead of S we propose to look at (relative) curvature
+#       -'Smoothness' of a series (here: filter output) can be measured by looking at the (squared) second order differences
+#       -If the noise-leakage is strong (poor stopband properties of the filter) then the filter-output will be 
+#         noisy and squared second-order differences will be large
+#       -In contrast: if the leakage is weak (strong suppression of noise) then the squared second order differences will be small
+#       -The (relative) curvature is defined as follows: mean-squared second-order diffs divided by variance of series
+#       -Note that this concept (relative curvature) is scale invariant (scaling the filter output does not affect the measure)
+#       -Expectation: emphasizing S (eta>0) will result in smaller curvature
+
+#  -Experimental design: in the following empirical experiment we
+#    -compute data: multiple realizations of three differenet processes with positive/zero/negative autocorrelation 
+#    -compute 
+#      1. Symmetric target filters (in order to calculate peak correlation and (time-domain) MSEs)
+#          These filter look into the future: therefore we expect that one-sided filters will be lagging (positive shift at peak correlation)
+#      2. One-sided best possible MSE (assuming knowledge of the true model: no estimation): these filters are benchmarks
+#        Ideally we would like empirical customized filters to outperform this benchmark in terms of lag/curvature out-of-sample....
+#      3. Empirical (DFA) MSE and customized designs based on the periodogram (we assume 120 observations for the in-sample span)
+#        -We have 3 customized designs
+#          a. emphasize mainly T (specialized fast design) 
+#          b. emphasize mainly S (specialized smooth design)  
+#          c. 'best compromise' of T&S
+#        -Our hope is: c. will outperform best MSE (assuming knowledge of true model) in terms of speed/curvature out-of-sample
+#          for all processes considered
+#    -Compute for each filter-realization of each process 
+#      1. the peak-correlation (shift/lag)
+#      2. the curvature
+#      3. the (time-domain) MSE
+#      In-sample and out-of-sample
+#    -Plot the empirical distributions (box-plots) of all three measures: lag/curvature/MSE, in-sample and out-of-sample
+
+#   -Expectations: 
+#     1. MSE designs    
+#      -Benchmark (best MSE assuming knowledge of true model) will outperform all other designs in terms of MSE out-of-sample
+#       -DFA-MSE (based on periodogram) will outperform all customized designs in terms of MSE out-of-sample
+#       -DFA-MSE (based on periodogram) will outperform benchmark in terms of MSE in-sample; but it will losse out-of-sample (overfitting)
+#     2. Customized designs
+#       -Emphasizing mainly T (fourth design below) will outperform all other filters in terms of 'peak correlation' (smallest delay with respect to target: ideally zero-shift)
+#         But... this specialized design will be outperformed by classic MSE-design in terms of S (stronger leakage, noisy)
+#       -Emphasizing mainly S (second design below) will outperform all other filters in terms of 'curvature' (smoothest output, strongest noise suppression) 
+#         But... this specialized design will be outperformed by classic MSE-design in terms of T (larger lag)
+#       -Best mix of S&T will outperform classic MSE in terms of peak-correlation (faster) AND curvature (stronger noise suppression)
+#         This double score is not possible in a classic MSE-perspective
+#         The ATS-trilemma allow to improve both S and T (peak-cor and curvature) at the expense of A (and MSE)
+# Let's start
+
+# Number of realizations for computing empirical distributions
 anzsim<-100
 # Specify the processes: ar(1) with coefficients -0.9,0.1 and 0.9
-a_vec<-c(0.9,0.1,-0.9)
-# Ordinary ATS-components
-scaled_ATS<-F
-# Specify the lambdas
+#   One can specify different processes at once and the code will loop through 
+#   For simplicity we here use positive and nearly zero autocorrelation
+a_vec<-c(0.9,0.08,-0.9)
+# Specify the lambdas: first filter is MSE, second is specialized S (very smooth/high lag), 
+#   third is 'best mix' (outperforms MSE in terms of S and T or in smaller lag and smaller curvature), 
+#   last one is specialized T (smallest/vanishing lag but noisy) 
 lambda_vec<-c(0,0,30,500)
 # Specify the etas
 eta_vec<-c(0,1.5,1,0.3)
-# Specify filter length
-L<-24
+# Ordinary ATS-components
+scaled_ATS<-F
 # Use periodogram
 mba<-F
 estim_MBA<-T
-M<-len/2
-# Length of symmetric target filter (for computing MSEs)
-L_sym<-2*939
-# Length of long data
-len1<-2000
-# Length of estimation sample
+L_sym<-1000
+# Length of long data (for computing the target)
+len1<-3000
+# Length of in-sample span
 len<-120
-# cutoff
-cutoff<-pi/12
+# Frequency grid: length of periodogram i.e. len/2
+K<-len/2
+# Periodicity
+periodicity<-12
+cutoff<-pi/periodicity
+# Specify filter length
+L<-2*periodicity
 # Real-time design
 Lag<-0
 # no constraints
 i1<-i2<-F
-# difference data
+# Use original (not differenced) data
 dif<-F
+
+
 
 
 
@@ -331,9 +401,9 @@ xff_sim_sym<-for_sim_obj$xff_sim_sym
 ats_sym<-for_sim_obj$ats_sym
 dim_names<-for_sim_obj$dim_names
 
+dim(amp_shift_mat_sim)
 
-
-# Plot: empirical distributions of MSEs, peak-correlation and cusrvature, in-sample and out-of-sample, for all processes specified in a_vec
+# Plot: empirical distributions of MSEs, peak-correlation and curvature, in-sample and out-of-sample, for all processes specified in a_vec
 colo<-c("red","orange","yellow","green","blue")#rainbow(length(lambda_vec)+1)
 
 Perf_meas_sel<-c(3,7,4,8,5,9,6,10)
@@ -365,8 +435,8 @@ xff_sim<-for_sim_obj$xff_sim
 xff_sim_sym<-for_sim_obj$xff_sim_sym
 ats_sym<-for_sim_obj$ats_sym
 dim_names<-for_sim_obj$dim_names
-ki<-2
-xf_per<-xff_sim[940:(940+2*len),,ki,10]
+DGP<-2
+xf_per<-xff_sim[940:(940+2*len),,DGP,10]
 dimnames(xf_per)[[2]]<-dim_names[[1]]
 anf<-1
 enf<-2*len

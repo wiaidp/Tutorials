@@ -237,9 +237,12 @@ for_sim_out<-function(a_vec,len1,len,cutoff,L,mba,estim_MBA,L_sym,Lag,i1,i2,scal
   shift_eper<-amp_eper
   b_sim<-array(dim=c(L,length(eta_vec)+1,length(a_vec),anzsim))
   b_array<-array(dim=c(L,length(eta_vec)+1,length(a_vec)))
-
+  pb <- txtProgressBar(min = 1, max = anzsim, style = 3)
+  
   for (i in 1:anzsim) #i<-1
   {
+    setTxtProgressBar(pb, i)
+    
     for (ki in 1:length(a_vec))    #ki<-1
     {
   # The same seed is used for all three processes
