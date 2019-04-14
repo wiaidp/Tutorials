@@ -542,9 +542,11 @@ box()
 
 #---------------------------------------------------------------------------------------------------------
 # Example 7: same as example 6 but we now allow for customization of the bivariate design
+# Contenders in this competition: uni and bivariate MSE as well as uni and bivariate customized (the latter is new)
 
 
-# Use the same settings as above but add a 'best-mix' customized for the bivariate filter
+# Use the same settings as above but add a 'best-mix' customization for the bivariate filter
+#   You might have to load the settings in the previous example in order to run this piece (if not done yet)
 lambda_mdfa<-c(0,30)
 eta_mdfa<-c(0,1.)
 
@@ -577,11 +579,15 @@ boxplot(list(cust_leading_obj$perf_in_sample[,3,1],cust_leading_obj$perf_in_samp
 boxplot(list(cust_leading_obj$perf_out_sample[,3,1],cust_leading_obj$perf_out_sample[,3,2],cust_leading_obj$perf_out_sample[,3,3],cust_leading_obj$perf_out_sample[,3,4]),outline=T,names=c(paste("DFA(",lambda_vec,",",eta_vec,")",sep=""),paste("MDFA(",lambda_mdfa,",",eta_mdfa,")",sep="")),main=paste("MSE out-of-sample, a1=",a1,sep=""),cex.axis=0.8,col=colo)
 
 # Multivariate customized 
-#   outperforms all other contenders with respect to lead and curvature out-of-sample
+#   outperforms all other contenders with respect to lead and curvature out-of-sample (though outperformance with respect to customized DFA is modest)
 #   outperforms customized univariate in terms of MSE out-of-sample
 #   is outperformed in terms of MSE by both MSE-designs out-of-sample
-
-
+# Conclusion: 
+#   1. Performances in terms of Smoothess (smaller curvature) and Timeliness (smaller lag at peak correlation) are
+#     obtained mainly by design, i.e. by the art of optimizing the relevant features of the filter, rather than by adding 
+#     a (cheating...) leading time series.
+#   2. MSE-performances may degrade substantially as a side-effect of addressing S and T at the expense of A
+#     but some users (me included) really don't care about that collateral damage
 
 
 
