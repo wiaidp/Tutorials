@@ -168,7 +168,7 @@ for (i_series in 1:ncol(log_FX_mat))
 # Length of frequency-grid (always length of spectral estimate)  
   K<-nrow(weight_func)-1
 # Target (cutoff, periodicity)
-  periodicity<-5
+  periodicity<-10
 # Nowcast  
   Lag<-0
 # Huge L  
@@ -234,7 +234,7 @@ for (i_series in 1:ncol(log_FX_mat))#i_series<-1
   colnames(weight_func)<-rep(colnames(log_FX_mat)[i_series],2)
   colnames(weight_func)<-c("spectrum target","spectrum explanatory")
   # Target (cutoff, periodicity)
-  periodicity<-5
+  periodicity<-10
   # Nowcast  
   Lag<-0
   # Reasonably large L  
@@ -332,7 +332,7 @@ for (i_series in 1:ncol(log_FX_mat))# i_series<-1
 # Length of sepctral grid  
   K<-nrow(weight_func)-1
 # Target (cutoff/periodicity)  
-  periodicity<-5
+  periodicity<-10
 # Nowcast  
   Lag<-0
 # Large L

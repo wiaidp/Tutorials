@@ -68,7 +68,7 @@ x<-na.exclude(diff(log_FX_mat[,asset]))
 weight_func<-cbind(per(x[paste("/",in_sample_span,sep="")],T)$DFT,per(x[paste("/",in_sample_span,sep="")],T)$DFT)
 K<-nrow(weight_func)-1
 #weight_func[1,]<-1000
-periodicity<-5
+periodicity<-10
 # Cutoff frequency
 cutoff<-pi/periodicity
 # Target 

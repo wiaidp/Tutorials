@@ -72,7 +72,7 @@ weight_func<-cbind(per(x[paste("/",in_sample_span,sep="")],T)$DFT,per(x[paste("/
 K<-nrow(weight_func)-1
 colnames(weight_func)<-c("spectrum target","spectrum explanatory")
 # Target: specify cutoff=pi/periodicity of lowpass ideal target
-periodicity<-5
+periodicity<-10
 cutoff<-pi/periodicity
 Gamma<-(0:(K))<=K*cutoff/pi+1.e-9
 # Nowcast (Lag=0), Backcast (Lag>0) and Forecast (Lag<0)
@@ -284,7 +284,7 @@ x<-na.exclude(diff(log_FX_mat[,asset]))
 weight_func<-cbind(per(x[paste("/",in_sample_span,sep="")],T)$DFT,per(x[paste("/",in_sample_span,sep="")],T)$DFT)
 K<-nrow(weight_func)-1
 #weight_func[1,]<-1000
-periodicity<-5
+periodicity<-10
 # Cutoff frequency
 cutoff<-pi/periodicity
 # Target 
