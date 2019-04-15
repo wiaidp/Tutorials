@@ -1,6 +1,6 @@
 K<-nrow(weight_func)-1
 #weight_func[1,]<-1000
-periodicity<-5
+periodicity<-10
 # Cutoff frequency
 cutoff<-pi/periodicity
 # Target 

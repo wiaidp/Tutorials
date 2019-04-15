@@ -96,8 +96,6 @@ ts.plot(mdfa_reg_obj$b)
 ts.plot(abs(mdfa_reg_obj$trffkt))
 # Shift
 ts.plot(Arg(mdfa_reg_obj$trffkt)/((0:K)*pi/K))
-# Degrees of freedom
-print(paste("Degrees of freedom: ",mdfa_reg_obj$rever,sep=""))
 
 
 # Same as above but using unconstrained MSE-wrapper
@@ -129,7 +127,7 @@ cbind(mdfa_reg_obj$b,mdfa_obj$b)
 #   -Or use constraints (i1<-T)
 
 # Set all remaining parameters as in example above
-source("parameter_set.r")
+source("Common functions/parameter_set.r")
 
 # Example 2.0: no decay
 lambda_decay<-c(0,0)
@@ -172,7 +170,7 @@ ts.plot(Arg(mdfa_reg_obj$trffkt/scaler)/((0:K)*pi/K))
 #   Fundamental idea: filter coefficients should be smoothly changing over time (exception: seasonality)
 
 # Set all remaining parameters as in example above
-source("parameter_set.r")
+source("Common functions/parameter_set.r")
 
 # Set lambda_decay back to zero
 lambda_decay<-c(0,0)
@@ -230,7 +228,7 @@ head(weight_func_mat)
 
 
 # Set all remaining parameters as in example above
-source("parameter_set.r")
+source("Common functions/parameter_set.r")
 
 # Set lambda_decay and lambda_smooth back to zero
 lambda_decay<-c(0,0)
@@ -318,7 +316,7 @@ head(weight_func_mat)
 weight_func<-weight_func_mat
 
 # Set all remaining parameters as in example above
-source("parameter_set.r")
+source("Common functions/parameter_set.r")
 
 # Imposing regularity: 
 #-------------------------
