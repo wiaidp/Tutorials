@@ -40,6 +40,7 @@ head(mdfa_analytic)
 source("Common functions/plot_func.r")
 source("Common functions/mdfa_trade_func.r")
 source("Common functions/data_load_functions.R")
+source("Common functions/arma_spectrum.r")
 
 
 #-----------------------------------------------------------------------------------------------
@@ -209,10 +210,76 @@ plot(as.xts(apply(apply(na.exclude(diff_perf_mat[paste("/",in_sample_span,sep=""
 plot(as.xts(apply(diff_perf_mat[paste(in_sample_span,"/",sep="")],2,cumsum)),main="Individual FX-series, out-of-sample")
 plot(as.xts(apply(apply(diff_perf_mat[paste(in_sample_span,"/",sep="")],2,cumsum),1,mean)),main="Aggregate out-of-sample")
 
+#-----------------------------------------------------------
+# Example 4: same as above but use Burg's max-entropy spectrum
+#   -If the autoregressive order (parameter burg_order below) is 'small' then overfitting will be contained: one can use 'large' L
+#   -K can be selected arbitrarily large
+# We use all series
+
+
+in_sample_span<-"2018-01-01"
+burg_order<-10
+K<-600
+
+for (i_series in 1:ncol(log_FX_mat))#i_series<-1
+{
+  
+  
+  x<-na.exclude(diff(log_FX_mat[,i_series]))
+  # Spectrum Burg max entropy
+  arp<-arima(x,c(burg_order,0,0))$coef[1:burg_order]
+  b1<-NULL
+  arma_spec<-arma_spectrum_func(arp,b1,K,T)$arma_spec
+  weight_func<-cbind(arma_spec,arma_spec)
+  colnames(weight_func)<-rep(colnames(log_FX_mat)[i_series],2)
+  colnames(weight_func)<-c("spectrum target","spectrum explanatory")
+  # Target (cutoff, periodicity)
+  periodicity<-5
+  # Nowcast  
+  Lag<-0
+  # Reasonably large L  
+  L<-2*periodicity
+  # large L  
+  L<-120
+  # Degrees of freedom must be smaller than number of equations (otherwise problem is singular)  
+  L<-min(2*K,L)#L<-900
+  # Delay trade execution (must be >=1)  
+  lag_fx<-1
+  plot_T<-T
+  
+  # This function is in mdfa_trade_func.r
+  # MSE estimation and trading
+  
+  mdfa_mse_reg_trade_obj<-mdfa_mse_reg_trade_func(K,periodicity,L,Lag,lag_fx,x,plot_T,weight_func)
+  
+  cum_perf_sign<-mdfa_mse_reg_trade_obj$cum_perf_sign
+  
+  diff_perf<-diff(cum_perf_sign)
+  # Save trading performances  
+  if (i_series==1)
+  {
+    diff_perf_mat<-diff_perf  
+  } else
+  {
+    diff_perf_mat<-cbind(diff_perf_mat,diff_perf)
+    
+  }
+  
+}
+
+# in sample performances
+plot(as.xts(apply(na.exclude(diff_perf_mat[paste("/",in_sample_span,sep="")]),2,cumsum)),main="Individual FX-series in-sample")
+plot(as.xts(apply(apply(na.exclude(diff_perf_mat[paste("/",in_sample_span,sep="")]),2,cumsum),1,mean)),main="Aggregate in-sample")
+
+
+# out-of-sample performances
+plot(as.xts(apply(diff_perf_mat[paste(in_sample_span,"/",sep="")],2,cumsum)),main="Individual FX-series, out-of-sample")
+plot(as.xts(apply(apply(diff_perf_mat[paste(in_sample_span,"/",sep="")],2,cumsum),1,mean)),main="Aggregate out-of-sample")
+
 
 
 #-----------------------------------------------------------
-# Example 4: multivariate (MDFA) with dft (discrete fourier transform)
+# Example 5: multivariate (MDFA) with dft (discrete fourier transform)
 # We use all series as explanatory variables: 6-dimensional design (this is a bit unwise but we use the example for illustration)
 #   Number of degrees of freedom is 6*L   
 # Huge overfitting: try L<-200 with periodicity=5 against 'reasonably large' L:
