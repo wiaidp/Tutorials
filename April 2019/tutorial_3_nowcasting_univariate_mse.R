@@ -14,7 +14,7 @@
 #   We compare best possible one-sided DFA with empirical DFA based on dft as well as DFA based on on Burg's maximum entropy 
 #     estimate, both in-sample and out-of-sample
 #   We show that lowpass nowcasting with DFA based on discrete fourier transform (dft) performs nearly as well (in terms of MSE performances) as best possible approach (assuming knowledge of true data generating process)
-#     -Assuming some elemtary care is needed in order to avoid overfitting
+#     -Assuming some elementary care is taken in order to avoid overfitting
 #     -Heavily overparametrized designs still perform honorably when compared to best possible approach (10%loss of efficiency 'only')
 #   We also show that DFA based on dft and DFA based on Burg's max-entropy spectral estimate perform equally
 #     These results suggest that dft or Burg-spectrum can be used for real-time signal extraction (lowpass nowcasting) in practice
@@ -78,7 +78,7 @@ spec<-arma_spectrum_func(a1,b1,K,plot_T)$arma_spec
 weight_func<-cbind(spec,spec)
 colnames(weight_func)<-c("spectrum target","spectrum explanatory")
 # Target: specify cutoff=pi/periodicity of lowpass ideal target
-periodicity<-5
+periodicity<-10
 cutoff<-pi/periodicity
 Gamma<-(0:(K))<=K*cutoff/pi+1.e-9
 # Nowcast (Lag=0), Backcast (Lag>0) and Forecast (Lag<0)
@@ -174,7 +174,7 @@ lines(output_dft_dfa,col="green")
 # Let's now zoom into the plot and have a closer look at both series
 anf<-400
 enf<-500
-ts.plot(output_ideal[anf:enf],col="blue",main="Output of ideal lowpass (blue) vs DFA (red)")
+ts.plot(output_ideal[anf:enf],col="blue",main="Output of ideal lowpass (blue) vs DFA (red) and DFA-dft (green)")
 lines(output_dfa[anf:enf],col="red")
 lines(output_dft_dfa[anf:enf],col="green")
 abline(h=0)
@@ -229,11 +229,11 @@ mse_true_arma<-mse_dfa<-NULL
 # Number of simulations
 anzsim<-500
 # Length of in-sample span
-in_sample<-300
+in_sample<-100
 # Frequency grid for DFA based on true model
 K_true<-600
 # Lowpass target  
-periodicity<-5
+periodicity<-10
 # Default (reasonable) filter length for nowcasting
 L<-2*periodicity
 # Nowcast
@@ -297,11 +297,11 @@ for (i in 1:anzsim)
 sqrt(mean(mse_true)/mean(mse_dft))
 
 # Results: 
-#   -for L=2*periodicity and in_sample=300, the ratio is typically around 99%: in the mean the non-parametric DFA performs as well (by all practical means) as the best possible forecast approach
-#   -for L=2*periodicity and in_sample=100, the ratio is typically around 95%: in the mean the non-parametric DFA performs nearly as well as the best possible forecast approach
-#   -for L=4*periodicity and in_sample=100, the ratio is typically around 90%: in the mean the non-parametric DFA performs close to the best possible forecast approach
-#     Note that L=2*periodicity is fine for damping all components with durations shorter/equal periodicity
-#     Although fitting L=4*periodicity=20 parameters for a time series of length in_sample=100 is not extremly smart (overfitting), the DFA-dft's performance is close to the best possible approach (assuming knowledge of the true data-generating process) 
+#   -for L=2*periodicity and in_sample=300, the ratio is typically around 97%: in the mean the non-parametric DFA performs as well (by all practical means) as the best possible forecast approach
+#   -for L=2*periodicity and in_sample=100, the ratio is typically around 88%: in the mean the non-parametric DFA performs nearly as well as the best possible forecast approach
+#     -Note that L=2*periodicity is fine for damping all components with durations shorter/equal periodicity
+#     -But fitting L=2*periodicity=20 parameters for a time series of length in_sample=100 is 
+#       not extremely smart (overfitting). See tutorial on regulartization...
 
 
 
@@ -332,7 +332,7 @@ in_sample<-300
 # Frequency grid for DFA based on Burg's estimate
 K_burg<-600
 # Lowpass target  
-periodicity<-5
+periodicity<-10
 # Default (reasonable) filter length for nowcasting: this is also used for the estimation of Burg's max-entropy spectrum
 L<-2*periodicity
 # Nowcast
@@ -357,14 +357,15 @@ for (i in 1:anzsim)
   # Use in-sample span for model-estimation and for dft  
   x_insample<-x[1:in_sample]
   # Burg spectral estimate: use AR(L)
-  arima_burg_obj<-arima(x_insample,order=c(L,0,0),include.mean=F)
+  # Restrict length of AR (otherwise numerical optimization fails)
+  arima_burg_obj<-arima(x_insample,order=c(min(L,10),0,0),include.mean=F)
   # Spectrum based on burg model  
   spec<-arma_spectrum_func(arima_burg_obj$coef,NULL,K_burg,F)$arma_spec
   weight_func<-cbind(spec,spec)
   colnames(weight_func)<-c("spectrum target","spectrum explanatory")
   weight_func_burg<-weight_func
   cutoff<-pi/periodicity
-  # target burg model: frequnecy grid is not the same as for dft below i.e. K is different
+  # target burg model: frequency grid is not the same as for dft below i.e. K is different
   Gamma_burg<-(0:(K_burg))<=K_burg*cutoff/pi+1.e-9
   mdfa_burg_obj<-MDFA_mse(L,weight_func_burg,Lag,Gamma_burg)$mdfa_obj 
   b_burg<-mdfa_burg_obj$b
@@ -397,7 +398,5 @@ for (i in 1:anzsim)
 sqrt(mean(mse_burg)/mean(mse_dft))
 
 # Results: 
-#   -for L=2*periodicity and in_sample=300, the ratio is 100%: both approaches are indistinguishable
-#   -for L=2*periodicity and in_sample=100, the ratio is around 99%: in the mean DFA-dft performs as well as DFA-Burg
-#   -for L=4*periodicity and in_sample=100, the ratio is marginally above 100%: in the mean DFA-dft performs at least as well as DFA-Burg
+#   -for L=2*periodicity and in_sample=300, the ratio is 98% i.e. both approaches are indistinguishable by all practical means
 

@@ -87,7 +87,7 @@ data_matrix_in_sample<-data_matrix[M:(M+len),]
 # One can see that the second explanatory (third column) leads the target data (but it is noisy)
 tail(round(data_matrix_in_sample,4))
 
-# Specify target
+# Specify target (as used in book)
 periodicity<-6
 cutoff<-pi/periodicity
 # Ideal filter: used for evaluating time-domain MSE
