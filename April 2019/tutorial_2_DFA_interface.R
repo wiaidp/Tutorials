@@ -119,7 +119,7 @@ plot_estimate_func(mdfa_obj,weight_func,Gamma)
 #   Alternatively, the user might want to emphasize interesting low-frequency components: for example trend and/or cycle
 
 # Target: specify cutoff=pi/periodicity of lowpass ideal target
-periodicity<-5
+periodicity<-10
 cutoff<-pi/periodicity
 Gamma<-(0:(K))<=K*cutoff/pi+1.e-9
 plot(Gamma,type="l",main=paste("Ideal lowpass, periodicity=",periodicity,", denseness=",K,sep=""),
@@ -199,7 +199,7 @@ abline(v=1+which(plot_data[1:(nrow(plot_data)-1),2]<0&plot_data[2:nrow(plot_data
 abline(v=1+which(plot_data[1:(nrow(plot_data)-1),2]>0&plot_data[2:nrow(plot_data),2]<0),col="red")
 
 # Trading: tactical (short-term) and strategic (mid and long-term) positioning
-#   -Short-term: select a small periodicity (for example weekly: periodicity<-5)
+#   -Short-term: select a small periodicity (for example weekly: periodicity<-10)
 #   -Mid-term: select a mid-sized periodicity (for example monthly: periodicity<-20)
 #   -Long-term: select a large periodicity (for example quarterly: periodicity<-60; or yearly: periodicity<-250 (in the latter case the filter-length M should be enlarged too))
 # Problem: the above ideal filter is not causal!
@@ -281,7 +281,7 @@ K<-600
 weight_func<-matrix(rep(1,2*(K+1)),ncol=2)
 colnames(weight_func)<-c("target","explanatory")
 weight_func_noise<-weight_func
-periodicity<-5
+periodicity<-10
 cutoff<-pi/periodicity
 Gamma<-(0:(K))<=K*cutoff/pi+1.e-9
 plot(Gamma,type="l",main=paste("Ideal lowpass, periodicity=",periodicity,", denseness=",K,sep=""),
@@ -379,7 +379,7 @@ weight_func<-cbind(spec,spec)
 colnames(weight_func)<-c("spectrum target","spectrum explanatory")
 weight_func_ar1<-weight_func
 
-periodicity<-5
+periodicity<-10
 cutoff<-pi/periodicity
 Gamma<-(0:(K))<=K*cutoff/pi+1.e-9
 plot(Gamma,type="l",main=paste("Ideal lowpass, periodicity=",periodicity,", denseness=",K,sep=""),
@@ -441,7 +441,7 @@ box()
 #   2. We therefore expect the fit of the amplitude function to improve towards pi/2
 # Let's verify this conjecture
 
-periodicity<-5
+periodicity<-10
 cutoff<-pi/periodicity
 Gamma<-(0:(K))<=K*cutoff/pi+1.e-9
 plot(Gamma,type="l",main=paste("Ideal lowpass, periodicity=",periodicity,", denseness=",K,sep=""),
@@ -470,7 +470,7 @@ plot_compare_two_DFA_designs(mdfa_obj_tweaked_mse,mdfa_obj_ar1_mse,weight_func_t
 # What happened?
 #   Both amplitude functions are quite similar except that the tweaked one approaches zero at frequency pi/2
 #   This is because 
-#     1. the target is zero at frequency pi (this component will be eliminated by the ideal lowpass)
+#     1. the target is zero at frequency pi/2 (this component will be eliminated by the ideal lowpass)
 #     2. the tweaked spectrum is very large: thus DFA tries to damp that component more effectively (the amplitude approaches the target-value zero)
 #  The fit of the time-shift improves similarly, see next example
 #---------------------------------------------------------------------------------------
@@ -495,7 +495,7 @@ box()
 #   2. We therefore expect the fit of the amplitude function to improve at that frequency
 # Let's verify this conjecture
 
-periodicity<-5
+periodicity<-10
 cutoff<-pi/periodicity
 Gamma<-(0:(K))<=K*cutoff/pi+1.e-9
 plot(Gamma,type="l",main=paste("Ideal lowpass, periodicity=",periodicity,", denseness=",K,sep=""),
@@ -564,7 +564,7 @@ box()
 # Let's do so...
 
 
-periodicity<-5
+periodicity<-10
 cutoff<-pi/periodicity
 Gamma<-(0:(K))<=K*cutoff/pi+1.e-9
 plot(Gamma,type="l",main=paste("Ideal lowpass, periodicity=",periodicity,", denseness=",K,sep=""),
@@ -663,3 +663,4 @@ plot_estimate_func(mdfa_obj_tweaked_mse,weight_func_tweaked,Gamma)
 #---------------------------------------------------------------------------------
 # Possible additions (todos)
 #   Specify target in time-domain
+#   Filter constraints
