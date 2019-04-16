@@ -492,20 +492,24 @@ for (i in 1:(ncol(data)-1))
 
 #------------------------------------------------------------------------------------
 # Example 5: we here duplicate example 3 (simulation experiment) of tutorial 3 but we use regularization (insetad of unconstrained design)
+# Specifically
+#   -We benchmark empirical DFA based on DFT, unconstrained (as in tutorial 3) and regularized,
+#     against best possible MSE-design (assuming knowledge of true model) out-of-sample
+# Expectation: in short samples (sparse information) performances of suitably regularized designs improve out-of-sample 
 
-# Example 3.1: MA(1)
+# Example 5.1: MA(1)
 a1<-0.
 b1<-0.7
 true_model_order<-c(0,0,1)
-# Example 3.2: ARMA with positive acf
+# Example 5.2: ARMA with positive acf
 a1<-0.6
 b1<-0.7
 true_model_order<-c(1,0,1)
-# Example 3.3: AR with negative acf
+# Example 5.3: AR with negative acf
 a1<--0.9
 b1<-0
 true_model_order<-c(1,0,0)
-# Example 3.4: close to noise (typical for log-returns of FX-data)
+# Example 5.4: close to noise (typical for log-returns of FX-data)
 a1<--0.08
 b1<-0.0
 true_model_order<-c(1,0,0)
@@ -529,7 +533,7 @@ K_true<-600
 periodicity<-10
 # Deliberately exagerate overfitting: we use filters of length 4*periodicity 
 #   -This filter length is used for all designs
-#   -Expected effect: when imposing regularization the performances improve out-of-sample
+#   -Expected effect: when imposing regularization in short samples the performances improve out-of-sample
 L<-4*periodicity
 #   MSE design (no customization)
 lambda<-eta<-0
@@ -616,7 +620,8 @@ result_mat
 
 #----------------------------------------------------------------------------------------------
 # Example 6: advanced regularization
-#  We here skip the regularization wrapper and use the fulle-fleshed mdfa_analytic function
+#  We here short-cut the regularization wrapper and proceed directly with the 
+#   fully-featured mdfa_analytic function
 
 # Compute spectrum
 data<-na.exclude(diff(log_FX_mat[,c("EURUSD","EURUSD","EURJPY","EURGBP")]))
@@ -639,12 +644,15 @@ for (i_series in 1:ncol(data))
 # First column is target; columns 2-4 are explanatory; columns 1 and 2 are identical because EURUSD is also explanatory
 head(weight_func_mat)
 
-# Set all remaining parameters as in example above
-source("Common functions/parameter_set.r")
+
 
 # Example 6.1: replication of wrapper by generic estimation function
-
+L<-20
 # The regularization wrapper preselects additionally the following (hyper-) parameter values
+K<-nrow(weight_func_mat)-1
+Gamma<-(0:(K))<=K*cutoff/pi+1.e-9
+lambda_smooth<-lambda_cross<-0
+lambda_decay<-c(0,0)
 lin_eta<-F
 weight_constraint<-rep(1/(ncol(weight_func_mat)-1),ncol(weight_func_mat)-1)
 lin_expweight<-F
@@ -663,6 +671,8 @@ i1<-i2<-F
 
 # The above selection is 'just fine' for typical economic data (details will be provided in the book)
 #  Once (hyper-)parameters are set, the principal estimation function is called in the wrapper
+
+
 
 mdfa_obj<-mdfa_analytic(L,lambda,weight_func_mat,Lag,Gamma,eta,cutoff,i1,i2,weight_constraint,
                         lambda_cross,lambda_decay,lambda_smooth,lin_eta,shift_constraint,grand_mean,
