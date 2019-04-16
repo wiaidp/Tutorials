@@ -579,21 +579,22 @@ names(mdfa_obj)
 mdfa_obj$freezed_degrees_new
 
 #-----------------------------
-# Example 5.3 Imposing arbitrary regularization
+# Example 5.3 Imposing super strong decay
 #   We here observe how this affects the degrees of freedom
 
-# Strong and fast decay
-lambda_decay<-c(0.7,0.9)
-lambda_smooth<-0.9
-lambda_cross<-0.9
+# Super srong decay
+lambda_decay<-c(0,1)
+lambda_smooth<-0.
+lambda_cross<-0.
 
 mdfa_obj<-mdfa_analytic(L,lambda,weight_func_mat,Lag,Gamma,eta,cutoff,i1,i2,weight_constraint,
                         lambda_cross,lambda_decay,lambda_smooth,lin_eta,shift_constraint,grand_mean,
                         b0_H0,c_eta,weight_structure,white_noise,
                         synchronicity,lag_mat,troikaner)
 
-# We estimate L*3 coefficients no regularization: in the above example L=100 i.e. 300 
-#   The degrees of freedom are substantially smaller: a bit below 50
+# We estimate L*3 coefficients and impose super-strong decay 
+#   The parametgers vanish and the degrees of freedom are 0
+#   Meaningful though not useful...
 round(mdfa_obj$freezed_degrees_new,0)
 
 #---------------------------
@@ -635,3 +636,20 @@ mdfa_obj<-mdfa_analytic(L,lambda,weight_func_mat,Lag,Gamma,eta,cutoff,i1,i2,weig
 # We expect L=100 degrees of freedom 
 round(mdfa_obj$freezed_degrees_new,0)
 
+#-----------------------------
+# Example 5.6 Imposing arbitrary regularization
+#   We here observe how this affects the degrees of freedom
+
+# Strong and fast decay
+lambda_decay<-c(0.7,0.9)
+lambda_smooth<-0.9
+lambda_cross<-0.9
+
+mdfa_obj<-mdfa_analytic(L,lambda,weight_func_mat,Lag,Gamma,eta,cutoff,i1,i2,weight_constraint,
+                        lambda_cross,lambda_decay,lambda_smooth,lin_eta,shift_constraint,grand_mean,
+                        b0_H0,c_eta,weight_structure,white_noise,
+                        synchronicity,lag_mat,troikaner)
+
+# We estimate L*3 coefficients no regularization: in the above example L=100 i.e. 300 
+#   The degrees of freedom are substantially smaller: a bit below 50
+round(mdfa_obj$freezed_degrees_new,0)
