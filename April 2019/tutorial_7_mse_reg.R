@@ -509,6 +509,7 @@ for (i_series in 1:ncol(data))
   }
 }
 
+
 # First column is target; columns 2-4 are explanatory; columns 1 and 2 are identical because EURUSD is also explanatory
 head(weight_func_mat)
 
