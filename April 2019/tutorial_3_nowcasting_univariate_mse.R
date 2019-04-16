@@ -2,6 +2,7 @@
 #   -Add/discuss constraints
 
 
+
 # Purpose of tutorial: 
 #   -In first tutorial we applied DFA to forecasting and we replicated classic SOTA time series approaches
 #   -In second tutorial We learned how to specify target (Gamma) and weighting-function (spectrum) 

@@ -95,6 +95,7 @@ cutoff<-pi/periodicity
 M<-100
 y<-ideal_filter_func(periodicity,M,x_long)$y[1:lenh]
 
+
 # Spectrum
 # One can use either the function per
 weight_func_bivariate<-cbind(per(data_matrix_in_sample[,1],T)$DFT,per(data_matrix_in_sample[,2],T)$DFT,per(data_matrix_in_sample[,3],T)$DFT)

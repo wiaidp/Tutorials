@@ -7,6 +7,7 @@
 # Here we use MDFA_reg-function
 
 
+
 rm(list=ls())
 
 library(xts)

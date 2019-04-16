@@ -14,6 +14,7 @@
 #   -These results suggest pertinence of the non-parametric approach --DFA based on dft-- in a wide range of applications 
 #     and in particular when models are likely to be misspecified (which is always the case for real-world data)
 
+
 rm(list=ls())
 
 library(xts)

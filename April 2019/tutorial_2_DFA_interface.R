@@ -563,6 +563,7 @@ box()
 #   4. What happens if we restrict the flexibility (degrees of freedom) by selecting a smaller L (filter length)?
 # Let's do so...
 
+
 periodicity<-5
 cutoff<-pi/periodicity
 Gamma<-(0:(K))<=K*cutoff/pi+1.e-9
