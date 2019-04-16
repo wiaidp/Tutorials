@@ -516,6 +516,7 @@ head(weight_func_mat)
 # Set all remaining parameters as in example above
 source("Common functions/parameter_set.r")
 
+# Example 5.1: replication of wrapper by generic estimation function
 
 # The regularization wrapper preselects additionally the following (hyper-) parameter values
 lin_eta<-F
@@ -550,4 +551,87 @@ mdfa_reg_obj<-MDFA_reg(L,weight_func_mat,Lag,Gamma,cutoff,lambda,eta,lambda_cros
 # Check: both filters are identical
 cbind(mdfa_obj$b,mdfa_reg_obj$b)
 
+
+#------------------------
+# Example 5.2 working with the degrees of freedom
+
+
+# Setting the Boolean T implies that additional useful statistics will be computed
+#   -The filter is not affected
+#   -But the additional statistics are computationally intensive
+#   -Therefore troikaner<-F accelerates computations (but then the 'other' statistics are not available anymore)
+# One important additional statistic is the effective degrees of freedom: edof
+
+troikaner<-T
+
+
+# The above selection is 'just fine' for typical economic data (details will be provided in the book)
+#  Once (hyper-)parameters are set, the principal estimation function is called in the wrapper
+
+mdfa_obj<-mdfa_analytic(L,lambda,weight_func_mat,Lag,Gamma,eta,cutoff,i1,i2,weight_constraint,
+                        lambda_cross,lambda_decay,lambda_smooth,lin_eta,shift_constraint,grand_mean,
+                        b0_H0,c_eta,weight_structure,white_noise,
+                        synchronicity,lag_mat,troikaner)
+
+names(mdfa_obj)
+
+# We estimate L*3 coefficients no regularization: in the above example L=100 i.e. 300 
+mdfa_obj$freezed_degrees_new
+
+#-----------------------------
+# Example 5.3 Imposing arbitrary regularization
+#   We here observe how this affects the degrees of freedom
+
+# Strong and fast decay
+lambda_decay<-c(0.7,0.9)
+lambda_smooth<-0.9
+lambda_cross<-0.9
+
+mdfa_obj<-mdfa_analytic(L,lambda,weight_func_mat,Lag,Gamma,eta,cutoff,i1,i2,weight_constraint,
+                        lambda_cross,lambda_decay,lambda_smooth,lin_eta,shift_constraint,grand_mean,
+                        b0_H0,c_eta,weight_structure,white_noise,
+                        synchronicity,lag_mat,troikaner)
+
+# We estimate L*3 coefficients no regularization: in the above example L=100 i.e. 300 
+#   The degrees of freedom are substantially smaller: a bit below 50
+round(mdfa_obj$freezed_degrees_new,0)
+
+#---------------------------
+# Example 5.4 Imposing super strong smoothness
+# We now impose superstrong smoothness: all other reg-terms vanish
+#   In this case all coefficients are linear
+#   A linear function is determined by 2 degrees of freedom
+#   Trivariate design times two degrees of freedom implies a total of 6 degrees of freedom
+# Let's check
+lambda_decay<-c(0,0)
+# Super strong smoothness
+lambda_smooth<-1
+lambda_cross<-0
+
+mdfa_obj<-mdfa_analytic(L,lambda,weight_func_mat,Lag,Gamma,eta,cutoff,i1,i2,weight_constraint,
+                        lambda_cross,lambda_decay,lambda_smooth,lin_eta,shift_constraint,grand_mean,
+                        b0_H0,c_eta,weight_structure,white_noise,
+                        synchronicity,lag_mat,troikaner)
+
+# We expect 2*3=6 degrees of freedom 
+round(mdfa_obj$freezed_degrees_new,0)
+
+
+#---------------------------
+# Example 5.5 Imposing super strong cross-sectional
+#  The coefficients must be identical across series
+#  Therefore the degrees of freedom must by 1*L 
+
+# Let's check
+lambda_decay<-c(0,0)
+lambda_smooth<-0
+lambda_cross<-1
+
+mdfa_obj<-mdfa_analytic(L,lambda,weight_func_mat,Lag,Gamma,eta,cutoff,i1,i2,weight_constraint,
+                        lambda_cross,lambda_decay,lambda_smooth,lin_eta,shift_constraint,grand_mean,
+                        b0_H0,c_eta,weight_structure,white_noise,
+                        synchronicity,lag_mat,troikaner)
+
+# We expect L=100 degrees of freedom 
+round(mdfa_obj$freezed_degrees_new,0)
 
