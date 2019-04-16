@@ -4,6 +4,7 @@
 # Purpose of tutorial: play with MSE unconstrained designs 
 #   -Apply DFA based on white noise spectrum to FX-trading (6 most liquid pairs)
 #   -Apply DFA based on dft to FX-trading 
+#   -Apply DFA based on Burg's maximum entropy sepctral estimate to FX-trading 
 #   -Apply multivariate DFA (MDFA) based on dft to FX-trading
 #   -Discuss overfitting issues
 #   -Customization and regularization will be tackled in separate tutorials
@@ -92,7 +93,7 @@ K<-600
 weight_func<-matrix(rep(1,2*(K+1)),ncol=2)
 colnames(weight_func)<-c("spectrum target","spectrum explanatory")
 # Target: specify cutoff=pi/periodicity of lowpass ideal target
-periodicity<-5
+periodicity<-10
 # Nowcast (Lag=0), Backcast (Lag>0) and Forecast (Lag<0)
 Lag<-0
 # Filter length
@@ -133,7 +134,7 @@ colnames(weight_func)<-c("spectrum target","spectrum explanatory")
 # Denseness of frequency-grid is completely specified by length of periodogram (to be constrasted with example 1 where we could specify any K)
 K<-nrow(weight_func)-1
 # Target
-periodicity<-5
+periodicity<-10
 # Nowcast
 Lag<-0
 # Filter length
@@ -292,7 +293,7 @@ plot(as.xts(apply(apply(diff_perf_mat[paste(in_sample_span,"/",sep="")],2,cumsum
 #   again by cross-sectional cancelling of low-frequency trends
 # Large overfitting: don't feel comfortable with such a design (just 'fitting')
 
-# 4.1 Specify in-sample span for estimation
+# 5.1 Specify in-sample span for estimation
 in_sample_span<-"2018-01-01"
 
 # and compute multivariate spectrum
@@ -311,7 +312,7 @@ for (i_series in 1:ncol(log_FX_mat))
 }
 
 
-# 4.2 For each target (FX-series): use all other (FX-) series as explanatory variables: 6-dim designs
+# 5.2 For each target (FX-series): use all other (FX-) series as explanatory variables: 6-dim designs
 #   Loop through each target (FX_series) and compute filtering and trading: collect performances in a matrix
 
 for (i_series in 1:ncol(log_FX_mat))# i_series<-1
