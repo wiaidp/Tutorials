@@ -11,11 +11,8 @@
 #     -Illustrate smoothness
 #     -Illustrate cross
 # 3. Compare unconstrained and constrained designs
-# 4. Apply to (currency-) trading
-# 5. Reconcile hard-constraints and flexible regularization (add potentially useful filter constraints)
+# 4. Advanced regularization
 
-# Disclaimer/caveat: applications to (currency-)trading are intended for illustrative purposes only 
-#   -Filter designs are deliberately 'suboptimal'
 
 
 rm(list=ls())
@@ -400,7 +397,7 @@ lambda_smooth<-0
 # Mild smoothness
 lambda_smooth<-0.5
 # Strong smoothness
-lambda_smooth<-0.95
+lambda_smooth<-0.99
 # Extremely strong (maximum) smoothness: coefficients are 'linear'
 lambda_smooth<-1
 
@@ -491,28 +488,12 @@ for (i in 1:(ncol(data)-1))
 #     Degrees of freedom correspond to length L of filter
 
 
+#----------------------------------------------------------------------------------------------
+# Example 5: advanced regularization
+#  We here skip the regularization wrapper and use the fulle-fleshed mdfa_analytic function
 
-
-#----------------------------------------------------------------------------------------------------------------------------------------------------------------
-#---------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# Example 5: here we apply what we learned above to FX
-# Multivariate design: target EURUSD, all series are used as explanatory data 
-# Fundamental idea
-#   Unconstrained designs cannout account 'directly' for a priori knowledge 
-#   Imposing constraints (regularization) might go hand-in-hand with applying a priori knowledge
-#   For that purpose it is wise to format the data in view of complying with constraints 
-# Example: use a priori knowledge for defining the data-matrix
-#   -Sine we target EURUSD we here use only pairs with either EUR or USD (i.e. we skip GBPJPY)
-#   -We change signs for 'inverted' explanatory (i.e. we change sign of USDJPY)
-# In this context regularization (in particular cross-sectional regularization) could 
-#   be meaningful beyond the starightforward 'shrinkage' of the parameter space 
-in_sample_span<-"2018-01-01"
-datah<-na.exclude(diff(log_FX_mat[,c("EURUSD","EURUSD","EURJPY","GBPUSD","USDJPY","EURGBP")]))
-head(datah)
-data<-datah
-data[,"USDJPY"]<--datah[,"USDJPY"]
-colnames(data)[5]<-"JPYUSD"
-head(data)
+# Compute spectrum
+data<-na.exclude(diff(log_FX_mat[,c("EURUSD","EURUSD","EURJPY","EURGBP")]))
 # Compute multivariate spectrum
 for (i_series in 1:ncol(data))
 {
@@ -528,122 +509,44 @@ for (i_series in 1:ncol(data))
   }
 }
 
-# First column is target; columns 2-6 are explanatory; columns 1 and 2 are identical because EURUSD is also explanatory;
-#   column 5 corresponds to the DFT of -USDJPY (negative sign)
+# First column is target; columns 2-4 are explanatory; columns 1 and 2 are identical because EURUSD is also explanatory
 head(weight_func_mat)
-weight_func<-weight_func_mat
 
 # Set all remaining parameters as in example above
 source("Common functions/parameter_set.r")
 
-# Imposing regularity: 
-#-------------------------
-# Example 5.1
-#   We start with the most important one: decay
-#   We can impose a strong regularization with a reasonably fast decay 
-#     This will freeze a lots of unnecessary degrees of freedom (alternatively we may select a smaller filter length L)
-#   Fundamental idea: if target is mid/short-term, then remote past of data is not useful
-lambda_decay<-c(0.3,0.99)
-# Cross and smooth are set to zero
-lambda_cross<-0.00
-lambda_smooth<-0.
-# MDFA_reg: wrapper for working with regularization
+
+# The regularization wrapper preselects additionally the following (hyper-) parameter values
+lin_eta<-F
+weight_constraint<-rep(1/(ncol(weight_func_mat)-1),ncol(weight_func_mat)-1)
+lin_expweight<-F
+shift_constraint<-rep(0,ncol(weight_func_mat)-1)
+grand_mean<-F
+b0_H0<-NULL
+c_eta<-F
+weights_only<-F
+weight_structure<-c(0,0)
+white_noise<-F
+synchronicity<-F
+lag_mat<-matrix(rep(0:(L-1),ncol(weight_func_mat)),nrow=L)
+troikaner<-F
+i1<-i2<-F
+
+
+# The above selection is 'just fine' for typical economic data (details will be provided in the book)
+#  Once (hyper-)parameters are set, the principal estimation function is called in the wrapper
+
+mdfa_obj<-mdfa_analytic(L,lambda,weight_func_mat,Lag,Gamma,eta,cutoff,i1,i2,weight_constraint,
+                        lambda_cross,lambda_decay,lambda_smooth,lin_eta,shift_constraint,grand_mean,
+                        b0_H0,c_eta,weight_structure,white_noise,
+                        synchronicity,lag_mat,troikaner)
+
+
+# This is the same as the reg-wrapper used in the previous examples
+
 mdfa_reg_obj<-MDFA_reg(L,weight_func_mat,Lag,Gamma,cutoff,lambda,eta,lambda_cross,lambda_decay,lambda_smooth)$mdfa_obj
 
-par(mfrow=c(1,1))
-# Filter coefficients: largest weight is attributed to EURUSD, coefficients are not excessively noisy and the decay rapidly
-ts.plot(mdfa_reg_obj$b,col=rainbow(ncol(data)-1))
-for (i in 1:(ncol(data)-1))
-  mtext(colnames(data)[i+1],side=3,line=-i,col=rainbow(ncol(data)-1)[i])
-# Amplitude: amplitudes are intuitively appealing
-ts.plot(abs(mdfa_reg_obj$trffkt),col=rainbow(ncol(data)-1))
-for (i in 1:(ncol(data)-1))
-  mtext(colnames(data)[i+1],side=3,line=-i,col=rainbow(ncol(data)-1)[i])
-# Shift
-ts.plot(Arg(mdfa_reg_obj$trffkt)/((0:K)*pi/K),col=rainbow(ncol(data)-1))
-for (i in 1:(ncol(data)-1))
-  mtext(colnames(data)[i+1],side=3,line=-i,col=rainbow(ncol(data)-1)[i])
-
-# Comments
-#   1. The coefficients look similar already (without imposing cross-sectional similarity)
-#   2. The amplitude functions look fine (shape corresponds to targeted cutoff)
-#   3. The shifts look OK, too
+# Check: both filters are identical
+cbind(mdfa_obj$b,mdfa_reg_obj$b)
 
 
-#------------
-# Example 5.2: as above with additional cross-sectional tightness
-
-lambda_decay<-c(0.3,0.99)
-# No smoothness
-lambda_smooth<-0.
-# Strong similarity
-lambda_cross<-0.9
-# MDFA_reg: wrapper for working with regularization
-mdfa_reg_obj<-MDFA_reg(L,weight_func_mat,Lag,Gamma,cutoff,lambda,eta,lambda_cross,lambda_decay,lambda_smooth)$mdfa_obj
-
-par(mfrow=c(1,1))
-# Filter coefficients: very similar across series, decay papidly, fairly smooth
-ts.plot(mdfa_reg_obj$b,col=rainbow(ncol(data)-1))
-for (i in 1:(ncol(data)-1))
-  mtext(colnames(data)[i+1],side=3,line=-i,col=rainbow(ncol(data)-1)[i])
-# Amplitude
-ts.plot(abs(mdfa_reg_obj$trffkt),col=rainbow(ncol(data)-1))
-for (i in 1:(ncol(data)-1))
-  mtext(colnames(data)[i+1],side=3,line=-i,col=rainbow(ncol(data)-1)[i])
-# Shift
-ts.plot(Arg(mdfa_reg_obj$trffkt)/((0:K)*pi/K),col=rainbow(ncol(data)-1))
-for (i in 1:(ncol(data)-1))
-  mtext(colnames(data)[i+1],side=3,line=-i,col=rainbow(ncol(data)-1)[i])
-
-# Comment: 
-#   lambda_smooth is not critical: any value in [0.5,0.99] just seems fine
-#   In case of doubt: larger might be marginally better (freezing unnecessary degrees of freedom)
-#   We might select lambda_cross>0, too, but the coefficients look just fine 'as is'
-#------------
-# Example 5.3: as above with additional strong smoothness
-
-lambda_decay<-c(0.3,0.99)
-# Cross and smooth are set to large values
-#   Strong cross means that filter coefficients are similar: common multivariate filter
-#   Extract information from all series to infer the common filter coefficients 
-lambda_cross<-0.9
-lambda_smooth<-0.99
-
-# MDFA_reg: wrapper for working with regularization
-mdfa_reg_obj<-MDFA_reg(L,weight_func_mat,Lag,Gamma,cutoff,lambda,eta,lambda_cross,lambda_decay,lambda_smooth)$mdfa_obj
-
-par(mfrow=c(1,1))
-# Filter coefficients: decay rapidly, are smooth and similar
-ts.plot(mdfa_reg_obj$b,col=rainbow(ncol(data)-1))
-for (i in 1:(ncol(data)-1))
-  mtext(colnames(data)[i+1],side=3,line=-i,col=rainbow(ncol(data)-1)[i])
-# Amplitude
-ts.plot(abs(mdfa_reg_obj$trffkt),col=rainbow(ncol(data)-1))
-for (i in 1:(ncol(data)-1))
-  mtext(colnames(data)[i+1],side=3,line=-i,col=rainbow(ncol(data)-1)[i])
-# Shift
-ts.plot(Arg(mdfa_reg_obj$trffkt)/((0:K)*pi/K),col=rainbow(ncol(data)-1))
-for (i in 1:(ncol(data)-1))
-  mtext(colnames(data)[i+1],side=3,line=-i,col=rainbow(ncol(data)-1)[i])
-
-# Comment: 
-#   lambda_smooth is not critical: any value in [0.5,0.99] just seems fine
-#   In case of doubt: larger might be marginally better (freezing unnecessary degrees of freedom)
-#   We might select lambda_cross>0, too, but the coefficients look just fine 'as is'
-
-#----------------------------------------------------------------------------------------------------------------
-# Trading with the above designs
-#  Performance with strong smoothness (example 5.3) marginally (random) worse than without smoothness (example 5.2)
-
-data_filter<-data[,2:ncol(data)]
-lag_fx<-1
-
-# MSE: 
-lambda<-0
-eta<-0
-
-mdfa_trade_obj<-mdfa_reg_trade_func(K,periodicity,L,Lag,lag_fx,data_filter,plot_T,weight_func,lambda_cross,lambda_decay,lambda_smooth,lambda,eta)
-
-
-#----------------------------------------------------------------------------------------------------------------------------------------------------------------
-#---------------------------------------------------------------------------------------------------------------------------------------------------------------------
