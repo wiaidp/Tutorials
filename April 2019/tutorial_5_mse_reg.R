@@ -539,9 +539,11 @@ L<-4*periodicity
 #   MSE design (no customization)
 lambda<-eta<-0
 # Use the most important (decay) regularization: mid-strength
+#   See example 7 below for a formal derivation of these regularization settings
 lambda_decay<-c(0.6,0.8)
-# Smoothness is useful for estimating long-term trends (periodicity longer than above)
-lambda_smooth<-0.
+# Smoothness is most useful when estimating long-term trends (large periodicity)
+#   But it's usefulness might apply 'in general' too
+lambda_smooth<-0.99
 # Cross sectional regularization is not activated here since design is univariate  
 lambda_cross<-0 
 # Nowcast
@@ -615,9 +617,13 @@ colnames(result_mat)<-c("Unconstrained","Regularized")
 result_mat
 # Results: 
 #   -Overfitting could be sucessively avoided by the regularized design
-#   -Efficiency is above 92% when compared to best possible design, assuming knowledge of true process
+#   -Efficiency lies at 93% when compared to best possible design, assuming knowledge of true process (quite remarkable given the short estimation span)
 
-
+# Note that we stuffed the above code-lines into a more convenient function-call
+#   This function replicates the above simulation experiment
+#   It computes additional statistics which are described in example 7 below
+tic_simulation_experiment_func(a1,b1,true_model_order,lambda_decay,lambda_smooth,anzsim)
+  
 
 #----------------------------------------------------------------------------------------------
 # Example 6: advanced regularization
@@ -776,43 +782,107 @@ round(mdfa_reg_T_obj$freezed_degrees_new,0)
 # Let's check that idealized expectation
 #   -The following code is the same as in example 5 above excpet that we set troikaner=T when calling the regularization wrapper in the loop
 
+# Number of simulations
+anzsim<-100
+
 # Example 7.1: MA(1)
 a1<-0.
 b1<-0.7
 true_model_order<-c(0,0,1)
+
+# Example 7.1.1
 lambda_smooth<-0.
 # This is a good choice in the case of 'nearly white noise'
+#   -Degrees of freedom is around 10
 #   -The tic value is small and out-of-sample performances (of the regularized design) are good (92% efficiency) 
 lambda_decay<-c(0.6,0.8)
-tic_simulation_experiment_func(a1,b1,true_model_order,lambda_decay,lambda_smooth)
+tic_simulation_experiment_func(a1,b1,true_model_order,lambda_decay,lambda_smooth,anzsim)
 
-# This is slightly shifted lambda_decay
-#   tic is sligthly larger than above and out-of-sample MSE is slightly worse (as desired)
-lambda_decay<-c(0.5,0.8)
-tic_simulation_experiment_func(a1,b1,true_model_order,lambda_decay,lambda_smooth)
-
-# More heavily shifted lambda_decay
-#   tic is sligthly larger than first setting and out-of-sample MSE is slightly worse (as desired)
+# Example 7.1.2
+# Weaker lambda_decay
+#   -Degrees of freedom is a bit larger: 13
+#   -tic is sligthly larger than first setting and out-of-sample MSE is slightly worse (as desired)
 lambda_decay<-c(0.3,0.8)
-tic_simulation_experiment_func(a1,b1,true_model_order,lambda_decay,lambda_smooth)
+tic_simulation_experiment_func(a1,b1,true_model_order,lambda_decay,lambda_smooth,anzsim)
 
 
-# More heavily shifted lambda_decay
-#   tic is sligthly larger than first setting and out-of-sample MSE is slightly worse (as desired)
+# Example 7.1.3
+# Weaker lambda_decay
+#   -Degrees of freedom is larger: 23
+#   -tic is sligthly larger than first setting and out-of-sample MSE is worse (as desired)
+#   -Overfitting is starting to compromise out-of-sample performances
 lambda_decay<-c(0.3,0.2)
-tic_simulation_experiment_func(a1,b1,true_model_order,lambda_decay,lambda_smooth)
+tic_simulation_experiment_func(a1,b1,true_model_order,lambda_decay,lambda_smooth,anzsim)
 
 
-# Example 7.2: ARMA with positive acf
-a1<-0.6
-b1<-0.7
-true_model_order<-c(1,0,1)
-# Example 7.3: AR with negative acf
-a1<--0.9
-b1<-0
-true_model_order<-c(1,0,0)
-# Example 7.4: close to noise (typical for log-returns of FX-data)
+# Example 7.1.4
+# Stronger lambda_decay
+#   -Degrees of freedom is smaller (than first design): 7
+#   -tic is sligthly larger than first setting and out-of-sample MSE is worse (as desired)
+#   -in this case our design is 'too simple': it cannot fit the (complex) structure of the estimation problem as well as first design
+lambda_decay<-c(0.6,0.95)
+tic_simulation_experiment_func(a1,b1,true_model_order,lambda_decay,lambda_smooth,anzsim)
+
+
+# Example 7.1.5
+# We add smoothness regularization to first design
+lambda_smooth<-0.3
+#   -Degrees of freedom is around 7
+#   -The tic value is smaller than first design but out-of-sample performances are marginally worse (might be attributed to sampling error because we know formally that tic makes sense) 
+lambda_decay<-c(0.6,0.8)
+tic_simulation_experiment_func(a1,b1,true_model_order,lambda_decay,lambda_smooth,anzsim)
+
+
+# Example 7.1.6
+# Strong smoothness 
+lambda_smooth<-0.99
+#   -Degrees of freedom is around 3
+#   -The tic value is smaller than first design and out-of-sample performances are marginally better 
+#   -in this case the additional regularization shrinkage allows to fit the data well, without overfitting
+#     tic suggests that 3 degrees of freedom (optimally shared across the 40 coefficients) is all we need to match the salient features of the estimation problem
+#     out-of-sample MSE performances confirm that claim
+lambda_decay<-c(0.6,0.8)
+tic_simulation_experiment_func(a1,b1,true_model_order,lambda_decay,lambda_smooth,anzsim)
+
+# Example 7.1.7
+# Too much smoothing
+lambda_smooth<-0.9999
+#   -Degrees of freedom is 1 (now that's small...)
+#   -The tic value is substantially larger than the previous design and out-of-sample performances are worse 
+#   -Shrinkage is too strong...
+lambda_decay<-c(0.6,0.8)
+tic_simulation_experiment_func(a1,b1,true_model_order,lambda_decay,lambda_smooth,anzsim)
+
+
+# Example 7.1.8
+# Unconstrained design
+lambda_smooth<-0.
+#   -Degrees of freedom is 40 (which corresponds to L)
+#   -The tic value is substantially larger than the above 'good' designs and out-of-sample performances are substantially worse 
+#   -overparametrization (too many degrees of freedom) generates and exacerbates overfitting
+lambda_decay<-c(0.,0.)
+tic_simulation_experiment_func(a1,b1,true_model_order,lambda_decay,lambda_smooth,anzsim)
+
+# Conclusion
+#   -Best out-of-sample performances are obtained by designs which strongly shrink the original (unconstrained) estimation space
+#   -the new information criterion --tic-- and out-of-sample MSE-performances correlate strongly (efficiency correlates negatively i.e. smaller tic implies higher efficiency)
+#   -Designs with degrees of freedom between 13 (example 7.1.2), 10 (example 7.1.1) or 3 (example 7.1.6) perform quite similarly out-of-sample
+#     -Therefore there is no urge of determining the uniquely absolute best possible design since MSE-performances are not 
+#       too 'touchy' with respect to departures from the optimum
+#     -Strategy: find a regularization setting with a fairly small tic (which is automatically greeted with fairly small degrees of freedom)
+#       imposing an appealing mix of decay, smoothness and cross-sectional (the latter only for multivariate designs) regularization
+#     -Forget the delusional concept of 'the single best outcome'
+#   -Unnecessarily strong regularization may lead to unflexible designs with poorer out-of-sample performances
+
+#------------------
+# Example 7.2: Same as above examples 7.1.1-7.1.8 but use a 'nearly white' process (typical for log-returns of financial data)
+#   The big picture is the same (nearly identical results as in example 1 up to sampling errors)
 a1<--0.08
 b1<-0.0
 true_model_order<-c(1,0,0)
-# Smoothness is useful for estimating long-term trends (periodicity longer than above)
+
+
+
+
+
+

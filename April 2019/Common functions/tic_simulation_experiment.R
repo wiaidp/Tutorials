@@ -1,7 +1,7 @@
 
 
 
-tic_simulation_experiment_func<-function(a1,b1,true_model_order,lambda_decay,lambda_smooth)
+tic_simulation_experiment_func<-function(a1,b1,true_model_order,lambda_decay,lambda_smooth,anzsim)
 {
   
   
@@ -9,8 +9,6 @@ tic_simulation_experiment_func<-function(a1,b1,true_model_order,lambda_decay,lam
   set.seed(1)
   len<-1000
   mse_true_arma<-mse_dfa<-NULL
-  # Number of simulations
-  anzsim<-500
   # Length of in-sample span
   #   For illustration we here use a short sample
   #   In fact regularization is deemed useful when working with small samples (otherwise unconstrained designs work fine)
@@ -101,7 +99,7 @@ tic_simulation_experiment_func<-function(a1,b1,true_model_order,lambda_decay,lam
 
   # Compute the ratio of root mean-square forecast errors:
   #   The ratio cannot be larger than 1 asymptotically because our particular design distinguishes arma as the universally best possible design
-  result_mat<-matrix(c(sqrt(mean(mse_true)/mean(mse_dft)),sqrt(mean(mse_true)/mean(mse_reg_dft)),mean(tic),round(mean(degrees_of_freedom),0)),nrow=1,ncol=3)
+  result_mat<-matrix(c(sqrt(mean(mse_true)/mean(mse_dft)),sqrt(mean(mse_true)/mean(mse_reg_dft)),mean(tic),round(mean(degrees_of_freedom),0)),nrow=1,ncol=4)
   colnames(result_mat)<-c("Unconstrained","Regularized","tic","degrees of freedom")
   return(list(result_mat=result_mat))
   
