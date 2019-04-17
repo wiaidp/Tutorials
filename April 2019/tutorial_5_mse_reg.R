@@ -34,6 +34,7 @@ source("Common functions/mdfa_trade_func.r")
 source("Common functions/data_load_functions.R")
 source("Common functions/arma_spectrum.r")
 source("Common functions/ideal_filter.r")
+source("Common functions/tic_simulation_experiment.r")
 
 
 #-----------------------------------------------------------------------------------------------
@@ -757,3 +758,61 @@ mdfa_reg_T_obj<-MDFA_reg(L,weight_func_mat,Lag,Gamma,cutoff,lambda,eta,lambda_cr
 # We estimate L*3 coefficients no regularization: in the above example L=20 i.e. degrees of freedom is 3*20=60 (without regularization)
 #   The degrees of freedom are substantially smaller: around 5
 round(mdfa_reg_T_obj$freezed_degrees_new,0)
+
+#-----------------------------------------------------------------------------------------------------
+# Example 7: working with the generalized DFA information criterion
+# Question: how do we have to choose the regularization parameters (lambda_decay, lambda_smooth, lambda_cross)?
+#   -First possibility: cross-validation (determine settings such that out-of-sample MSE-performances are optimized, see example 5 above)
+#   -Besides this purely empirical approach there is a formal alternative based on the dimension of the shrinkage-space (the degrees of freedom used above)
+# Select lambda_decay, lambda_smooth, lambda_cross so as to minimize the DFA information criterion tic
+#   -This criterion generalizes the classic Akaike criterion AIC to the more complex regularized signal extraction problem 
+#   -It is not based on the idea of 'maximizing a likelihood' (as is AIC)
+#   -Instead it derives the dimension of the regularized shrinkage space from which the spurious decrease of the 
+#     (log of the) MSE-criterion can be obtained in the case of overparametrization (L too large)
+#   -Compensating the spurious decrease of the (log of the) MSE-criterion by a penalty-term larger than this decrease then results in the new criterion
+
+# Ideally we expect that
+#   -Selecting lambda_decay, lambda_smooth, lambda_cross according to minimum tic should lead to best out-of-sample performances
+# Let's check that idealized expectation
+#   -The following code is the same as in example 5 above excpet that we set troikaner=T when calling the regularization wrapper in the loop
+
+# Example 7.1: MA(1)
+a1<-0.
+b1<-0.7
+true_model_order<-c(0,0,1)
+lambda_smooth<-0.
+# This is a good choice in the case of 'nearly white noise'
+#   -The tic value is small and out-of-sample performances (of the regularized design) are good (92% efficiency) 
+lambda_decay<-c(0.6,0.8)
+tic_simulation_experiment_func(a1,b1,true_model_order,lambda_decay,lambda_smooth)
+
+# This is slightly shifted lambda_decay
+#   tic is sligthly larger than above and out-of-sample MSE is slightly worse (as desired)
+lambda_decay<-c(0.5,0.8)
+tic_simulation_experiment_func(a1,b1,true_model_order,lambda_decay,lambda_smooth)
+
+# More heavily shifted lambda_decay
+#   tic is sligthly larger than first setting and out-of-sample MSE is slightly worse (as desired)
+lambda_decay<-c(0.3,0.8)
+tic_simulation_experiment_func(a1,b1,true_model_order,lambda_decay,lambda_smooth)
+
+
+# More heavily shifted lambda_decay
+#   tic is sligthly larger than first setting and out-of-sample MSE is slightly worse (as desired)
+lambda_decay<-c(0.3,0.2)
+tic_simulation_experiment_func(a1,b1,true_model_order,lambda_decay,lambda_smooth)
+
+
+# Example 7.2: ARMA with positive acf
+a1<-0.6
+b1<-0.7
+true_model_order<-c(1,0,1)
+# Example 7.3: AR with negative acf
+a1<--0.9
+b1<-0
+true_model_order<-c(1,0,0)
+# Example 7.4: close to noise (typical for log-returns of FX-data)
+a1<--0.08
+b1<-0.0
+true_model_order<-c(1,0,0)
+# Smoothness is useful for estimating long-term trends (periodicity longer than above)
