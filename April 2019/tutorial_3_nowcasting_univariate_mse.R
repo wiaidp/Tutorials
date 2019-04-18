@@ -24,11 +24,6 @@
 #   -Customization and regularization will be tackled in separate tutorials
 
 
-# We show that lowpass nowcasting with DFA based on discrete fourier transform (dft) performs nearly as well (in terms of MSE performances) as best possible approach (assuming knowledge of true data generating process)
-#   -Assuming some elemtary care is needed in order to avoid overfitting
-#   -Heavily overparametrized designs still perform honorably when compared to best possible approach (10%loss of efficiency 'only')
-# We also show that DFA based on dft and DFA based on Burg's max-entropy spectral estimate perform equally
-#   These results suggest that dft or Burg-spectrum can be used for real-time signal extraction (lowpass nowcasting) in practice
 
 
 rm(list=ls())
