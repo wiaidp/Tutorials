@@ -298,7 +298,7 @@ sqrt(mean(mse_true)/mean(mse_dft))
 
 # Results: 
 #   -for L=2*periodicity and in_sample=300, the ratio is typically around 97%: in the mean the non-parametric DFA performs as well (by all practical means) as the best possible forecast approach
-#   -for L=2*periodicity and in_sample=100, the ratio is typically around 88%: in the mean the non-parametric DFA performs nearly as well as the best possible forecast approach
+#   -for L=2*periodicity and in_sample=100, the ratio is typically around 89%: in the mean the non-parametric DFA performs nearly as well as the best possible forecast approach
 #     -Note that L=2*periodicity is fine for damping all components with durations shorter/equal periodicity
 #     -But fitting L=2*periodicity=20 parameters for a time series of length in_sample=100 is 
 #       not extremely smart (overfitting). See tutorial on regulartization...

@@ -95,7 +95,7 @@ play_bivariate_func<-function(a1,scale_idiosyncratic,len,L)
   ymin<-min(mplot,na.rm=T)
   ymax<-max(mplot,na.rm=T)
   ts.plot(mplot[,1],main=paste("Out-of-sample MSE MDFA: ",ylab="",
-                               round(perf_mse[1],3),", DFA: ",round(perf_mse[2],3),sep=""),col="blue",
+                               round(perf_mse[1,1],3),", DFA: ",round(perf_mse[1,2],3),sep=""),col="blue",
           ylim=c(ymin,ymax))
   lines(mplot[,2],col="red")
   lines(mplot[,3],col="green")
@@ -111,7 +111,7 @@ play_bivariate_func<-function(a1,scale_idiosyncratic,len,L)
   ymin<-min(mplot,na.rm=T)
   ymax<-max(mplot,na.rm=T)
   ts.plot(mplot[,1],main=paste("Out-of-sample MSE MDFA: ",ylab="",
-                               round(perf_mse[1],3),", DFA: ",round(perf_mse[2],3),sep=""),col="blue",
+                               round(perf_mse[1,1],3),", DFA: ",round(perf_mse[1,2],3),sep=""),col="blue",
           ylim=c(ymin,ymax))
   lines(mplot[,2],col="red")
   lines(mplot[,3],col="green")

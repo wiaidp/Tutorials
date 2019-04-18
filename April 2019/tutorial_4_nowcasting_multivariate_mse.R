@@ -306,7 +306,7 @@ play_obj$perf_mse
 #   -In-sample measures (row 2: time-domain; row 3: frequency-domain criterion value) differ: 
 #     -the criteria values (third row) are too small because both filters overfit the coarse freqeuncy-grid (only 50 frequencies available)
 #     -the bivariate filter (first column) 'overfits' more hevaily, as expected
-#   -Out-of-sample performances of both filters are worse (overfitting) as in example 2 
+#   -Out-of-sample performances of both filters are worse (overfitting) than in example 2 
 #     -However, a comparison of out-of-sample MSEs (example 2 and here) reveals pretty similar performances: which is rather unexpected but welcome
 #     -Efficiency gains of the bivariate filter are similar to example 2 above which is, once again, rather unexpected but welcome
 #  3. Plot of filter outputs (toggle point 3):
