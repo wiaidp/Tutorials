@@ -492,7 +492,7 @@ for (i in 1:(ncol(data)-1))
 
 
 #------------------------------------------------------------------------------------
-# Example 5: we here duplicate example 3 (simulation experiment) of tutorial 3 but we use regularization (insetad of unconstrained design)
+# Example 5: we here duplicate example 3 (simulation experiment) of tutorial 3 but we use regularization (instead of unconstrained design)
 # Specifically
 #   -We benchmark empirical DFA based on DFT, unconstrained (as in tutorial 3) and regularized,
 #     against best possible MSE-design (assuming knowledge of true model) out-of-sample
@@ -627,8 +627,30 @@ tic_simulation_experiment_func(a1,b1,true_model_order,lambda_decay,lambda_smooth
 
 #----------------------------------------------------------------------------------------------
 # Example 6: advanced regularization
-#  We here short-cut the regularization wrapper and proceed directly with the 
-#   fully-featured mdfa_analytic function
+# -We here exploit additional (computationally slightly more expensive) statistics which hint at 
+#   'optimal regularization' settings
+# -What is an 'optimal regularization' setting?
+#   1. The idealized purpose of regularization is to contain overfitting without affecting (too much...) flexibility
+#     -Ideally, an optimally regularized design is able to match all relevant features of a particular estimation problem 
+#     -Ideally, an optimally regularized design performs as well out-of-sample as it does in-sample
+#   2. More practically (less idealized) we expect that hinting at an 'optimally regularized design' will affect 
+#       positively out-of-sample performances
+#     -Ideally, the 'optimally regularized design' outperforms all other contenders out-of-sample
+# -We here propose a novel statistic (see book for formal background) which (in a way) generalizes classic information
+#   -We derive the effective degrees of freedom of a troika-regularized design (decay, smoothness and cross sectional similarity)
+#   -From this we can derive the effective dimension of the shrinkage space
+#   -From this we can derive the spurious decrease of the DFA-(optimization) criterion in the case of overparametrization (too richly parametrized filters)
+#   -Form this we can design an 'information criterion' by compensating the spurious decrease (of the criterion) by 
+#     a 'penalty'-term which effectively penalizes too-richly parametrized designs
+
+# Let's do so!
+#   Example 6 plays with the new edof statistic (effective degrees of freedom)
+#   Example 7 plays with the new tic statistic (troika information criterion) which relies on edof
+#   Both statistics are 'computationally expensive': therefore we can turn them off via a Boolean called troikaner
+#     If trokaner==F then the ststistics are skipped and the calculation (optimization) is faster
+#     If troikaner==T then the statistics are computed; the result of the optimization is not affected though
+
+
 in_sample_span<-"2017-01-01"
 # Compute spectrum
 data<-na.exclude(diff(log_FX_mat[,c("EURUSD","EURUSD","EURJPY","EURGBP")]))
@@ -671,8 +693,9 @@ lambda_decay<-c(0,0)
 
 # Classic call (as above)
 mdfa_reg_obj<-MDFA_reg(L,weight_func_mat,Lag,Gamma,cutoff,lambda,eta,lambda_cross,lambda_decay,lambda_smooth)$mdfa_obj
-# New call: with additional Boolan troikaner
+# New call: with additional Boolean troikaner
 #   If T then additional statistics will be computed (however computation time increases) but filter solution is not affected
+#   Troika here means: the three supports of regularization, namely decay, smoothness, cross-similarity
 troikaner<-T
 mdfa_reg_T_obj<-MDFA_reg(L,weight_func_mat,Lag,Gamma,cutoff,lambda,eta,lambda_cross,lambda_decay,lambda_smooth,troikaner)$mdfa_obj
 
@@ -690,7 +713,7 @@ names(mdfa_reg_T_obj)
 
 
 # We estimated L*3 (trivariate filter) coefficients without regularization in the above example i.e. 20*3=60 
-mdfa_reg_T_obj$freezed_degrees_new
+mdfa_reg_T_obj$edof
 
 #-----------------------------
 # Example 6.3 Imposing super strong decay
@@ -707,7 +730,7 @@ mdfa_reg_T_obj<-MDFA_reg(L,weight_func_mat,Lag,Gamma,cutoff,lambda,eta,lambda_cr
 # We estimate L*3 coefficients and impose super-strong decay 
 #   The parametgers vanish and the degrees of freedom are 0
 #   Meaningful though not useful...
-round(mdfa_reg_T_obj$freezed_degrees_new,0)
+round(mdfa_reg_T_obj$edof,0)
 
 #---------------------------
 # Example 6.4 Imposing super strong smoothness
@@ -728,7 +751,7 @@ mdfa_reg_T_obj<-MDFA_reg(L,weight_func_mat,Lag,Gamma,cutoff,lambda,eta,lambda_cr
 #   super strong smoothness means: coefficients are linear
 #   a linear function requires two degrees of freedom (slope/intercept)
 #   therefore we expect the dgrees of freedom to be 3*2=6
-round(mdfa_reg_T_obj$freezed_degrees_new,0)
+round(mdfa_reg_T_obj$edof,0)
 
 
 #---------------------------
@@ -747,7 +770,7 @@ mdfa_reg_T_obj<-MDFA_reg(L,weight_func_mat,Lag,Gamma,cutoff,lambda,eta,lambda_cr
 # We estimate L*3 coefficients and impose super-strong cross sectional regularization 
 #   Coefficients accross series must be identical (but are otherwise unconstrained)
 #   Therefore we xpect the degrees of freedom to be 1*L (instead of 3*L)
-round(mdfa_reg_T_obj$freezed_degrees_new,0)
+round(mdfa_reg_T_obj$edof,0)
 
 #-----------------------------
 # Example 6.6 Imposing arbitrary regularization
@@ -763,10 +786,10 @@ mdfa_reg_T_obj<-MDFA_reg(L,weight_func_mat,Lag,Gamma,cutoff,lambda,eta,lambda_cr
 
 # We estimate L*3 coefficients no regularization: in the above example L=20 i.e. degrees of freedom is 3*20=60 (without regularization)
 #   The degrees of freedom are substantially smaller: around 5
-round(mdfa_reg_T_obj$freezed_degrees_new,0)
+round(mdfa_reg_T_obj$edof,0)
 
 #-----------------------------------------------------------------------------------------------------
-# Example 7: working with the generalized DFA information criterion
+# Example 7: working with the generalized DFA information criterion (tic)
 # Question: how do we have to choose the regularization parameters (lambda_decay, lambda_smooth, lambda_cross)?
 #   -First possibility: cross-validation (determine settings such that out-of-sample MSE-performances are optimized, see example 5 above)
 #   -Besides this purely empirical approach there is a formal alternative based on the dimension of the shrinkage-space (the degrees of freedom used above)
@@ -791,10 +814,10 @@ b1<-0.7
 true_model_order<-c(0,0,1)
 
 # Example 7.1.1
-lambda_smooth<-0.
-# This is a good choice in the case of 'nearly white noise'
+# This regularization setting is a good choice in the case of 'nearly white noise'
 #   -Degrees of freedom is around 10
-#   -The tic value is small and out-of-sample performances (of the regularized design) are good (92% efficiency) 
+#   -The tic value is small and out-of-sample performances (of the regularized design) are good (92% efficiency vs. 80% for unconstrained designs) 
+lambda_smooth<-0.
 lambda_decay<-c(0.6,0.8)
 tic_simulation_experiment_func(a1,b1,true_model_order,lambda_decay,lambda_smooth,anzsim)
 
@@ -807,7 +830,7 @@ tic_simulation_experiment_func(a1,b1,true_model_order,lambda_decay,lambda_smooth
 
 
 # Example 7.1.3
-# Weaker lambda_decay
+# Substantially weaker lambda_decay
 #   -Degrees of freedom is larger: 23
 #   -tic is sligthly larger than first setting and out-of-sample MSE is worse (as desired)
 #   -Overfitting is starting to compromise out-of-sample performances
@@ -882,7 +905,27 @@ b1<-0.0
 true_model_order<-c(1,0,0)
 
 
+#-----------------------------------------------------------------------------------------------------------
+# What did we learn
+#   -Overfitting can seriously affect out-of-sample MSE-performances
+#   -Multivariate designs suffer more heavily from overfitting
+#   -The regularization troika based on decay, smoothness and similarity, imposes universally desirable filter-features
+#     -Irrespective of the particular application, all three requirements are 'desirable'
+#     -Therefore we may impose any combination of them in any kind of application (without fearing some 'loss of structural integrity' of the resulting filter)
+#   -However, we don't know a priori how to weight the trems of the troika: 
+#     -the strength (dimension of shrinkage space) is dependent on the structure of the particular estimation problem at hand
+#   -We proposed a novel statistic, the troika information criterion (tic) which enables to find suitable regularization
+#     weighting 
+#     -Suitable here means: the tic correlates strongly (though negatively) with out-of-sample MSE-performances 
+#   -In general the effective degrees of freedom (edof) of such optimized designs are markedly smaller than the original unconstrained designs
+#     -The Troika is flexible enough (universal) to account for the relevant features of an estimation problem
+#       with humbly-sized degrees of freedom
 
 
+# What remains to be learned (what has been skipped in the above tutorial)?
+#   -The proposed regularization features are effective in terms of MSE-performances, mainly
+#   -Alternative applications for which MSE is not of utmost priority are not adressed explicitly 
+#     -though indirectly most applications will still be addressed, at least indirectly/partially, because 
+#       the troika-features may claim 'universality' (to some extent)
 
 

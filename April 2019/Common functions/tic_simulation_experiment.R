@@ -70,12 +70,12 @@ tic_simulation_experiment_func<-function(a1,b1,true_model_order,lambda_decay,lam
     mdfa_reg_obj<-MDFA_reg(L,weight_func_dft,Lag,Gamma_dft,cutoff,lambda,eta,lambda_cross,lambda_decay,lambda_smooth,troikaner)$mdfa_obj
     b_dft_reg<-mdfa_reg_obj$b
     # Here we compute the new information criterion 'by hand'
-    #   -One can show that the penalty term 2*mdfa_reg_obj$freezed_degrees_new/(2*K_dft)) is larger than the 
+    #   -One can show that the penalty term 2*mdfa_reg_obj$edof/(2*K_dft)) is larger than the 
     #    spurious decrease of the (log of the) MSE-criterion log(mdfa_reg_obj$MS_error) when overparametrization is attained, see up-coming book
-    tic_by_hand<-c(tic_by_hand,log(mdfa_reg_obj$MS_error)+2*mdfa_reg_obj$freezed_degrees_new/(2*K_dft))
+    tic_by_hand<-c(tic_by_hand,log(mdfa_reg_obj$MS_error)+2*mdfa_reg_obj$edof/(2*K_dft))
     # Alternatively the criterion is computed explicitly in the MDFA function  
     tic<-c(tic,mdfa_reg_obj$tic)
-    degrees_of_freedom<-c(degrees_of_freedom,mdfa_reg_obj$freezed_degrees_new)
+    degrees_of_freedom<-c(degrees_of_freedom,mdfa_reg_obj$edof)
     # Filter data
     # 1. ideal filter  
     id_obj<-ideal_filter_func(periodicity,M,x)
