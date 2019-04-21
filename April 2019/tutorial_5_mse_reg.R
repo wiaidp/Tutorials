@@ -922,10 +922,58 @@ true_model_order<-c(1,0,0)
 #       with humbly-sized degrees of freedom
 
 
-# What remains to be learned (what has been skipped in the above tutorial)?
-#   -The proposed regularization features are effective in terms of MSE-performances, mainly
-#   -Alternative applications for which MSE is not of utmost priority are not adressed explicitly 
-#     -though indirectly most applications will still be addressed, at least indirectly/partially, because 
-#       the troika-features may claim 'universality' (to some extent)
+# Other/additional issues
+#   1.The proposed regularization features are effective in terms of MSE- (level) performances, mainly
+#     -Alternative applications for which MSE (or level) is not of utmost priority are not adressed explicitly 
+#     -Example: tradin or recession-calling
+#       -In trading the analyst may decide to be positioned (long/short) depending on the sign of the filter output (positive/negative)
+#       -Considering the filter output in terms of 'sign' (instead of level) is a scale-invariant application
+#       -On the other hand, zero-shrinkage (by imposing a large decay-regularization for example) adresses 
+#         MSE/level issues, explicitly (shrinking towards zero improves MSE under noisy conditions)
+#       -Therefore zero-shrinkage cannot be claimed to address explicitly scale-invariant filter applications  
+#     -Though indirectly most applications will still be addressed, at least indirectly/partially, because 
+#         the troika-features may claim 'universality' (to some extent) 
+#       -Filters with smooth and fast-decaying coefficients are felt to be useful irrespective of the 
+#         particular application at hand (being scale-dependent or scale-invariant)
 
+#   2.Regularization and spectrum estimates
+#     -The degrees of freedom statistic computed by the MDFA-package (edof) measures the dimension of the 
+#       projection-space engrossed by the MDFA-estimate
+#     -Shrinking that space to a smaller structurally commensurate ('smart') sub-space by imposing universally valid 
+#       features (smoothness, decay, cross-similarity) addresses overfitting (while still maintaining necessary flexibility to tackle the generic estimation problem)
+#     -However, overfitting is mainly (uniquely) due to the weighting-function (spectrum) being 'noisy' 
+#       -In fact, overfitting could be avoided entirely by substituting the true spectrum to the dft (as we did in tutorial 3)
+#         -The true spectrum has zero degrees of freedom: we do not fit the data (we just use the true model)
+#       -In contrast, the dft has as many degrees of freedom as the original data: we can recover the original data from the dft by inverse fourier transform (idft)
+#     -Therefore, MDFA inherits the degrees of freedom from the spectrum estimate: 
+#       -if the spectrum is the dft then 
+#         -the degrees of freedom of the dft corresponds to the number of observations 
+#         -the degrees of freedom of the (unconstrained) MDFA corresponds to L (univariate) or L times #explanatory series (multivariate)
+#         -overfitting by the (unconstrained) MDFA will be obtained unavoidably as L increases. 
+#       -if the spectrum is a model-based spectrum (for example form an ARIMA-model) then 
+#         -the degrees of freedom of MDFA cannot exceed the degrees of freedom of the fitted model: 
+#         -An ARMA(1,1)-model would result in maximally 2 degrees of freedom for the MDFA, irrespective of L, 
+#           as long as L/K is small 
+#             -If L/K is 'large', then overfitting of the target at the discrete frequency-ordinates could result, recall tutorial 2
+#             -Recall that for a model-based estimate K could be selected arbitrarily large (a large K 'consumes' more computation time, though)
+#       -if the spectrum is obtained from Burg's maximum entropy estimate then
+#         -The degrees of freedom of MDFA cannot exceed the order of the autoregressive model fitted to the data
+#           -Assuming, once again, that L/K is small...
+#     -Now... given that overfitting might be contained/addressed/tackled by model-based spectra: 
+#       -why don't we use more often (at all) model-based spectra in our applications?
+#       -why do we use the noisy dft together with a fancy dimension-crusher (regularization troika)
+#     -Answers
+#       -In practice, models are invariably (always) misspecified; the dft never is (the dft IS the data: trivially, it cannot be misspecified)
+#         -By using a model instead of the dft we trade bias (misspecification) against volatility (noise)
+#       -While models for univariate designs perform well (as confirmed by international forecast combinations), models
+#         for multivariate problems are tricky (there are numerous identification/causality issues and the number of parameters to be fitted increaes rapidly)
+#       -Controlling the degres of freedom of the MDFA-dft by our fancy dimension-crusher, the troika, addresses
+#         bias (universality of the troika-requirements implies mitigation of misspecification) as well as volatility 
+#         in a single-stroke, within an estimation paradigm that adresses the structure of the relevant problem (signal extraction/nowcasting) directly (in contrast to model-based approaches which address one-step forecasting, exclusively)
+#     -Note that the troika could be applied to MDFA as based on arbitrary spectra (for example model-based spectra with few degrees of freedom)
+#       -But applying 'universal' constraints to a design which is inherently misspecified misses somehow the point...
 
+#   Wrap-up
+#     -The regularization troika is required (most effective) when using the (very noisy but 'not misspecified') dft as spectrum
+#     -The combination of troika and dft mitigates bias (misspecification) and volatility (dimension-crusher) in a 
+#       coherent 'single-stroke' approach 
