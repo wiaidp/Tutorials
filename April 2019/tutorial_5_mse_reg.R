@@ -977,6 +977,9 @@ true_model_order<-c(1,0,0)
 #       -But applying 'universal' constraints to a design which is inherently misspecified misses somehow the point...
 
 #   Wrap-up
+#     -The extent of overfitting of the data by MDFA cannot exceed the extent of overfitting of the data-generating process by the spectral estimate
+#       If the spectrum is not overfitted then the MDFA cannot overfit the data (assuming L/K is small): in-sample and out-of-sample performances will be congruent
+#       However, a strongly misspecified spectrum (bias) will result in poor (in-sample as well as out-of-sample) performances
+#       The dft in combination with the troika aims at good in-sample as well as congruent (and therefore equally good) out-of-sample performances
 #     -The regularization troika is required (most effective) when using the (very noisy but 'not misspecified') dft as spectrum
-#     -The combination of troika and dft mitigates bias (misspecification) and volatility (dimension-crusher) in a 
-#       coherent 'single-stroke' approach 
+#     -The combination of troika and dft mitigates bias (misspecification) and volatility (dimension-crusher) in a coherent 'single-stroke' approach 
