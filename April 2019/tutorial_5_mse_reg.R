@@ -5,13 +5,19 @@
 
 # Purpose of tutorial: tackle overfitting by imposing shrinkage of the parameter space towards 'universally' meaningful subspace
 #   -Customization will be tackled in separate tutorials
-# 1. Show that extendend function replicates previous unconstrained MSE design(s)
+# 1. Show that generalized function replicates previous (unconstrained) MSE design(s) in the absence of regularization (i.e. when all regularization weights vanish)
 # 2. Introduce regularization troika: effect on filter coefficients (universally meaningful shrinkage)
 #     -Illustrate decay
 #     -Illustrate smoothness
 #     -Illustrate cross
-# 3. Compare unconstrained and constrained designs
+# 3. Compare unconstrained and constrained designs, in-sample and (more importantly) out-of-sample
 # 4. Advanced regularization
+#     -Derive the effective degrees of freedom (edof) of a regularized design
+#     -Analyzte the impact of regularization on the dimension of the sub-space spanned by MDFA
+#     -Derive a generalized information criterion inspired from classic criteria (but constructed from other principles): the troika information criterion, tic
+#     -Learn how to select optimal regularization weights based on tic
+#       -observe from our experimental design that tic correlates strongly with out-of-sample (MSE-) performances
+#       -therefore, selecting regularization weights such tic is minimal leads to good out-of-sample performances
 
 
 
@@ -958,23 +964,23 @@ true_model_order<-c(1,0,0)
 #             -Recall that for a model-based estimate K could be selected arbitrarily large (a large K 'consumes' more computation time, though)
 #         -therefore, in this case (assuming the spectrum is based on a parsimonious model) the effectiveness of the proposed regularization troika 
 #           would be mitigated: the troika is not necessarily/strictly required in such a setting
-#       -if the spectrum is obtained from Burg's maximum entropy estimate then
+#       -if the spectrum is obtained from Burg's maximum entropy estimate (see tutorials 1 and 3) then
 #         -The degrees of freedom of MDFA cannot exceed the order of the autoregressive model fitted to the data
 #           -Assuming, once again, that L/K is small...
 #         -For large autoregressive model orders, the troika can be applied to contain (unavoidable) overfitting and to improve out-of-sample performances
 #     -Now... given that overfitting might be contained/addressed/tackled by model-based spectra: 
 #       -why don't we use more often (at all) model-based spectra in our applications?
-#       -why do we use instead the noisy dft together with a fancy dimension-crusher (regularization troika)
+#       -why do we use instead the noisy dft together with a fancy dimension-crusher (the regularization troika)
 #     -Answers
-#       -In practice, models are invariably (always) misspecified; the dft never is (the dft IS the data: trivially, it cannot be misspecified)
+#       -In practice, models are invariably (always) misspecified; the dft never is (the dft IS the data: trivially, it cannot be misspecified; at least not for stationary data...)
 #         -By using a model instead of the dft we trade bias (misspecification) against volatility (noise)
-#       -While models for univariate designs perform well (as confirmed by a historical record of forecast competitions), models
-#         for multivariate problems are tricky (there are numerous identification/causality issues and the number of parameters to be fitted increaes rapidly i.e. overfitting is an issue)
+#       -While models for univariate designs perform well (as confirmed by a historical record of forecast competitions), multivariate models
+#         are tricky (there are numerous identification/causality issues and the number of parameters to be fitted increaes rapidly i.e. overfitting is an issue)
 #       -Controlling the degres of freedom of the MDFA (based on dft) by our fancy dimension-crusher (the troika) addresses
 #         bias (universality of the troika-requirements implies mitigation of misspecification) as well as volatility 
 #         in a single-stroke, within an estimation paradigm that adresses the structure of the relevant problem (signal extraction/nowcasting) directly (in contrast to model-based approaches which address one-step forecasting, exclusively)
 #     -Note that the troika could be applied to MDFA as based on arbitrary spectra (for example model-based spectra with few degrees of freedom)
-#       -But applying 'universal' constraints to a design which is inherently misspecified misses somehow the point...
+#       -But applying 'universal' shrinkage to a design which is inherently misspecified misses somehow the point...
 
 #   Wrap-up
 #     -The extent of overfitting of the data by MDFA cannot exceed the extent of overfitting of the data-generating process by the spectral estimate
