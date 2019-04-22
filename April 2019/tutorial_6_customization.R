@@ -644,7 +644,9 @@ boxplot(list(cust_leading_obj$perf_out_sample[,3,1],cust_leading_obj$perf_out_sa
 #     -In the mean, the customized filter will cross the zero line earlier than the MSE-filter: this will indeed be observed
 #     -But this feature would be completely 'useless' in the context of an iid process (independent identically distributed): no utility could be derived for the user
 #   -But all is not lost... in real-world markets liquidity is finite (adjustments are not immediate) and a substantial share of traders are relying on classic ('slow') MA-filters. 
-#     In such a context, improved timing by customized designs could deliver (experience suggests that faster is not always better, though)
+#     -In such a context, improved timing by customized designs could deliver 
+#     -However, experience suggests that faster is not always better
+#     -In any case, the ATS-trilemma enables to trigger whatever is felt judicious
 
 
 
