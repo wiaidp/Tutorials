@@ -1,5 +1,4 @@
-# Todos
-#   Link to trilemma paper
+# To do: link to trilemma paper
 
 
 

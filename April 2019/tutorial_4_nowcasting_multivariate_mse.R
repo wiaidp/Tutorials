@@ -1,4 +1,4 @@
-# To do: link to paper
+# To do: link to optimal filter paper, to multivariate filter paper and to companion paper
 
 
 # Purpose of tutorial: 

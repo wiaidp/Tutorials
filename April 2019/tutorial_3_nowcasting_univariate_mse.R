@@ -1,5 +1,4 @@
-# Todos
-#   -Add/discuss constraints
+# To do: link to optimal filter paper and to companion paper
 
 
 

@@ -1,3 +1,5 @@
+# To do: link to multi-step ahead forecast paper and companion paper
+
 # This tutorial is made of 6 exercises
 
 # Purpose of tutorial: 

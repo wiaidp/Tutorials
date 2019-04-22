@@ -1,6 +1,4 @@
-# Todos
-#   -link to data
-#   -advanced regularization with mdfa_analytic
+# To do: link to book
 
 
 # Purpose of tutorial: tackle overfitting by imposing shrinkage of the parameter space towards 'universally' meaningful subspace
