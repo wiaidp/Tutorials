@@ -20,6 +20,10 @@
 #       -therefore, selecting regularization weights such tic is minimal leads to good out-of-sample performances
 
 
+# New parameters: we will learn to work with the parameters lambda_smooth, lambda_decay and lambda_cross appearing in the calls to the (new) function 
+# MDFA_reg. The parameters lambda and eta appearing in this function-call will be set to zero (reflecting usage of the MSE criterion). The usage 
+# of lambda,eta will be discussed in the next tutorial 6 about customization
+
 
 rm(list=ls())
 

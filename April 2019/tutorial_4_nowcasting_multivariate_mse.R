@@ -8,6 +8,8 @@
 # Analyze pertinence of bivariate approach under multiple secnarios (data generating process, noise of indicator, filter-lengths, sample-lengths,... )
 # Establish a link between optimization criterion (MSE in the frequency-domain) and in-sample (classic time-domain) MSE
 
+# Functions and parameters: throughout this tutorial we rely on the same function MDFA_mse as used previously and we learn how to (better) understand 
+# its parameters in a multivariate setting. In particular the filter length L is of concern, due to the typical magnification of overfitting in multivariate frameworks 
 
 rm(list=ls())
 

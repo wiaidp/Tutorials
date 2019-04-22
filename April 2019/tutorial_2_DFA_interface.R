@@ -20,6 +20,10 @@
 #   -Unconstrained filters (no regularization)
 #   -Customization and regularization will be tackled in separate tutorials
 
+# Functions and parameters: throughout this tutorial we rely on the same function MDFA_mse as used previously and we learn how to (better) understand 
+# its parameters in a univariate signal extraction (nowcasting) framework. In particular, this tutorial will emphasize Gamma (arbitrary target) and 
+# weight_func (spectrum)
+
 
 
 # Start from scratch

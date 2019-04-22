@@ -15,6 +15,12 @@
 #     and in particular when models are likely to be misspecified (which is always the case for real-world data)
 
 
+# Functions and parameters: throughout this tutorial we rely on the function MDFA_mse which is the MSE-(mean-square error norm) wrapper to the generic MDFA estimation routine. 
+# By omitting many additional features (to be discussed in later tutorials) this wrapper allows to focus on the relevant problem.
+# We here learn handling of the parameters in the call to MDFA_mse by replicating a classic one-step ahead forecast framework. We are then able 
+# to replicate classic time series approaches.
+
+
 rm(list=ls())
 
 library(xts)

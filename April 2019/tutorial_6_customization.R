@@ -14,6 +14,11 @@
 # -Compare all designs to customized bivariate MDFA
 # -Proceed to extensive (out-of-sample) simulation studies
 
+
+# New parameters: we will learn to work with the parameters lambda and eta appearing in the calls to the (new) functions MDFA_cust and the previous MDFA_reg
+
+
+
 rm(list=ls())
 
 library(xts)
@@ -627,12 +632,19 @@ boxplot(list(cust_leading_obj$perf_out_sample[,3,1],cust_leading_obj$perf_out_sa
 #       -The shrinkage could be remedied easily, at least to some extent, by re-scaling of the filter output. 
 #       -Stated otherwise: part of the loss in A- and MSE-performances could be overcome by a very simple transformation which does not affect 
 #         the scale-invariant (relative) curvature and lag at peak-correlation measures
+# -Selecting lambda,eta
+#   -In contrast to the previous regularization feature, for which 'best' weights could be derived in terms of smallest tic (see tutorial 5), 
+#     customization of a filter by means of lambda (Timeliness) and eta (Smoothness) cannot claim uncontroversial 'optimality'
+#   -As suggested by its naming, customization (the selection of lambda/eta) depends mainly (solely) on the user or, more precisely, on the purpose of the analysis
+#   -The 'utility' of a particular lambda/eta setting belies in the mindset of its user
 # -Summary of empirical studies
 #   -MSE designs outperform customized designs in- and out-of-sample, as expected
 #   -The bivariate leading indicator MSE-design outperforms all other contenders in-sample and out-of-sample in terms of MSE (assuming overfitting is not excessively heavy)
 #   -A univariate suitably customized DFA filter can outperform all MSE-designs in terms of curvature and (lag at) peak-correlation simultaneously in-sample and out-of-sample
 #     1. the best possible univariate MSE-approach assuming knowledge of the true data-generating process is outperformed
 #     2. more surprisingly, perhaps, the bivariate MSE leading indicator design is outperformed: this last result confirms that gains can be substantial in both dimensions at once
+
+
 
 # -Cautionary words: avoid confusions
 #   -All reported measures are aggregates of stochastic events
@@ -646,7 +658,7 @@ boxplot(list(cust_leading_obj$perf_out_sample[,3,1],cust_leading_obj$perf_out_sa
 #   -But all is not lost... in real-world markets liquidity is finite (adjustments are not immediate) and a substantial share of traders are relying on classic ('slow') MA-filters. 
 #     -In such a context, improved timing by customized designs could deliver 
 #     -However, experience suggests that faster is not always better
-#     -In any case, the ATS-trilemma enables to trigger whatever is felt judicious
+#     -In any case, the ATS-trilemma enables to trigger whatever is felt judicious: now it's up to the user...
 
 
 
