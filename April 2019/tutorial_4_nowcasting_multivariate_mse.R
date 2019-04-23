@@ -5,7 +5,7 @@
 # Illustrate multivaraite designs: we rely on an artificial bivariate leading-indicator design
 # Compare (MSE-, in-sample and out-sample) performances of univariate DFA and bivariate design
 # Explore overfitting issues
-# Analyze pertinence of bivariate approach under multiple secnarios (data generating process, noise of indicator, filter-lengths, sample-lengths,... )
+# Analyze pertinence of bivariate approach under multiple scenarios (data generating process, noise of indicator, filter-lengths, sample-lengths,... )
 # Establish a link between optimization criterion (MSE in the frequency-domain) and in-sample (classic time-domain) MSE
 
 # Functions and parameters: throughout this tutorial we rely on the same function MDFA_mse as used previously and we learn how to (better) understand 
@@ -197,7 +197,7 @@ scale_idiosyncratic<-0.4
 # Fairly long in-sample span
 len<-300
 # Modest filter length (periodicity is 6 so L=12 is needed to damp components in the stopband)
-L<-12
+L<-2*periodicity
 
 play_obj<-play_bivariate_func(a1,scale_idiosyncratic,len,L)
   
@@ -230,7 +230,7 @@ scale_idiosyncratic<-0.4
 # Fairly long in-sample span
 len<-300
 # Modest filter length (periodicity is 6 so L=12 is needed to damp components in the stopband)
-L<-12
+L<-2*periodicity
 
 play_obj<-play_bivariate_func(a1,scale_idiosyncratic,len,L)
 
@@ -262,7 +262,7 @@ scale_idiosyncratic<-10
 # Fairly long in-sample span
 len<-300
 # Modest filter length (periodicity is 6 so L=12 is needed to damp components in the stopband)
-L<-12
+L<-2*periodicity
 
 play_obj<-play_bivariate_func(a1,scale_idiosyncratic,len,L)
 
@@ -294,7 +294,7 @@ scale_idiosyncratic<-0.4
 len<-100
 # Modest filter length (periodicity is 6 so L=12 is needed to damp components in the stopband)
 #   But note that we fit 2*12=24 coefficients to 100 observations only (49 complex-valued frequency-domain equations + 2 real-valued at frequencies 0 and pi which gives 49*2+2=100 frequency-domain observations)
-L<-12
+L<-2*periodicity
 
 play_obj<-play_bivariate_func(a1,scale_idiosyncratic,len,L)
 
@@ -353,7 +353,7 @@ scale_idiosyncratic<-0.4
 # Very long sample (more than 10 years of daily data)
 len<-3000
 # moderate filter length
-L<-50
+L<-2*periodicity
 
 play_obj<-play_bivariate_func(a1,scale_idiosyncratic,len,L)
 
@@ -378,7 +378,7 @@ a1<-0.08
 scale_idiosyncratic<-0.4
 # Very long sample (more than 10 years of daily data)
 len<-3000
-# moderate filter length
+# Larger L
 L<-50
 
 play_obj<-play_bivariate_func(a1,scale_idiosyncratic,len,L)
@@ -402,8 +402,6 @@ mtext("Asymptotic DFA (univariate)",line=-2,col="green")
 mtext("Massively overfitted MDFA",line=-3,col="red")
 abline(h=0)
 
-# Comment:
-#   The overfitted design performs remarkably well (in particular at zero-crossings...) 
 
 
 

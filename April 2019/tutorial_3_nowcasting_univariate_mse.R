@@ -225,7 +225,7 @@ mse_true_arma<-mse_dfa<-NULL
 # Number of simulations
 anzsim<-500
 # Length of in-sample span
-in_sample<-100
+in_sample<-300
 # Frequency grid for DFA based on true model
 K_true<-600
 # Lowpass target  
@@ -297,7 +297,7 @@ sqrt(mean(mse_true)/mean(mse_dft))
 #   -for L=2*periodicity and in_sample=100, the ratio is typically around 89%: in the mean the non-parametric DFA performs nearly as well as the best possible forecast approach
 #     -Note that L=2*periodicity is fine for damping all components with durations shorter/equal periodicity
 #     -But fitting L=2*periodicity=20 parameters for a time series of length in_sample=100 is 
-#       not extremely smart (overfitting). See tutorial on regulartization...
+#       not extremely smart (overfitting). See tutorial on regularization...
 
 
 
