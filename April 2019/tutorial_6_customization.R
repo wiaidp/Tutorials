@@ -650,10 +650,12 @@ boxplot(list(cust_leading_obj$perf_out_sample[,3,1],cust_leading_obj$perf_out_sa
 #   -Improved S and T or, equivalently, improved curvature and peak correlation imply that the corresponding filter output improves 'in the mean'
 #     -At some turning-points the lead can be larger or smaller (than indicated by the aggregate peak-correlation number): there is variation (no determinism)
 #     -Sometimes the output is less (or more) smooth than assumed by the aggregate curvature number
-#   -Applying a customized filter to white noise can (and does) not improve our inferentail ability about the (completely random) future
+#     -Note that usage of a leading indicator in the bivariate design leads to 'more determinism' i.e. the anticipation (by exactly one time point) is less random or more regular than for the customized univariate design
+#   -Applying a customized filter to white noise can (and does) not improve our inferential ability about the (completely random) future
 #     -Neither forecasting nor any derived statistic (for example trading performances based on the sign of the filter output) can be improved
 #     -In the mean, the customized filter will cross the zero line earlier than the MSE-filter: this will indeed be observed
 #     -But this feature would be completely 'useless' in the context of an iid process (independent identically distributed): no utility could be derived for the user
+#     -In contrast, usage of the leading indicator in the bivariate design would have lead to substantial trading performance (due to effective non-causality of the design) 
 #   -But all is not lost... in real-world markets liquidity is finite (adjustments are not immediate) and a substantial share of traders are relying on classic ('slow') MA-filters. 
 #     -In such a context, improved timing by customized designs could deliver 
 #     -However, experience suggests that faster is not always better
