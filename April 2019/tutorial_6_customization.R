@@ -29,7 +29,7 @@ library(devtools)
 library(MDFA)
 
 
-# Briev overview of wrappers and main function
+# Brief overview of wrappers and main function
 head(MDFA_mse)
 head(MDFA_mse_constraint)
 head(MDFA_cust)
