@@ -48,6 +48,7 @@ if (download_data_from_Quandl)
   load("mydata")
 }
 
+#-------------
 # Prepare GDP-data
 start_year<-1960
 end_date<-format(Sys.time(), "%Y-%m-%d")
@@ -59,30 +60,36 @@ data_sample<-data_sample[paste(start_date,"/",sep="")]
 lgdp <- ts(100*log(data_sample),start=start_year,frequency=4)
 nobs <- length(lgdp)
 
-
+#-----------------
 # The function hpFilt derives the MA-coefficients of the implicit ARIMA(0,2,2)-model underlying the HP-filter
 #   -The HP-filter assumes a particular ARIMA(0,2,2)-model for the data-gerenating process
 #   -The MA-coeffcients of the (twice differenced) stationary data are determined by lambda
-#   -See 
+#     -See paper by McElroy (in literature folder on github) for details
+#   -The ARIMA(0,2,2) is necessary for deriving weight_func, the pseudo-spectrum, of MDFA
 head(hpFilt)
 
 x<-lgdp
 # Series length
 len<-L_hp<-length(x)
-# Select lambda
+# Select lambda: 1600 is typically used for quarterly data 
 lambda_hp<-1600
 q<-1/lambda_hp
 
+# This function derives the MA-coefficients of the ARIMA(0,2,2)-model: it is not related to MDFA
 hp_filt_obj<-hpFilt(q,L_hp)
 
 tail(hpFilt,2)
 hp_filt_obj$ma_model
 ma_coeff<-hp_filt_obj$ma_model[2:3]
+# The MA-coefficients depend on lambda
+ma_coeff
 
 
+#----------------------
+# Apply the HP-filter to GDP
+#   We here rely on the R-package mFilter 
+#   Below, we will replicate the HP-filter by MDFA
 
-K<-2*len
-K<-1200
 # proceed to filtering
 x_hp <- hpfilter(x,type="lambda", freq=lambda_hp)
 # Extract the coefficients of the symmetric trend:
@@ -105,9 +112,14 @@ plot(mplot[,4],col="blue",xlab="",ylab="",main=plot_title)
 nberShade()
 lines(mplot[,5],col="red")
 
+#-------------------------
+# Replicate HP-filter by MDFA
+#   -For that purpose we need weight_func (the pseudo-spectrum of the ARIMA(0,2,2)) as well as Gamma (the target symmetric filter)
 
+# Select resolution of frequency-grid
+K<-1200
 
-# Compute pseudo-spectral density underlying Wiener-Kolmogorov derivation of HP 
+# 1.Compute pseudo-spectral density underlying Wiener-Kolmogorov derivation of HP 
 #   (see McElroy (2008) or Maravall-Kaiser p.179)
 # For lambda=1600 the MA coefficients are -1.77709 and 0.79944
 # Note that MDFA is fed with the square-root of the spectrum
@@ -119,14 +131,14 @@ weight_func_h<-abs((1+ma_coeff[1]*exp(-1.i*(0:(K))*pi/(K))+
 #   and of explanatory variable (second column): target and 
 #   explanatory are the same here (univariate filter)
 weight_func<-cbind(weight_func_h,weight_func_h)
-# Compute target Gamma: HP-trend symmetric filter, see McElroy (2008)
+
+# 2.Compute target Gamma: HP-trend symmetric filter, see McElroy (2008)
 Gamma<-0:(K)
 for (k in 0:(K))
 {
   omegak<-k*pi/(K)
   Gamma[k+1]<-(1/lambda_hp)/(1/lambda_hp+abs(1-exp(1.i*omegak))^4)
 }
-
 
 par(mfrow=c(2,1))
 colo<-c("blue","red")
@@ -143,11 +155,21 @@ plot_title<-"Log pseudo-spectrum, lambda=1600"
 mplot_func(mplot,freq_axe,plot_title,title_more,insamp,colo)
 
 
-
-
+#-------------------
+# Set-up MDFA
+#   -We here rely on the MSE-wrapper MDFA_mse_constraint 
+#     -The constraints assume that
+#       1. Shift of one-sided filter vanishes in frequency-zero: i2<-T, shift_constraint<-0
+#       2. Amplitude of one-sided filter is one in frequency zero: i1<-T, weight_constraint<-1
+#       It is necessary to impose these constraints because of the implicit ARIMA(0,2,2)-model assumed by HP-filter
+#   -Note that the pseudo-spectrum of the ARIMA(0,2,2) is infinite in frequency zero which would shut-down the numerical optimization
+#     -We skip this issue by assigning an arbitrary (zero-) value in frequency-zero
+#     -This arbitrary value could be ignored because we impose constraints i1==T and i2==T in frequency zero
+#     -Any other arbitrary number could be used without affecting the resulting estimate
+#   -We want a nowcast: Lag=0
+#   -cutoff is not relevant in a MSE-setting (it's relevant for customization): we could assign any value to cutoff
 
 weight_func_hp<-weight_func
-K<-nrow(weight_func_hp)-1
 # Frequency zero is infinity (unit root)
 #   The singularity is removed by imposing first and second order 
 #     restrictions
@@ -165,12 +187,17 @@ i2<-T
 cutoff<-pi*which(Gamma<0.5)[1]/length(Gamma)
 # Real-time (nowcast)
 Lag<-0
-# Alternative (identical) context-specific estimation: 
+# Constraints: amplitude is one, shift is zero
 weight_constraint<-1
 shift_constraint<-0
 
 imdfa_hp<-MDFA_mse_constraint(L,weight_func_hp,Lag,Gamma,i1,i2,weight_constraint,shift_constraint)$mdfa_obj
 
+# Compare coefficients of one-sided HP-filter by R-package mFilter and by MDFA 
+#   -Both series are virtually indistinguishable
+#   -The minuscule differences could be reduced further (arbitrarily small) by selecting a higher resolution of the frequency-grid above (at cost of numerical speed)
+# Thus the HP-filter could be replicated by MDFA
+#   -In principle we could now apply customization (not showed here)
 par(mfrow=c(2,1))
 colo<-c("blue","red")
 insamp<-1.e+99
