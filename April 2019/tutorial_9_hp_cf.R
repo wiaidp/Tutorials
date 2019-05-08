@@ -60,7 +60,9 @@ data_sample<-data_sample[paste(start_date,"/",sep="")]
 lgdp <- ts(100*log(data_sample),start=start_year,frequency=4)
 nobs <- length(lgdp)
 
-#-----------------
+#---------------------------------------------------------------------------------
+# Replication Hodrick-Prescott (HP-) filter
+
 # The function hpFilt derives the MA-coefficients of the implicit ARIMA(0,2,2)-model underlying the HP-filter
 #   -The HP-filter assumes a particular ARIMA(0,2,2)-model for the data-gerenating process
 #   -The MA-coeffcients of the (twice differenced) stationary data are determined by lambda
@@ -197,7 +199,7 @@ imdfa_hp<-MDFA_mse_constraint(L,weight_func_hp,Lag,Gamma,i1,i2,weight_constraint
 #   -Both series are virtually indistinguishable
 #   -The minuscule differences could be reduced further (arbitrarily small) by selecting a higher resolution of the frequency-grid above (at cost of numerical speed)
 # Thus the HP-filter could be replicated by MDFA
-#   -In principle we could now apply customization (not showed here)
+#   -In principle we could now apply customization (see MDFA-book for illustration)
 par(mfrow=c(2,1))
 colo<-c("blue","red")
 insamp<-1.e+99
@@ -217,3 +219,140 @@ title_more<-c("DFA","HP")
 mplot_func(mplot,freq_axe,plot_title,title_more,insamp,colo)
 
 
+# Check constraints
+# first-order: should give 1
+print(paste("Transfer function in frequency zero: ",
+            round(sum(imdfa_hp$b),3),sep=""))
+# second-order: time-shift should vanish
+print(paste("Time-shift in frequency zero: ",
+            round((1:(L-1))%*%imdfa_hp$b[2:L],10),sep=""))
+
+
+
+#--------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------------------------
+# Replication Christiano-Fitzgerald (CF-) filter
+# CF-filter differs from HP
+#   It is an ideal bandpass: this will be the target for MDFA
+#   The implicit model assumption is a random-walk: this will be the spectrum for MDFA
+
+
+x<-lgdp
+# Series length
+len<-length(x)
+# Resolution of frequency-grid
+#   Selecting a higher resolution would tighten the approximation of CF by DFA
+K<-1200
+# Upper and lower cutoffs of bandpass: lengths in quarters
+len1<-8
+len2<-40
+cutoff1<-2*pi/len1
+cutoff2<-2*pi/len2
+# Specify target bandpass
+Gamma_cf<-((0:K)>K*cutoff2/pi)&((0:K)<K*cutoff1/pi)
+# Specify (square-root of) implicit pseudo-spectral density (of random-walk)
+weight_func_cf<-matrix(rep(1/abs(1-exp(1.i*(0:K)*pi/K)),2),ncol=2)
+K<-nrow(weight_func_cf)-1
+# Remove singularity in frequency zero (one can assign an arbitrary value)
+weight_func_cf[1,]<-0
+# Filter length
+L<-len
+# Filter constraints: the CF-filter assumes an I(1)-model: i1<-T, i2<-F
+i1<-T
+i2<-F
+# Constraints: amplitude is zero (CF-filter is a abndpass); 
+# shift is irrelevant because i2<-F: we could assign any arbitrary value to shift_constraint
+weight_constraint<-0
+shift_constraint<-0
+
+# Proceed to estimation
+imdfa_cf<-MDFA_mse_constraint(L,weight_func_cf,Lag,Gamma_cf,i1,i2,weight_constraint,shift_constraint)$mdfa_obj
+
+omega_k<-pi*(0:K)/K
+amp_mse<-abs(imdfa_cf$trffkt)
+mplot<-as.matrix(amp_mse)
+mplot[1,]<-NA
+colnames(mplot)<-NA
+ax<-rep(NA,nrow(mplot))
+ax[1+(0:6)*((nrow(mplot)-1)/6)]<-c(0,"pi/6","2pi/6","3pi/6",
+                                   "4pi/6","5pi/6","pi")
+plot_title<-paste("Amplitude of one-sided Christiano Fitzgerald with 
+                  cutoffs pi/",len2/2,", pi/",len1/2,sep="")
+insamp<-1.e+90
+title_more<-dimnames(mplot)[[2]]
+colo<-c("blue","red")
+mplot_func(mplot, ax, plot_title, title_more, insamp, colo)
+
+
+print(paste("Transfer function in frequency zero: ",
+            round(sum(imdfa_cf$b),3),sep=""))
+# Check second-order: time-shift is unconstrained
+print(paste("Time-shift in frequency zero: ",
+            round((1:(L-1))%*%imdfa_cf$b[2:L],3),sep=""))
+
+#------------------------------------
+# We now verify that the above one-sided filter, obtained by MDFA, replicates the one-sided CF-filter
+#   -For that purpose we would have relied on the mFilter-package: 
+#     -Unfortunately mFilter is wrong, as can be seen below 
+#   -Therefore we rely on the classic model-based solution for deriving the one-sided filter and we check that this corresponds to MDFA
+
+
+# First attempt: based on mFilter
+# We here rely on R-package mFilter for the CF-filter: comparisons with the MDFA-package are provided below
+x_cf<-cffilter(x,pu=len2,pl=len1,root=F,drift=F, nfix=NULL,theta=1)
+parm_cf<-x_cf$fmatrix
+
+# Check first-order constraint: should give 0 i.e. amplitude in frequency zero should vanish
+print(paste("Transfer function in frequency zero: ",
+            round(sum(parm_cf[,1]),3),sep=""))
+  x_cf_T<-cffilter(x,pu=len2,pl=len1,root=T,drift=F, nfix=NULL,theta=1)
+parm_cf_T<-x_cf_T$fmatrix
+
+# Check first-order: should give 0
+print(paste("Transfer function in frequency zero: ",
+            round(sum(parm_cf_T[,1]),3),sep=""))
+
+#  Obviously, the code does not seem to work properly. 
+x_mF_T<-mFilter(x,filter="CF",pu=len2,pl=len1,root=T,drift=F, 
+                  nfix=NULL,theta=1)
+parm_mF_T<-x_mF_T$fmatrix
+
+# Check first-order: should give 0
+print(paste("Transfer function in frequency zero: ",
+            round(sum(parm_mF_T[,1]),3),sep=""))
+
+#  Neither $mFilter$ nor $cffilter$  comply with the first-order constraint in frequency zero. Selecting $root=T$ results in a severly misspecified filter.
+colo<-c("blue","red","green")
+mplot<-cbind(imdfa_cf$b,parm_cf[,1],parm_mF_T[,1])
+colnames(mplot)<-c("DFA","mFilter: plot=F","mFilter: plot=T")
+plot_title<-"Real-time CF-filters: DFA (blue) vs. mFilter (red and green)"
+freq_axe<-paste("Lag ",0:(len-1),sep="")
+title_more<-colnames(mplot)
+mplot_func(mplot,freq_axe,plot_title,title_more,insamp,colo)
+
+# As can be seen, DFA (blue) and $mFilter$ or $cffilter$ based on $root=F$ (red) match closely up to the boundaries, lags 0 and $\Sexpr{len}$, where non-negligible discrepancies can be observed. 
+# In contrast, the coefficients of $mFilter$ for $root=T$ (green line) are `off the mark'.
+
+#----------------------
+# Cross-check real-time DFA coefficients with the (time-domain) model-based solution proposed in section \ref{time_domain}, see fig.\ref{z_CF_us_real_log_gdp_fb}. Hint: our R-code relies on \ref{mba_coef_td}, whereby $a_1=1$ (random-walk).
+#   Finally we can verify replication of CF-filter by MDFA
+ord<-100000
+b<-0:ord
+b[1+1:ord]<-(sin((1:ord)*2*pi/len1)-sin((1:ord)*2*pi/len2))/(pi*(1:ord))
+b[1]<-2/len1-2/len2
+# Real-time filter based on for- and backcasts
+b_finite<-b[1:len]
+# The lag-0 coefficient is augmented by forecasts
+b_finite[1]<-b_finite[1]+sum(b[2:ord])
+# The lag-len coefficient is augmenetd by backcasts
+b_finite[len]<-b_finite[len]+sum(b[(len+1):ord])
+# Compare DFA and model-based coefficients
+#   Both coefficients overlap almost perfectly: tighter approximations could be obtained 
+#     by increasing K (resolution of frequency-grid)
+colo<-c("red","blue")
+mplot<-cbind(b_finite,imdfa_cf$b)
+plot_title<-"Real-time CF-filters: Forecast/backcast (red) vs. DFA (blue)"
+freq_axe<-rep(NA,len)
+freq_axe[1]<-0
+freq_axe[(1:6)*len/6]<-paste("Lag ",as.integer(1+(1:6)*len/6),sep="")
+mplot_func(mplot,freq_axe,plot_title,title_more,insamp,colo)
