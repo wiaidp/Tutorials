@@ -386,3 +386,20 @@ freq_axe<-rep(NA,len)
 freq_axe[1]<-0
 freq_axe[(1:6)*len/6]<-paste("Lag ",as.integer(1+(1:6)*len/6),sep="")
 mplot_func(mplot,freq_axe,plot_title,title_more,insamp,colo)
+
+#-----------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------
+# Final considerations
+#   -We showed how to replicate classic filters in MDFA
+#     Derive Gamma and weight_func as specified in literature
+#     Apply constraints (if required)
+#     Apply MDFA_mse_constraint wrapper for replication
+#   -Any other (linear) filter could be replicated analogously by MDFA
+#   -Once replicated, additional features could be applied
+#     -Customization: an example of a customized HP is presented in the MDFA-book
+#     -Regularization
+#     -Thus any filter could be 'tweaked' to the purpose of a particular application or the preferences of a particular user
+#   -Hybrid designs could be obtained straightforwardly
+#     Example hybrid design
+#       -Use (pseudo-) spectrum from a model fitted to the data or the from the dft
+#       -Use target from HP or CF
