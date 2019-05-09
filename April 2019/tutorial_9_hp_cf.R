@@ -1,3 +1,29 @@
+# Purpose of this tutorial: replicate one-sided and symmetric classic filter designs
+#   1. Hodrick-Prescott (HP-) lowpass filter
+#   2. Cristiano-Fitzgerald (CF-) bandpass filter
+# Proceeding
+#   a. These are constrained MSE designs (no customization, no regularization but unit-root constraints in frequency zero)
+#   b. For replication we have to supply: weight_func (pseudo-spectrum) and Gamma (target) as well as constraints in frequency zero
+#     -For that purpose we rely on the MDFA_mse_constraint wrapper for MDFA
+#     -weight_func can be derived from the implicit model-based representation of the filters: ARIMA(0,2,2) (for HP) and ARIMA(0,1,0) (for CF)
+#       -HP:  the MA(2) coefficients of the ARIMA(0,2,2)-model are uniquely determined by lambda (the free parameter of HP), see paper by McElroy (in literature folder on github) for details
+#             The MA(2) parameters of the implicit HP-model do not depend on data...
+#     -Gamma can be derived either from the implicit model (for HP, see paper by McElroy in github folder literature) or from the specification by the authors (CF: ideal bandpass)
+#   c. Since both (implicit) models are non-stationary, we have to impose classic constraints in frequency zero
+#     -HP: for the lowpass we impose 
+#       -Amplitude in frequency-zero must equal one (i<-T; weight_constraint<-1)
+#       -Time-shift in frequency zero must vanish (i2<-T; shift_constraint<-0)
+#       -These two constraints are necessary for cancelling the putative unit-roots of the (implicit) ARIMA(0,2,2)-model
+#     -CF: for the bandpass we impose
+#       -Amplitude in frequency zero vanishes  (i<-T; weight_constraint<-0)
+#       -Since the implicit model is a random-walk, no second-order constraint is required i.e. i2<-F
+#   d. For replication we compare the outcome of MDFA with the R-package mFilter
+#     -For HP the replication can be made arbitrarily tight (depending on resolution of frequency-grid in MDFA)
+#     -For CF the package mFilter delivers wrong one-sided filters
+#       On this case we check replicability by comparing MDFA with the classic model-based (time-domain) solution of the estimation problem
+#       Once again, when done right, the replication could be tightened arbitrarily (by selecting larger K)
+
+
 rm(list=ls())
 
 # Load libraries
@@ -49,6 +75,9 @@ if (download_data_from_Quandl)
 }
 
 #-------------
+# HP is typically applied to GDP
+# For quarterly data lambda=1600 has been suggested in literature
+
 # Prepare GDP-data
 start_year<-1960
 end_date<-format(Sys.time(), "%Y-%m-%d")
@@ -60,12 +89,16 @@ data_sample<-data_sample[paste(start_date,"/",sep="")]
 lgdp <- ts(100*log(data_sample),start=start_year,frequency=4)
 nobs <- length(lgdp)
 
-#---------------------------------------------------------------------------------
-# Replication Hodrick-Prescott (HP-) filter
+# Select lambda: 1600 is typically used for quarterly data 
+lambda_hp<-1600
 
+#---------------------------------------------------------------------------------
+# Exercise 1. Replication Hodrick-Prescott (HP-) filter
+
+# 1.1 Use the function hpFilt (written by McElroy, see paper in github folder) 
 # The function hpFilt derives the MA-coefficients of the implicit ARIMA(0,2,2)-model underlying the HP-filter
 #   -The HP-filter assumes a particular ARIMA(0,2,2)-model for the data-gerenating process
-#   -The MA-coeffcients of the (twice differenced) stationary data are determined by lambda
+#   -The MA-coefficients of the (twice differenced) stationary data are determined by lambda
 #     -See paper by McElroy (in literature folder on github) for details
 #   -The ARIMA(0,2,2) is necessary for deriving weight_func, the pseudo-spectrum, of MDFA
 head(hpFilt)
@@ -73,8 +106,6 @@ head(hpFilt)
 x<-lgdp
 # Series length
 len<-L_hp<-length(x)
-# Select lambda: 1600 is typically used for quarterly data 
-lambda_hp<-1600
 q<-1/lambda_hp
 
 # This function derives the MA-coefficients of the ARIMA(0,2,2)-model: it is not related to MDFA
@@ -88,7 +119,7 @@ ma_coeff
 
 
 #----------------------
-# Apply the HP-filter to GDP
+# 1.2 Apply the HP-filter to GDP
 #   We here rely on the R-package mFilter 
 #   Below, we will replicate the HP-filter by MDFA
 
@@ -115,13 +146,13 @@ nberShade()
 lines(mplot[,5],col="red")
 
 #-------------------------
-# Replicate HP-filter by MDFA
+# 1.3 Replicate HP-filter by MDFA
 #   -For that purpose we need weight_func (the pseudo-spectrum of the ARIMA(0,2,2)) as well as Gamma (the target symmetric filter)
 
 # Select resolution of frequency-grid
 K<-1200
 
-# 1.Compute pseudo-spectral density underlying Wiener-Kolmogorov derivation of HP 
+# 1.3.1.Compute pseudo-spectral density underlying Wiener-Kolmogorov derivation of HP 
 #   (see McElroy (2008) or Maravall-Kaiser p.179)
 # For lambda=1600 the MA coefficients are -1.77709 and 0.79944
 # Note that MDFA is fed with the square-root of the spectrum
@@ -134,7 +165,7 @@ weight_func_h<-abs((1+ma_coeff[1]*exp(-1.i*(0:(K))*pi/(K))+
 #   explanatory are the same here (univariate filter)
 weight_func<-cbind(weight_func_h,weight_func_h)
 
-# 2.Compute target Gamma: HP-trend symmetric filter, see McElroy (2008)
+# 1.3.2.Compute target Gamma: HP-trend symmetric filter, see McElroy (2008)
 Gamma<-0:(K)
 for (k in 0:(K))
 {
@@ -158,7 +189,7 @@ mplot_func(mplot,freq_axe,plot_title,title_more,insamp,colo)
 
 
 #-------------------
-# Set-up MDFA
+# 1.3.3 Set-up MDFA
 #   -We here rely on the MSE-wrapper MDFA_mse_constraint 
 #     -The constraints assume that
 #       1. Shift of one-sided filter vanishes in frequency-zero: i2<-T, shift_constraint<-0
@@ -218,7 +249,7 @@ freq_axe<-rownames(mplot)
 title_more<-c("DFA","HP")
 mplot_func(mplot,freq_axe,plot_title,title_more,insamp,colo)
 
-
+# 1.3.4
 # Check constraints
 # first-order: should give 1
 print(paste("Transfer function in frequency zero: ",
@@ -231,12 +262,12 @@ print(paste("Time-shift in frequency zero: ",
 
 #--------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------------------------
-# Replication Christiano-Fitzgerald (CF-) filter
+# Exercise 2: Replication Christiano-Fitzgerald (CF-) filter
 # CF-filter differs from HP
 #   It is an ideal bandpass: this will be the target for MDFA
 #   The implicit model assumption is a random-walk: this will be the spectrum for MDFA
 
-
+# 2.1: set-up parameters for replicating CF in MDFA
 x<-lgdp
 # Series length
 len<-length(x)
@@ -265,7 +296,7 @@ i2<-F
 weight_constraint<-0
 shift_constraint<-0
 
-# Proceed to estimation
+# 2.2 Proceed to estimation
 imdfa_cf<-MDFA_mse_constraint(L,weight_func_cf,Lag,Gamma_cf,i1,i2,weight_constraint,shift_constraint)$mdfa_obj
 
 omega_k<-pi*(0:K)/K
@@ -283,7 +314,7 @@ title_more<-dimnames(mplot)[[2]]
 colo<-c("blue","red")
 mplot_func(mplot, ax, plot_title, title_more, insamp, colo)
 
-
+# 2.3 Verify constraints in frequency zero: only the amplitude constraint has been imposed (i1<-T and i2<-F)
 print(paste("Transfer function in frequency zero: ",
             round(sum(imdfa_cf$b),3),sep=""))
 # Check second-order: time-shift is unconstrained
@@ -291,13 +322,13 @@ print(paste("Time-shift in frequency zero: ",
             round((1:(L-1))%*%imdfa_cf$b[2:L],3),sep=""))
 
 #------------------------------------
-# We now verify that the above one-sided filter, obtained by MDFA, replicates the one-sided CF-filter
+# 2.4 We now verify that the above one-sided filter, obtained by MDFA, replicates the one-sided CF-filter
 #   -For that purpose we would have relied on the mFilter-package: 
 #     -Unfortunately mFilter is wrong, as can be seen below 
 #   -Therefore we rely on the classic model-based solution for deriving the one-sided filter and we check that this corresponds to MDFA
 
 
-# First attempt: based on mFilter
+# 2.4.1 First attempt: based on mFilter (mFilter does not work properly)
 # We here rely on R-package mFilter for the CF-filter: comparisons with the MDFA-package are provided below
 x_cf<-cffilter(x,pu=len2,pl=len1,root=F,drift=F, nfix=NULL,theta=1)
 parm_cf<-x_cf$fmatrix
@@ -334,7 +365,7 @@ mplot_func(mplot,freq_axe,plot_title,title_more,insamp,colo)
 # In contrast, the coefficients of $mFilter$ for $root=T$ (green line) are `off the mark'.
 
 #----------------------
-# Cross-check real-time DFA coefficients with the (time-domain) model-based solution proposed in section \ref{time_domain}, see fig.\ref{z_CF_us_real_log_gdp_fb}. Hint: our R-code relies on \ref{mba_coef_td}, whereby $a_1=1$ (random-walk).
+# 2.4.2 Cross-check real-time DFA coefficients with the (classic MSE time-domain) model-based solution 
 #   Finally we can verify replication of CF-filter by MDFA
 ord<-100000
 b<-0:ord
@@ -347,8 +378,7 @@ b_finite[1]<-b_finite[1]+sum(b[2:ord])
 # The lag-len coefficient is augmenetd by backcasts
 b_finite[len]<-b_finite[len]+sum(b[(len+1):ord])
 # Compare DFA and model-based coefficients
-#   Both coefficients overlap almost perfectly: tighter approximations could be obtained 
-#     by increasing K (resolution of frequency-grid)
+#   Both coefficients overlap almost perfectly: tighter approximations could be obtained by increasing K (resolution of frequency-grid)
 colo<-c("red","blue")
 mplot<-cbind(b_finite,imdfa_cf$b)
 plot_title<-"Real-time CF-filters: Forecast/backcast (red) vs. DFA (blue)"

@@ -1,5 +1,4 @@
-# todos
-# Poste DFA papers
+# To do: link to optimal filter paper and to companion paper
 
 # Purpose of tutorial: illustrate (M)DFA user-interface, understand and interpret MSE solutions, understand overfitting
 
