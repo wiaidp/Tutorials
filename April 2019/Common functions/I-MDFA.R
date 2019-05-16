@@ -199,11 +199,12 @@ MDFA_cust_constraint<-function(L,weight_func,Lag,Gamma,cutoff,lambda,eta,i1,i2,w
 #' @param lambda_cross Regularization: cross-sectional term
 #' @param lambda_decay Regularization: decay term
 #' @param lambda_smooth Regularization: smoothness term
+#' @param troikaner Boolean: if T then additional statistics such as ATS and degrees of freedom are computed (numerically involving)
 #' @return mdfa_obj MDFA object
 #' @export
 #'
 
-MDFA_reg<-function(L,weight_func,Lag,Gamma,cutoff,lambda,eta,lambda_cross,lambda_decay,lambda_smooth)
+MDFA_reg<-function(L,weight_func,Lag,Gamma,cutoff,lambda,eta,lambda_cross,lambda_decay,lambda_smooth,troikaner=F)
 {
 
 
@@ -219,7 +220,6 @@ MDFA_reg<-function(L,weight_func,Lag,Gamma,cutoff,lambda,eta,lambda_cross,lambda
   white_noise<-F
   synchronicity<-F
   lag_mat<-matrix(rep(0:(L-1),ncol(weight_func)),nrow=L)
-  troikaner<-F
   i1<-i2<-F
 
 
@@ -231,6 +231,7 @@ MDFA_reg<-function(L,weight_func,Lag,Gamma,cutoff,lambda,eta,lambda_cross,lambda
 
   return(list(mdfa_obj=mdfa_obj))
 }
+
 
 
 
@@ -255,11 +256,12 @@ MDFA_reg<-function(L,weight_func,Lag,Gamma,cutoff,lambda,eta,lambda_cross,lambda
 #' @param lambda_cross Regularization: cross-sectional term
 #' @param lambda_decay Regularization: decay term
 #' @param lambda_smooth Regularization: smoothness term
+#' @param troikaner Boolean: if T then additional statistics such as ATS and degrees of freedom are computed (numerically involving)
 #' @return mdfa_obj MDFA object
 #' @export
 #'
 
-MDFA_reg_constraint<-function(L,weight_func,Lag,Gamma,cutoff,lambda,eta,lambda_cross,lambda_decay,lambda_smooth,i1,i2,weight_constraint,shift_constraint)
+MDFA_reg_constraint<-function(L,weight_func,Lag,Gamma,cutoff,lambda,eta,lambda_cross,lambda_decay,lambda_smooth,i1,i2,weight_constraint,shift_constraint,troikaner=F)
 {
 
   lin_eta<-F
@@ -272,7 +274,7 @@ MDFA_reg_constraint<-function(L,weight_func,Lag,Gamma,cutoff,lambda,eta,lambda_c
   white_noise<-F
   synchronicity<-F
   lag_mat<-matrix(rep(0:(L-1),ncol(weight_func)),nrow=L)
-  troikaner<-F
+
 
   mdfa_obj<-mdfa_analytic(L,lambda,weight_func,Lag,Gamma,eta,cutoff,i1,i2,weight_constraint,
                           lambda_cross,lambda_decay,lambda_smooth,lin_eta,shift_constraint,grand_mean,
@@ -315,14 +317,18 @@ MDFA_reg_constraint<-function(L,weight_func,Lag,Gamma,cutoff,lambda,eta,lambda_c
 #' @return b Matrix of optimal filter coefficients
 #' @return trffkt Complex transfer function of optimal multivariate filter
 #' @return rever Criterion value (corresponds to a sample estimate of the MSE if lambda=eta=0)
-#' @return degrees_freedom Degrees of freedom (when imposing regularization the degrres of freedom are smaller than L times the number of explanatory series)
+#' @return freezed_degrees_freedom Degrees of freedom (when imposing regularization the degrres of freedom are smaller than L times the number of explanatory series)
 #' @return Accuracy Accuracy term in decomposition of MSE
 #' @return Smoothness Smoothness term in decomposition of MSE
 #' @return Timeliness Timeliness term in decomposition of MSE
 #' @return MS_error Sample estimate of MSE: consistent estimate in the cases lambda>0 and/or eta>0
-#' @return freezed_degrees_new The complementary of degrees_freedom
+#' @return degrees_freedom complementary of freezed_degrees_freedom
+#' @return edof alternative complementary of freezed_degrees_freedom
+#' @return tic Troikaner information criterion: based on sub-dimension of shrinkage space
 #' @export
 #'
+
+
 
 mdfa_analytic<-function(L,lambda,weight_func,Lag,Gamma,eta,cutoff,i1,i2,weight_constraint,
                         lambda_cross,lambda_decay,lambda_smooth,lin_eta,shift_constraint,grand_mean,
@@ -534,20 +540,20 @@ mdfa_analytic<-function(L,lambda,weight_func,Lag,Gamma,eta,cutoff,i1,i2,weight_c
     # DFA criterion: second possibility
     t(Conj(resi))%*%resi*pi/(K+1)
     t((weight_target*Gamma))%*%(t(Conj(res_mat))%*%(res_mat))%*%(weight_target*Gamma)*pi/(K+1)
-    degrees_freedom<-2*Re(sum(diag(t(Conj(res_mat))%*%(res_mat))))
+    freezed_degrees_freedom<-2*Re(sum(diag(t(Conj(res_mat))%*%(res_mat))))
     #  Re(t(Conj(res_mat))%*%(res_mat))-Re(res_mat)
-    freezed_degrees<-2*K+1-degrees_freedom
+    degrees_freedom<-2*K+1-freezed_degrees_freedom
     # The following expression equates to zero i.e. projection matrix is a projection for real part
     #   Re(t(Conj(res_mat))%*%(res_mat))-Re(res_mat)
 
     M<-((X_new)%*%(X_inv%*%t(Conj(X_new))))
     res_M<-diag(rep(1,dim(M)[1]))-M
     # The following is a real number but due to numerical rounding errors we prefer to take the real part of the result
-    freezed_degrees_new<-Re(K+1-sum(eigen(res_M)$values))
+    edof<-Re(K+1-sum(eigen(res_M)$values))
     # Troikaner
-    aic<-ifelse(degrees_freedom<K+1&degrees_freedom>1,log(rever)+2*(K-degrees_freedom+1)/(degrees_freedom-2),NA)
-
-    return(list(b=b,trffkt=trffkt,rever=rever,degrees_freedom=degrees_freedom,aic=aic,freezed_degrees=freezed_degrees,Accuracy=Accuracy,Smoothness=Smoothness,Timeliness=Timeliness,MS_error=MS_error,freezed_degrees_new=freezed_degrees_new))
+    tic<-ifelse(freezed_degrees_freedom<2*K+1&freezed_degrees_freedom>1,log(rever)+2*(K-freezed_degrees_freedom+1)/(freezed_degrees_freedom-2),NA)
+    tic<-log(rever)+2*edof/(2*K)
+    return(list(b=b,trffkt=trffkt,rever=rever,freezed_degrees_freedom=freezed_degrees_freedom,tic=tic,degrees_freedom=degrees_freedom,Accuracy=Accuracy,Smoothness=Smoothness,Timeliness=Timeliness,MS_error=MS_error,edof=edof))
   } else
   {
 # Simplified (shorter) return
