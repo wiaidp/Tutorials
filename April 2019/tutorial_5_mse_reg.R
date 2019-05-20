@@ -708,7 +708,6 @@ mdfa_reg_obj<-MDFA_reg(L,weight_func_mat,Lag,Gamma,cutoff,lambda,eta,lambda_cros
 troikaner<-T
 mdfa_reg_T_obj<-MDFA_reg(L,weight_func_mat,Lag,Gamma,cutoff,lambda,eta,lambda_cross,lambda_decay,lambda_smooth,troikaner)$mdfa_obj
 
-
 # Check: both filters are identical
 cbind(mdfa_reg_T_obj$b,mdfa_reg_obj$b)
 
