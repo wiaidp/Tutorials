@@ -39,11 +39,12 @@ sigma_low<-1
 len<-1200
 set.seed(1)
 x_low<-rep(NA,len)
-eps_low<-sigma_low*arima.sim(n=len,list(ar = c(0.8897), ma = c(0)))
+eps_low<-sigma_low*arima.sim(n=len,list(ar = c(0.1), ma = c(0)))
 
-eps_high<-arima.sim(n=period_high*len,list(ar = c(0.8897), ma = c(0)))
+eps_high<-arima.sim(n=period_high*len,list(ar = c(0.1), ma = c(0)))
 
 # Low-frequency data is flow-data i.e. differences of high-frequency data sum up to build diff of low-frequency data
+#   Then add an idiosyncratic error term eps_low
 for (i in 1:len)
   x_low[i]<-sum(eps_high[(i-1)*period_high+1:period_high])+eps_low[i]
 
@@ -51,17 +52,27 @@ for (i in 1:len)
 #   Embedding of high-frequency data in low-frequency sampling-scheme (period_high columns)
 x_high_embed<-matrix(ncol=period_high,nrow=len)   
 index_mat<-NULL
+high_freq_diff<-F
 for (i in 1:len)
 {
   for (j in 1:period_high)
   {
-    index<-(i-2)*period_high+(1:period_high)+j
+    if (!high_freq_diff)
+    {
+# 1. low-freq diff
+      index<-(i-2)*period_high+(1:period_high)+j
+    } else
+    {
+# 2. high-freq diff
+      index<-(i-1)*period_high+j
+    }
     if (min(index)<1)
       index<-rep(1,period_high)
     x_high_embed[i,j]<-sum(eps_high[index])
-    index_mat<-cbind(index_mat,index)
+    index_mat<-cbind(index_mat,as.vector(index))
   }
 }
+tail(t(index_mat)) 
 cor(x_high_embed[,c(1,3)])
 
 data_mat<-cbind(x_low,x_high_embed)
@@ -85,7 +96,7 @@ lead<-0/period_high
 weight_func_embed[,1]<-exp(-lead*1.i*(0:K)*pi/K)*weight_func_embed_h[,1]
 
 # Specify cutoff of ideal lowpass
-periodicity<-6
+periodicity<-3
 cutoff<-pi/periodicity
 # Target (in frequency domain)
 Gamma<-(0:(K))<=K*cutoff/pi+1.e-9
@@ -156,7 +167,7 @@ weight_func_embed[,1]<-exp(-lead*1.i*(0:K)*pi/K)*weight_func_embed_h[,1]
 
 
 # Specify cutoff of ideal lowpass
-periodicity<-6
+periodicity<-3
 cutoff<-pi/periodicity
 # Target (in frequency domain)
 Gamma<-(0:(K))<=K*cutoff/pi+1.e-9
