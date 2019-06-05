@@ -31,13 +31,18 @@ source("Common functions/plot_func.r")
 source("Common functions/mdfa_trade_func.r")
 source("Common functions/ideal_filter.r")
 
-insamp<-1200
-
-period_high<-6
-
-sigma_low<-2
+# Specify experimental setting
 len<-1200
-set.seed(10)
+insamp<-600
+period_high<-6
+sigma_low<-3
+high_freq_diff<-T
+target_as_explanatory<-F
+
+
+
+
+set.seed(1)
 x_low<-rep(NA,len)
 eps_low<-sigma_low*arima.sim(n=len,list(ar = c(0.09), ma = c(0)))
 
@@ -53,7 +58,6 @@ for (i in 1:len)
 x_high_embed<-matrix(ncol=period_high,nrow=len)   
 index_mat<-NULL
 # Use high-freq differences (for example monthly) or low-freq diff (for example quarterly)
-high_freq_diff<-T
 for (i in 1:len)
 {
   for (j in 1:period_high)
@@ -84,7 +88,6 @@ ts.plot(data_mat)
 #acf(data_mat)
 
 #Use target series a sexplanatory variable: not suitable for GDP since GDP releases are delayed and noisy (subject to revisions)
-target_as_explanatory<-T
 if (!target_as_explanatory)
 {
   weight_func_embed_h<-spec_comp(nrow(data_mat[1:insamp,]), cbind(data_mat[1:insamp,1],data_mat[1:insamp,2:ncol(data_mat)]), 0)$weight_func
@@ -154,7 +157,6 @@ mean(diff(diff(yhat_mixed[L:length(yhat_mixed)]))^2)
 #----------------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------------
 # Marc's 1. idea
-target_as_explanatory<-T
 
 weight_func_highh<-spec_comp(length(eps_high[1:(insamp*period_high)]),as.matrix(cbind(eps_high[1:(insamp*period_high)],eps_high[1:(insamp*period_high)])), 0)$weight_func[,1]
 weight_func_high<-weight_func_highh#/sqrt(period_high)
