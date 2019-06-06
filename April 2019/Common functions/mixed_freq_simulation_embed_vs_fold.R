@@ -1,7 +1,7 @@
 
 
 
-simulation_embed_vs_fold<-function(len,sigma_low,ar_low,ar_high,period_high,high_freq_diff,target_as_explanatory,lead,periodicity,M)
+simulation_embed_vs_fold<-function(len,sigma_low,ar_low,ar_high,period_high,high_freq_diff,target_as_explanatory,lead,periodicity,M,L)
 {
   x_low<-rep(NA,len)
   eps_low<-sigma_low*arima.sim(n=len,list(ar = c(ar_low), ma = c(0)))
@@ -68,8 +68,6 @@ simulation_embed_vs_fold<-function(len,sigma_low,ar_low,ar_high,period_high,high
   Gamma<-(0:(K))<=K*cutoff/pi+1.e-9
   # Nowcast (Lag=0), Backcast (Lag>0) and Forecast (Lag<0)
   Lag<-0
-  # Filter length: L/K should be 'small'
-  L<-2*periodicity
   # Estimate filter coefficients
   
   if (sigma_low==0)
@@ -138,7 +136,7 @@ simulation_embed_vs_fold<-function(len,sigma_low,ar_low,ar_high,period_high,high
   ts.plot(Gamma)
   
   # Filter length high-freq: account for narrowing high-freq time-scale
-  L<-2*period_high*periodicity
+  L_fold<-period_high*L
   
   lin_eta <- F
   lambda <- 0
@@ -160,16 +158,16 @@ simulation_embed_vs_fold<-function(len,sigma_low,ar_low,ar_high,period_high,high
   # Lag matrix of low-frequency series must be expanded according to period_high 
   if (!target_as_explanatory)
   {
-    lag_mat <- matrix(cbind(period_high*(0:(L - 1)),del_high*(0:(L - 1))), nrow = L)
+    lag_mat <- matrix(cbind(period_high*(0:(L_fold - 1)),del_high*(0:(L_fold - 1))), nrow = L_fold)
   } else
   {
-    lag_mat <- matrix(cbind(period_high*(0:(L - 1)),period_high*(0:(L - 1)),del_high*(0:(L - 1))), nrow = L)
+    lag_mat <- matrix(cbind(period_high*(0:(L_fold - 1)),period_high*(0:(L_fold - 1)),del_high*(0:(L_fold - 1))), nrow = L_fold)
   }
   troikaner <- F
   i1 <- i2 <- F
   
   
-  mdfa_obj <- mdfa_analytic(L, lambda, weight_func, Lag, Gamma, 
+  mdfa_obj <- mdfa_analytic(L_fold, lambda, weight_func, Lag, Gamma, 
                             eta, cutoff, i1, i2, weight_constraint, lambda_cross, 
                             lambda_decay, lambda_smooth, lin_eta, shift_constraint, 
                             grand_mean, b0_H0, c_eta, weight_structure, white_noise, 
@@ -178,7 +176,7 @@ simulation_embed_vs_fold<-function(len,sigma_low,ar_low,ar_high,period_high,high
   ts.plot(abs(mdfa_obj$trffkt),col=rainbow(ncol(mdfa_obj$trffkt)))
   b_mixed<-mdfa_obj$b
   colnames(b_mixed)<-colnames(weight_func)[2:ncol(weight_func)]
-  rownames(b_mixed)<-paste("Lag ",0:(L-1),sep="")#dim(b_mat)
+  rownames(b_mixed)<-paste("Lag ",0:(L_fold-1),sep="")#dim(b_mat)
   b_mixed
   
   # Filtering: one-sided filter
