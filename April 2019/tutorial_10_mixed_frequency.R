@@ -353,7 +353,7 @@ if (perform_computations)
 
 perf_mat
 # Test for significance of differences: larger than 2 (in abs) means significance
-sqrt(anzsim)*(perf_mat[1,]-perf_mat[2,])/sqrt(apply(var_perf,2,mean))
+sqrt(anzsim)*(perf_mat[1,]-perf_mat[2,])/(2*sqrt(apply(var_perf,2,sum)))
 
 
 #--------------------------------------------------------------------------------------------------------
@@ -425,7 +425,7 @@ if (perform_computations)
 
 perf_mat
 # Test for significance of differences: larger than 2 (in abs) means significance
-sqrt(anzsim)*(perf_mat[1,]-perf_mat[2,])/sqrt(apply(var_perf,2,mean))
+sqrt(anzsim)*(perf_mat[1,]-perf_mat[2,])/(2*sqrt(apply(var_perf,2,sum)))
 
 
 #--------------------------------------------------------------------------------------------------------
@@ -497,7 +497,7 @@ if (perform_computations)
 
 perf_mat
 # Test for significance of differences: larger than 2 (in abs) means significance
-sqrt(anzsim)*(perf_mat[1,]-perf_mat[2,])/sqrt(apply(var_perf,2,mean))
+sqrt(anzsim)*(perf_mat[1,]-perf_mat[2,])/(2*sqrt(apply(var_perf,2,sum)))
 
 #-------------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------------------------------
@@ -569,7 +569,7 @@ if (perform_computations)
 
 perf_mat
 # Test for significance of differences: larger than 2 (in abs) means significance
-sqrt(anzsim)*(perf_mat[1,]-perf_mat[2,])/sqrt(apply(var_perf,2,mean))
+sqrt(anzsim)*(perf_mat[1,]-perf_mat[2,])/(2*sqrt(apply(var_perf,2,sum)))
 
 
 #--------------------------------------------------------------------------------------------------------
@@ -641,7 +641,7 @@ if (perform_computations)
 
 perf_mat
 # Test for significance of differences: larger than 2 (in abs) means significance
-sqrt(anzsim)*(perf_mat[1,]-perf_mat[2,])/sqrt(apply(var_perf,2,mean))
+sqrt(anzsim)*(perf_mat[1,]-perf_mat[2,])/(2*sqrt(apply(var_perf,2,sum)))
 
 
 #--------------------------------------------------------------------------------------------------------
@@ -713,7 +713,7 @@ if (perform_computations)
 
 perf_mat
 # Test for significance of differences: larger than 2 (in abs) means significance
-sqrt(anzsim)*(perf_mat[1,]-perf_mat[2,])/sqrt(apply(var_perf,2,mean))
+sqrt(anzsim)*(perf_mat[1,]-perf_mat[2,])/(2*sqrt(apply(var_perf,2,sum)))
 
 
 # Here for the first time performances of fold are marginally worse than embed out-of-sample
@@ -787,7 +787,7 @@ if (perform_computations)
 
 perf_mat
 # Test for significance of differences: larger than 2 (in abs) means significance
-sqrt(anzsim)*(perf_mat[1,]-perf_mat[2,])/sqrt(apply(var_perf,2,mean))
+sqrt(anzsim)*(perf_mat[1,]-perf_mat[2,])/(2*sqrt(apply(var_perf,2,sum)))
 
 # Here fold is again marginally (not significantly) better out-of-sample
 
@@ -860,7 +860,7 @@ if (perform_computations)
 
 perf_mat
 # Test for significance of differences: larger than 2 (in abs) means significance
-sqrt(anzsim)*(perf_mat[1,]-perf_mat[2,])/sqrt(apply(var_perf,2,mean))
+sqrt(anzsim)*(perf_mat[1,]-perf_mat[2,])/(2*sqrt(apply(var_perf,2,sum)))
 
 #--------------------------------------------------------------------------------------------------------
 # Simulation experiment: compare embedding (Tucker) and folding (Marc)
@@ -931,7 +931,7 @@ if (perform_computations)
 
 perf_mat
 # Test for significance of differences: larger than 2 (in abs) means significance
-sqrt(anzsim)*(perf_mat[1,]-perf_mat[2,])/sqrt(apply(var_perf,2,mean))
+sqrt(anzsim)*(perf_mat[1,]-perf_mat[2,])/(2*sqrt(apply(var_perf,2,sum)))
 
 
 #--------------------------------------------------------------------------------------------------------
@@ -1004,7 +1004,7 @@ if (perform_computations)
 
 perf_mat
 # Test for significance of differences: larger than 2 (in abs) means significance
-sqrt(anzsim)*(perf_mat[1,]-perf_mat[2,])/sqrt(apply(var_perf,2,mean))
+sqrt(anzsim)*(perf_mat[1,]-perf_mat[2,])/(2*sqrt(apply(var_perf,2,sum)))
 
 
 #--------------------------------------------------------------------------------------------------------
@@ -1077,7 +1077,7 @@ if (perform_computations)
 
 perf_mat
 # Test for significance of differences: larger than 2 (in abs) means significance
-sqrt(anzsim)*(perf_mat[1,]-perf_mat[2,])/sqrt(apply(var_perf,2,mean))
+sqrt(anzsim)*(perf_mat[1,]-perf_mat[2,])/(2*sqrt(apply(var_perf,2,sum)))
 
 
 
