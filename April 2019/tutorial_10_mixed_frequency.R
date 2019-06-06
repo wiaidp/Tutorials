@@ -1009,7 +1009,7 @@ sqrt(anzsim)*(perf_mat[1,]-perf_mat[2,])/(2*sqrt(apply(var_perf,2,sum)))
 
 #--------------------------------------------------------------------------------------------------------
 # Simulation experiment: compare embedding (Tucker) and folding (Marc)
-# 11. Same settings as 10 but period_high<-3 and periodicity<-2
+# 11. Same settings as 10 but period_high<-3 and periodicity<-2: this implies smaller L (less overfitting)
 
 
 # Sample length
