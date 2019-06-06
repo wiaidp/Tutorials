@@ -30,14 +30,35 @@ head(mdfa_analytic)
 source("Common functions/plot_func.r")
 source("Common functions/mdfa_trade_func.r")
 source("Common functions/ideal_filter.r")
+source("Common functions/MSE_perf.r")
+source("Common functions/mixed_freq_simulation_embed_vs_fold.r")
 
 # Specify experimental setting
+# Sample length
 len<-1200
+# In-sample length
 insamp<-600
+# Folding rate
 period_high<-6
+# strength of low-freq indiosyncratic component
 sigma_low<-3
+# Use differences of high-freq data on high-freq scale (for example monthly) or on low-freq scale (for example quarterly)
 high_freq_diff<-T
+# Use low-freq target data as explanatory too (not suitable when target is GDP: publication-lag and revisions)
 target_as_explanatory<-F
+# DGP of differenced idiosyncratic component (low-freq data)
+#   Low-freq data is flow-data (sum of high-freq: for example sum in months of quarter) + idiosyncratic (independent) component
+ar_low<-0.09
+# DGP of differenced data
+ar_high<-0.09
+# Lead time: fractional 1/period_high corresponds to 1 time-unit on high-frequency scale
+lead<-0/period_high
+# Target: specify cutoff of ideal lowpass
+periodicity<-6
+# Ideal filter: used for evaluating time-domain MSE
+# Length of ideal lowpass (M is the half-length: effective length is 2*M-1 since filter is symmetric)
+M<-100
+
 
 
 
@@ -100,13 +121,9 @@ if (!target_as_explanatory)
 weight_func_embed<-weight_func_embed_h#dim(weight_func_embed)
 # Resolution of frequency-grid
 K<-nrow(weight_func_embed)-1
-# Lead time: fractional 1/period_high corresponds to 1 time-unit on high-frequency scale
-lead<-0/period_high
 
 weight_func_embed[,1]<-exp(-lead*1.i*(0:K)*pi/K)*weight_func_embed_h[,1]
 
-# Specify cutoff of ideal lowpass
-periodicity<-6
 cutoff<-pi/periodicity
 # Target (in frequency domain)
 Gamma<-(0:(K))<=K*cutoff/pi+1.e-9
@@ -144,14 +161,9 @@ y<-ideal_filter_func(periodicity,M,data_mat[,1])$y
 ts.plot(cbind(yhat_mixed,y),col=c("blue","red"))
 
 # MSE performances
-mean((y-yhat_mixed)^2,na.rm=T)
-if (!target_as_explanatory)
-{
-  print("The next MSE is cheating in this configuration because it uses low-freq data as estimate")
-}  
-mean((y-data_mat[,1])^2,na.rm=T)
-mdfa_obj_mixed$MS_error
-mean(diff(diff(yhat_mixed[L:length(yhat_mixed)]))^2)
+
+MSE_embed<-MSE_perf_func(insamp,y,yhat_mixed,len,mdfa_obj_mixed)$perf_mat
+  
 
 
 #----------------------------------------------------------------------------------------------------
@@ -176,8 +188,6 @@ if (!target_as_explanatory)
 # abs(DFT) of target is larger because target is sum of high-freq-data + noise
 ts.plot(abs(weight_func),col=c("blue","red"))
 
-# Lead time: fractional 1/period_high corresponds to 1 time-unit on high-frequency scale
-lead<-0/period_high
 K<-nrow(weight_func)-1
 
 weight_func[,1]<-exp(-lead*1.i*(0:K)*pi/K)*weight_funch[,1]#dim(weight_func)
@@ -267,14 +277,21 @@ y<-ideal_filter_func(periodicity,M,x_low)$y
 ts.plot(cbind(yhat_agg,y),col=c("blue","red"))
 
 # MSE performances
-mean((y-yhat_agg)^2,na.rm=T)
-if (!target_as_explanatory)
+MSE_fold<-MSE_perf_func(insamp,y,yhat_agg,len,mdfa_obj)$perf_mat
+
+perf_mat<-rbind(MSE_embed,MSE_fold)
+rownames(perf_mat)<-c("Embed","Fold")
+perf_mat
+
+
+#--------------------------------------------------------------------------------------------------------
+# Simulation experiment: compare embedding (Tucker) and folding (Marc)
+
+set.seed(1)
+anzsim<-100
+perf_mat<-NULL
+for (i in 1:anzsim)
 {
-  print("The next MSE is cheating in this configuration because it uses low-freq data as estimate")
+  perf_mat<-perf_mat+simulation_embed_vs_fold(len,sigma_low,ar_low,ar_high,period_high,high_freq_diff,target_as_explanatory,lead,periodicity,M)$perf_mat
 }  
-mean((y-data_mat[,1])^2,na.rm=T)
-mdfa_obj$MS_error
-
-
-mean(diff(diff(yhat_agg[L:length(yhat_agg)]))^2)
-
+perf_mat/anzsim
