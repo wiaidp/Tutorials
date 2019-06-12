@@ -288,6 +288,7 @@ perf_mat
 # Simulation experiment: compare embedding (Tucker) and folding (Marc)
 # 1. Same settings as above
 
+anzsim<-100
 # Sample length
 len<-1200
 # In-sample length
@@ -647,6 +648,10 @@ sqrt(anzsim)*(perf_mat[1,]-perf_mat[2,])/(2*sqrt(apply(var_perf,2,sum)))
 #--------------------------------------------------------------------------------------------------------
 # Simulation experiment: compare embedding (Tucker) and folding (Marc)
 # 6. Same as 5 but periodicity<-2 
+# We examine two cases: 6.1 and 6.2
+# 6.1: L<-2*periodicity
+#   In this case L=2*periodicity might be a limiting factor i.e. too few freely determined coefficients
+#   Selecting larger L (4*periodicity or 6*periodicity) will improve out-of-sample perfs (and folding then outperforms embedding) 
 
 # Sample length
 len<-1200
@@ -717,6 +722,81 @@ sqrt(anzsim)*(perf_mat[1,]-perf_mat[2,])/(2*sqrt(apply(var_perf,2,sum)))
 
 
 # Here for the first time performances of fold are marginally worse than embed out-of-sample
+
+#--------------------------------------------------------------------------------------------------------
+# Simulation experiment: compare embedding (Tucker) and folding (Marc)
+# 6.2 Same as 6.1 but L<-6*periodicity 
+#   Selecting larger L (4*periodicity or 6*periodicity) will improve out-of-sample perfs (and folding then outperforms embedding) 
+
+# Sample length
+len<-1200
+# In-sample length
+insamp<-600
+# Folding rate
+period_high<-6
+# strength of low-freq indiosyncratic component
+sigma_low<-1
+# Use differences of high-freq data on high-freq scale (for example monthly) or on low-freq scale (for example quarterly)
+high_freq_diff<-T
+# Use low-freq target data as explanatory too (not suitable when target is GDP: publication-lag and revisions)
+target_as_explanatory<-F
+# DGP of differenced idiosyncratic component (low-freq data)
+#   Low-freq data is flow-data (sum of high-freq: for example sum in months of quarter) + idiosyncratic (independent) component
+ar_low<-0.09
+# DGP of differenced data
+ar_high<-0.09
+# Lead time: fractional 1/period_high corresponds to 1 time-unit on high-frequency scale
+lead<-0/period_high
+# Target: specify cutoff of ideal lowpass
+periodicity<-2
+# Ideal filter: used for evaluating time-domain MSE
+# Length of ideal lowpass (M is the half-length: effective length is 2*M-1 since filter is symmetric)
+M<-100
+# Filter length: L too large leads to overfitting
+L<-6*periodicity
+
+
+# Computations need approx 5-10 mins: Results were previously stored
+perform_computations<-F
+
+if (perform_computations)
+{
+  set.seed(1)
+  anzsim<-100
+  perf_mat<-matrix(rep(0,2*3),nrow=2,ncol=3)
+  perf_array<-array(dim=c(anzsim,dim(perf_mat)))
+  var_perf<-perf_mat
+  pb <- txtProgressBar(min = 1, max = anzsim, style = 3)
+  
+  for (i in 1:anzsim)
+  {
+    perf_math<-simulation_embed_vs_fold(len,sigma_low,ar_low,ar_high,period_high,high_freq_diff,target_as_explanatory,lead,periodicity,M,L)$perf_mat
+    perf_array[i,,]<-perf_math
+    perf_mat<-perf_mat+perf_math
+    setTxtProgressBar(pb, i)
+  }  
+  for (i in 1:nrow(var_perf))
+  {
+    for (j in 1:ncol(var_perf))
+    {
+      var_perf[i,j]<-var(perf_array[,i,j])
+    }
+  }
+  perf_mat<-perf_mat/anzsim
+  save(perf_mat,file=paste("output/perf_mat_",len,"_",insamp,"_",period_high,"_",sigma_low,"_",high_freq_diff,"_",target_as_explanatory,"_",ar_low,"_",ar_high,"_",round(lead,3),"_",periodicity,"_",L,sep=""))
+  save(var_perf,file=paste("output/var_perf_",len,"_",insamp,"_",period_high,"_",sigma_low,"_",high_freq_diff,"_",target_as_explanatory,"_",ar_low,"_",ar_high,"_",round(lead,3),"_",periodicity,"_",L,sep=""))
+} else
+{
+  load(file=paste("output/perf_mat_",len,"_",insamp,"_",period_high,"_",sigma_low,"_",high_freq_diff,"_",target_as_explanatory,"_",ar_low,"_",ar_high,"_",round(lead,3),"_",periodicity,"_",L,sep=""))
+  load(file=paste("output/var_perf_",len,"_",insamp,"_",period_high,"_",sigma_low,"_",high_freq_diff,"_",target_as_explanatory,"_",ar_low,"_",ar_high,"_",round(lead,3),"_",periodicity,"_",L,sep=""))
+}
+
+perf_mat
+# Test for significance of differences: larger than 2 (in abs) means significance
+sqrt(anzsim)*(perf_mat[1,]-perf_mat[2,])/(2*sqrt(apply(var_perf,2,sum)))
+
+
+
 
 #--------------------------------------------------------------------------------------------------------
 # Simulation experiment: compare embedding (Tucker) and folding (Marc)
@@ -1151,6 +1231,7 @@ perf_mat
 sqrt(anzsim)*(perf_mat[1,]-perf_mat[2,])/(2*sqrt(apply(var_perf,2,sum)))
 
 
+#--------------------------------------------------------------------------------------------------------
 
 #------
 # Shorter in-sample
