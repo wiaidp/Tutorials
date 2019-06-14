@@ -1492,8 +1492,10 @@ sqrt(anzsim)*(perf_mat[1,]-perf_mat[2,])/(2*sqrt(apply(var_perf,2,sum)))
 # Simulation experiment: compare embedding (Tucker) and folding (Marc)
 # 13. Same as 1. but lambda_cross<-1 
 #   -Model: low-freq data is stock data i.e. diffs of low-freq data are sum of high-freq diffs within low-freq span
-#   -If this model assumptiobn is true/pertinent, then all embedded high-freq series must be treated equally
+#   -If this model assumption is true/pertinent, then all embedded high-freq series must be treated equally
 #     i.e. impose full cross-sectional regularization
+#   -The empirical results below confirm pertinence: embedding with regularization performs as well as folding 
+#     and the former outperforms embedding (without regularization) in 6.1 out-of-sample
 
 anzsim<-100
 # Sample length
