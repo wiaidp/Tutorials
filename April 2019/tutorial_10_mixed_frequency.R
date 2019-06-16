@@ -1039,7 +1039,7 @@ sqrt(anzsim)*(perf_mat[1,]-perf_mat[2,])/(2*sqrt(apply(var_perf,2,sum)))
 #   -The folded target looks like white noise (flat spectrum)
 #   -But the (target) data correlates with x_t, x_{t-1},...,x_{t-period_high} i.e. it cannot be white
 #     -In fact the amplitude of the high-freq data is a lowpass
-#   -Severe misspecification if periodicity is 'large'
+#   -Severe misspecification if periodicity is 'large' (Gamma identity, for example)
 
 # Sample length
 len<-1200
@@ -1565,6 +1565,7 @@ sqrt(anzsim)*(perf_mat[1,]-perf_mat[2,])/(2*sqrt(apply(var_perf,2,sum)))
 #   -If this model assumption is true/pertinent, then all embedded high-freq series must be treated equally
 #     i.e. impose full cross-sectional regularization
 #   -Note that we have to set high_freq_diff<-T (use diffs based on high-freq resolution/span)
+#     -Results with high_freq_diff<-F are marginally (insignificant) worse
 #   -The empirical results below confirm pertinence: embedding with regularization performs as well as folding 
 #     and the former outperforms embedding (without regularization) in 6.1 out-of-sample
 # This design is currently our prefered one
@@ -1581,6 +1582,7 @@ period_high<-6
 # strength of low-freq indiosyncratic component
 sigma_low<-3
 # Use differences of high-freq data on high-freq scale (for example monthly) or on low-freq scale (for example quarterly)
+#   Stored results for high_freq_diff<-T and high_freq_diff<-F
 high_freq_diff<-T
 # Use low-freq target data as explanatory too (not suitable when target is GDP: publication-lag and revisions)
 target_as_explanatory<-F
