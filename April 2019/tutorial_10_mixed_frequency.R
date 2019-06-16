@@ -809,11 +809,10 @@ perf_mat
 sqrt(anzsim)*(perf_mat[1,]-perf_mat[2,])/(2*sqrt(apply(var_perf,2,sum)))
 
 #--------------------------------------------------------------------------------------------------------
-# 6.3: L<-4*periodicity or L<-8*periodicity (both were computed), insamp<-2400, len<-3000
-#   Because L=2*periodicity might be a limiting factor we here set L<-4*periodicity
+# 6.3: same as 6.2 but len<-3000 and insamp<-2400
 #   In order to avoid overfitting we select a very large in-sample span
 #     So we can better compare asymptotic performances of embedding vs. folding
-#     Embeding still marginally better than folding (but t-values are around 0.02)
+#     DFA criterion of folding reveals misspecification issue: see example 6.5 for more extreme/revealing example (allpass target)
 
 # Sample length
 len<-3000
@@ -826,7 +825,7 @@ sigma_low<-1
 # Use differences of high-freq data on high-freq scale (for example monthly) or on low-freq scale (for example quarterly)
 high_freq_diff<-T
 # Use low-freq target data as explanatory too (not suitable when target is GDP: publication-lag and revisions)
-target_as_explanatory<-T
+target_as_explanatory<-F
 # DGP of differenced idiosyncratic component (low-freq data)
 #   Low-freq data is flow-data (sum of high-freq: for example sum in months of quarter) + idiosyncratic (independent) component
 ar_low<-0.09
@@ -840,9 +839,7 @@ periodicity<-2
 # Length of ideal lowpass (M is the half-length: effective length is 2*M-1 since filter is symmetric)
 M<-100
 # Filter length: L too large leads to overfitting
-#   Both settings were computed/stored
-L<-4*periodicity
-L<-8*periodicity
+L<-6*periodicity
 # No regularization
 lambda_cross<-0
 
@@ -1036,9 +1033,82 @@ sqrt(anzsim)*(perf_mat[1,]-perf_mat[2,])/(2*sqrt(apply(var_perf,2,sum)))
 
 
 #--------------------------------------------------------------------------------------------------------
-# 6.6: as 6.5 but sigma_low<-0.0001
+# 6.6: same as 6.5 but sigma_low<-0.0001
+# Here problem is even more clearly lead-out: embedding achieves nearly perfect fit while folding struggles
+# -Main problem (one of...): 
+#   -The folded target looks like white noise (flat spectrum)
+#   -But the (target) data correlates with x_t, x_{t-1},...,x_{t-period_high} i.e. it cannot be white
+#     -In fact the amplitude of the high-freq data is a lowpass
+#   -Severe misspecification if periodicity is 'large'
 
-# Regularization: absolute cross-sectional
+# Sample length
+len<-1200
+# In-sample length
+insamp<-600
+# Folding rate
+period_high<-6
+# strength of low-freq indiosyncratic component
+sigma_low<-0.0001
+# Use differences of high-freq data on high-freq scale (for example monthly) or on low-freq scale (for example quarterly)
+high_freq_diff<-T
+# Use low-freq target data as explanatory too (not suitable when target is GDP: publication-lag and revisions)
+target_as_explanatory<-F
+# DGP of differenced idiosyncratic component (low-freq data)
+#   Low-freq data is flow-data (sum of high-freq: for example sum in months of quarter) + idiosyncratic (independent) component
+ar_low<-0.09
+# DGP of differenced data
+ar_high<-0.09
+# Lead time: fractional 1/period_high corresponds to 1 time-unit on high-frequency scale
+lead<-0/period_high
+# Target: specify cutoff of ideal lowpass
+periodicity<-1
+# Ideal filter: used for evaluating time-domain MSE
+# Length of ideal lowpass (M is the half-length: effective length is 2*M-1 since filter is symmetric)
+M<-100
+# Filter length: L too large leads to overfitting
+L<-2*periodicity
+# No regularization
+lambda_cross<-0
+
+
+# Computations need approx 5-10 mins: Results were previously stored
+perform_computations<-F
+
+if (perform_computations)
+{
+  set.seed(1)
+  anzsim<-100
+  perf_mat<-matrix(rep(0,2*3),nrow=2,ncol=3)
+  perf_array<-array(dim=c(anzsim,dim(perf_mat)))
+  var_perf<-perf_mat
+  pb <- txtProgressBar(min = 1, max = anzsim, style = 3)
+  
+  for (i in 1:anzsim)
+  {
+    perf_math<-simulation_embed_vs_fold(len,sigma_low,ar_low,ar_high,period_high,high_freq_diff,target_as_explanatory,lead,periodicity,M,L,lambda_cross)$perf_mat
+    perf_array[i,,]<-perf_math
+    perf_mat<-perf_mat+perf_math
+    setTxtProgressBar(pb, i)
+  }  
+  for (i in 1:nrow(var_perf))
+  {
+    for (j in 1:ncol(var_perf))
+    {
+      var_perf[i,j]<-var(perf_array[,i,j])
+    }
+  }
+  perf_mat<-perf_mat/anzsim
+  save(perf_mat,file=paste("output/perf_mat_",len,"_",insamp,"_",period_high,"_",sigma_low,"_",high_freq_diff,"_",target_as_explanatory,"_",ar_low,"_",ar_high,"_",round(lead,3),"_",periodicity,"_",L,"_",lambda_cross,sep=""))
+  save(var_perf,file=paste("output/var_perf_",len,"_",insamp,"_",period_high,"_",sigma_low,"_",high_freq_diff,"_",target_as_explanatory,"_",ar_low,"_",ar_high,"_",round(lead,3),"_",periodicity,"_",L,"_",lambda_cross,sep=""))
+} else
+{
+  load(file=paste("output/perf_mat_",len,"_",insamp,"_",period_high,"_",sigma_low,"_",high_freq_diff,"_",target_as_explanatory,"_",ar_low,"_",ar_high,"_",round(lead,3),"_",periodicity,"_",L,"_",lambda_cross,sep=""))
+  load(file=paste("output/var_perf_",len,"_",insamp,"_",period_high,"_",sigma_low,"_",high_freq_diff,"_",target_as_explanatory,"_",ar_low,"_",ar_high,"_",round(lead,3),"_",periodicity,"_",L,"_",lambda_cross,sep=""))
+}
+
+perf_mat
+# Test for significance of differences: larger than 2 (in abs) means significance
+sqrt(anzsim)*(perf_mat[1,]-perf_mat[2,])/(2*sqrt(apply(var_perf,2,sum)))
 
 
 
@@ -1491,12 +1561,16 @@ sqrt(anzsim)*(perf_mat[1,]-perf_mat[2,])/(2*sqrt(apply(var_perf,2,sum)))
 #--------------------------------------------------------------------------------------------------------
 # Simulation experiment: compare embedding (Tucker) and folding (Marc)
 # 13. Same as 1. but lambda_cross<-1 
-#   -Model: low-freq data is stock data i.e. diffs of low-freq data are sum of high-freq diffs within low-freq span
+#   -Model assumption: low-freq data is stock data i.e. diffs of low-freq data are sum of high-freq diffs within low-freq span
 #   -If this model assumption is true/pertinent, then all embedded high-freq series must be treated equally
 #     i.e. impose full cross-sectional regularization
+#   -Note that we have to set high_freq_diff<-T (use diffs based on high-freq resolution/span)
 #   -The empirical results below confirm pertinence: embedding with regularization performs as well as folding 
 #     and the former outperforms embedding (without regularization) in 6.1 out-of-sample
-
+# This design is currently our prefered one
+#   -It outperforms embedding (without reg) out-of-sample
+#   -It performs as well as folding if periodicity>=6
+#   -It outperforms folding for small periodicity (folding does not work optimally if periodicity<=3)
 anzsim<-100
 # Sample length
 len<-1200
@@ -1569,5 +1643,7 @@ sqrt(anzsim)*(perf_mat[1,]-perf_mat[2,])/(2*sqrt(apply(var_perf,2,sum)))
 
 
 #------
-# Shorter in-sample
-# One month ahead
+# Todos
+#   -One month ahead
+#   -high-freq target
+#   -sigma~0
