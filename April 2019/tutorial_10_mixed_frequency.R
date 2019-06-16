@@ -1565,7 +1565,8 @@ sqrt(anzsim)*(perf_mat[1,]-perf_mat[2,])/(2*sqrt(apply(var_perf,2,sum)))
 #   -If this model assumption is true/pertinent, then all embedded high-freq series must be treated equally
 #     i.e. impose full cross-sectional regularization
 #   -Note that we have to set high_freq_diff<-T (use diffs based on high-freq resolution/span)
-#     -Results with high_freq_diff<-F are marginally (insignificant) worse
+#     -Otherwise: misspecification
+#     -Results with high_freq_diff<-F are marginally (insignificantly) worse
 #   -The empirical results below confirm pertinence: embedding with regularization performs as well as folding 
 #     and the former outperforms embedding (without regularization) in 6.1 out-of-sample
 # This design is currently our prefered one
