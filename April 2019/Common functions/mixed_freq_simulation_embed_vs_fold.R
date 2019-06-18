@@ -229,7 +229,7 @@ simulation_embed_vs_fold<-function(len,sigma_low,ar_low,ar_high,period_high,high
 
 
 
-simulation_embed_vs_fold_reg<-function(len,sigma_low,ar_low,ar_high,period_high,high_freq_diff,target_as_explanatory,lead,periodicity,M,L,lambda_cross)
+simulation_embed_vs_fold_reg<-function(len,sigma_low,ar_low,ar_high,period_high,high_freq_diff,target_as_explanatory,lead,periodicity,M,L,lambda_cross=0,lambda_decay=c(0,0),lambda_smooth=0,Lag=0,b0_H0=NULL)
 {
   x_low<-rep(NA,len)
   eps_low<-sigma_low*arima.sim(n=len,list(ar = c(ar_low), ma = c(0)))
@@ -379,7 +379,6 @@ simulation_embed_vs_fold_reg<-function(len,sigma_low,ar_low,ar_high,period_high,
   lin_expweight <- F
   shift_constraint <- rep(0, ncol(weight_func) - 1)
   grand_mean <- F
-  b0_H0 <- NULL
   c_eta <- F
   weights_only <- F
   weight_structure <- c(0, 0)

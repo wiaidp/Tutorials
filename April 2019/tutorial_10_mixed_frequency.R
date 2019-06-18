@@ -1699,7 +1699,15 @@ if (perform_computations)
   
   for (i in 1:anzsim)
   {
-    perf_math<-simulation_embed_vs_fold_reg(len,sigma_low,ar_low,ar_high,period_high,high_freq_diff,target_as_explanatory,lead,periodicity,M,L,lambda_cross)$perf_mat
+    if (period_high==1)
+    {
+      b0_H0<-c(1,rep(0,L-1))
+    } else
+    {
+      b0_H0<-matrix(rep(0,L*period_high),nrow=L,ncol=period_high)
+      b0_H0[1,1]<-1
+    }
+    perf_math<-simulation_embed_vs_fold_reg(len,sigma_low,ar_low,ar_high,period_high,high_freq_diff,target_as_explanatory,lead,periodicity,M,L,lambda_cross,b0_H0)$perf_mat
     perf_array[i,,]<-perf_math
     perf_mat<-perf_mat+perf_math
     setTxtProgressBar(pb, i)
@@ -1723,7 +1731,6 @@ if (perform_computations)
 perf_mat
 # Test for significance of differences: larger than 2 (in abs) means significance
 sqrt(anzsim)*(perf_mat[1,]-perf_mat[2,])/(2*sqrt(apply(var_perf,2,sum)))
-
 
 
 #------
