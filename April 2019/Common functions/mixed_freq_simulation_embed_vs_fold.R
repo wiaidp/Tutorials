@@ -1,7 +1,7 @@
 
 
 
-simulation_embed_vs_fold<-function(len,sigma_low,ar_low,ar_high,period_high,high_freq_diff,target_as_explanatory,lead,periodicity,M,L,lambda_cross)
+simulation_embed_vs_fold<-function(len,sigma_low,ar_low,ar_high,period_high,high_freq_diff,target_as_explanatory,lead,periodicity,M,L,lambda_cross=0)
 {
   x_low<-rep(NA,len)
   eps_low<-sigma_low*arima.sim(n=len,list(ar = c(ar_low), ma = c(0)))
@@ -95,7 +95,7 @@ simulation_embed_vs_fold<-function(len,sigma_low,ar_low,ar_high,period_high,high
   
   # MSE performances
 
-  MSE_embed<-MSE_perf_func(insamp,y,yhat_mixed,len,mdfa_obj_mixed,data_mat)$perf_mat
+  MSE_embed<-MSE_perf_func(insamp,y,yhat_mixed,len,mdfa_obj_mixed,data_mat,target_as_explanatory)$perf_mat
   
   
   #----------------------------------------------------------------------------------------------------
@@ -213,13 +213,12 @@ simulation_embed_vs_fold<-function(len,sigma_low,ar_low,ar_high,period_high,high
 #  ts.plot(cbind(yhat_mixed,yhat_agg)[600:700,],col=rainbow(2))
   
   # MSE performances
-  MSE_fold<-MSE_perf_func(insamp,y,yhat_agg,len,mdfa_obj,data_mat)$perf_mat
+  MSE_fold<-MSE_perf_func(insamp,y,yhat_agg,len,mdfa_obj,data_mat,target_as_explanatory)$perf_mat
   
   perf_mat<-rbind(MSE_embed,MSE_fold)
   rownames(perf_mat)<-c("Embed","Fold")
   return(list(perf_mat=perf_mat))
 }
-
 
 
 
@@ -265,12 +264,12 @@ simulation_embed_vs_fold_reg<-function(len,sigma_low,ar_low,ar_high,period_high,
       index_mat<-cbind(index_mat,as.vector(index))
     }
   }
-  tail(t(index_mat)) 
+#  tail(t(index_mat)) 
   
   data_mat<-cbind(x_low,x_high_embed)
   colnames(data_mat)<-c("Low",paste("High lag ",(period_high-1):0,sep=""))
-  tail(data_mat)#dim(data_mat)
-  ts.plot(data_mat)
+#  tail(data_mat)#dim(data_mat)
+#  ts.plot(data_mat)
   
   #acf(data_mat)
   
@@ -328,7 +327,7 @@ simulation_embed_vs_fold_reg<-function(len,sigma_low,ar_low,ar_high,period_high,
   
   # MSE performances
   
-  MSE_embed<-MSE_perf_func(insamp,y,yhat_mixed,len,mdfa_obj_mixed,data_mat)$perf_mat
+  MSE_embed<-MSE_perf_func(insamp,y,yhat_mixed,len,mdfa_obj_mixed,data_mat,target_as_explanatory)$perf_mat
   
   
   #----------------------------------------------------------------------------------------------------
@@ -445,7 +444,7 @@ simulation_embed_vs_fold_reg<-function(len,sigma_low,ar_low,ar_high,period_high,
   #  ts.plot(cbind(yhat_mixed,yhat_agg)[600:700,],col=rainbow(2))
   
   # MSE performances
-  MSE_fold<-MSE_perf_func(insamp,y,yhat_agg,len,mdfa_obj,data_mat)$perf_mat
+  MSE_fold<-MSE_perf_func(insamp,y,yhat_agg,len,mdfa_obj,data_mat,target_as_explanatory)$perf_mat
   
   perf_mat<-rbind(MSE_embed,MSE_fold)
   rownames(perf_mat)<-c("Embed","Fold")

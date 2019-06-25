@@ -332,7 +332,8 @@ if (perform_computations)
   
   for (i in 1:anzsim)
   {
-    perf_math<-simulation_embed_vs_fold(len,sigma_low,ar_low,ar_high,period_high,high_freq_diff,target_as_explanatory,lead,periodicity,M,L,lambda_cross)$perf_mat
+#    perf_math<-simulation_embed_vs_fold(len,sigma_low,ar_low,ar_high,period_high,high_freq_diff,target_as_explanatory,lead,periodicity,M,L,lambda_cross)$perf_mat
+    perf_math<-simulation_embed_vs_fold_reg(len,sigma_low,ar_low,ar_high,period_high,high_freq_diff,target_as_explanatory,lead,periodicity,M,L,lambda_cross=0,lambda_decay=c(0,0),lambda_smooth=0,Lag=0,b0_H0=NULL)$perf_mat
     perf_array[i,,]<-perf_math
     perf_mat<-perf_mat+perf_math
     setTxtProgressBar(pb, i)
@@ -406,7 +407,7 @@ if (perform_computations)
   
   for (i in 1:anzsim)
   {
-    perf_math<-simulation_embed_vs_fold(len,sigma_low,ar_low,ar_high,period_high,high_freq_diff,target_as_explanatory,lead,periodicity,M,L,lambda_cross)$perf_mat
+    perf_math<-simulation_embed_vs_fold_reg(len,sigma_low,ar_low,ar_high,period_high,high_freq_diff,target_as_explanatory,lead,periodicity,M,L,lambda_cross=0,lambda_decay=c(0,0),lambda_smooth=0,Lag=0,b0_H0=NULL)$perf_mat
     perf_array[i,,]<-perf_math
     perf_mat<-perf_mat+perf_math
     setTxtProgressBar(pb, i)
@@ -461,6 +462,8 @@ periodicity<-6
 L<-2*periodicity
 # No regularization
 lambda_cross<-0
+# No regularization
+lambda_cross<-0
 
 # Ideal filter: used for evaluating time-domain MSE
 # Length of ideal lowpass (M is the half-length: effective length is 2*M-1 since filter is symmetric)
@@ -480,7 +483,7 @@ if (perform_computations)
   
   for (i in 1:anzsim)
   {
-    perf_math<-simulation_embed_vs_fold(len,sigma_low,ar_low,ar_high,period_high,high_freq_diff,target_as_explanatory,lead,periodicity,M,L,lambda_cross)$perf_mat
+    perf_math<-simulation_embed_vs_fold_reg(len,sigma_low,ar_low,ar_high,period_high,high_freq_diff,target_as_explanatory,lead,periodicity,M,L,lambda_cross=0,lambda_decay=c(0,0),lambda_smooth=0,Lag=0,b0_H0=NULL)$perf_mat
     perf_array[i,,]<-perf_math
     perf_mat<-perf_mat+perf_math
     setTxtProgressBar(pb, i)
@@ -535,6 +538,8 @@ periodicity<-6
 L<-4*periodicity
 # No regularization
 lambda_cross<-0
+# No regularization
+lambda_cross<-0
 
 # Ideal filter: used for evaluating time-domain MSE
 # Length of ideal lowpass (M is the half-length: effective length is 2*M-1 since filter is symmetric)
@@ -554,7 +559,7 @@ if (perform_computations)
   
   for (i in 1:anzsim)
   {
-    perf_math<-simulation_embed_vs_fold(len,sigma_low,ar_low,ar_high,period_high,high_freq_diff,target_as_explanatory,lead,periodicity,M,L,lambda_cross)$perf_mat
+    perf_math<-simulation_embed_vs_fold_reg(len,sigma_low,ar_low,ar_high,period_high,high_freq_diff,target_as_explanatory,lead,periodicity,M,L,lambda_cross=0,lambda_decay=c(0,0),lambda_smooth=0,Lag=0,b0_H0=NULL)$perf_mat
     perf_array[i,,]<-perf_math
     perf_mat<-perf_mat+perf_math
     setTxtProgressBar(pb, i)
@@ -628,7 +633,7 @@ if (perform_computations)
   
   for (i in 1:anzsim)
   {
-    perf_math<-simulation_embed_vs_fold(len,sigma_low,ar_low,ar_high,period_high,high_freq_diff,target_as_explanatory,lead,periodicity,M,L,lambda_cross)$perf_mat
+    perf_math<-simulation_embed_vs_fold_reg(len,sigma_low,ar_low,ar_high,period_high,high_freq_diff,target_as_explanatory,lead,periodicity,M,L,lambda_cross=0,lambda_decay=c(0,0),lambda_smooth=0,Lag=0,b0_H0=NULL)$perf_mat
     perf_array[i,,]<-perf_math
     perf_mat<-perf_mat+perf_math
     setTxtProgressBar(pb, i)
@@ -706,7 +711,7 @@ if (perform_computations)
   
   for (i in 1:anzsim)
   {
-    perf_math<-simulation_embed_vs_fold(len,sigma_low,ar_low,ar_high,period_high,high_freq_diff,target_as_explanatory,lead,periodicity,M,L,lambda_cross)$perf_mat
+    perf_math<-simulation_embed_vs_fold_reg(len,sigma_low,ar_low,ar_high,period_high,high_freq_diff,target_as_explanatory,lead,periodicity,M,L,lambda_cross=0,lambda_decay=c(0,0),lambda_smooth=0,Lag=0,b0_H0=NULL)$perf_mat
     perf_array[i,,]<-perf_math
     perf_mat<-perf_mat+perf_math
     setTxtProgressBar(pb, i)
@@ -783,7 +788,7 @@ if (perform_computations)
   
   for (i in 1:anzsim)
   {
-    perf_math<-simulation_embed_vs_fold(len,sigma_low,ar_low,ar_high,period_high,high_freq_diff,target_as_explanatory,lead,periodicity,M,L,lambda_cross)$perf_mat
+    perf_math<-simulation_embed_vs_fold_reg(len,sigma_low,ar_low,ar_high,period_high,high_freq_diff,target_as_explanatory,lead,periodicity,M,L,lambda_cross=0,lambda_decay=c(0,0),lambda_smooth=0,Lag=0,b0_H0=NULL)$perf_mat
     perf_array[i,,]<-perf_math
     perf_mat<-perf_mat+perf_math
     setTxtProgressBar(pb, i)
@@ -858,7 +863,7 @@ if (perform_computations)
   
   for (i in 1:anzsim)
   {
-    perf_math<-simulation_embed_vs_fold(len,sigma_low,ar_low,ar_high,period_high,high_freq_diff,target_as_explanatory,lead,periodicity,M,L,lambda_cross)$perf_mat
+    perf_math<-simulation_embed_vs_fold_reg(len,sigma_low,ar_low,ar_high,period_high,high_freq_diff,target_as_explanatory,lead,periodicity,M,L,lambda_cross=0,lambda_decay=c(0,0),lambda_smooth=0,Lag=0,b0_H0=NULL)$perf_mat
     perf_array[i,,]<-perf_math
     perf_mat<-perf_mat+perf_math
     setTxtProgressBar(pb, i)
@@ -932,7 +937,7 @@ if (perform_computations)
   
   for (i in 1:anzsim)
   {
-    perf_math<-simulation_embed_vs_fold(len,sigma_low,ar_low,ar_high,period_high,high_freq_diff,target_as_explanatory,lead,periodicity,M,L,lambda_cross)$perf_mat
+    perf_math<-simulation_embed_vs_fold_reg(len,sigma_low,ar_low,ar_high,period_high,high_freq_diff,target_as_explanatory,lead,periodicity,M,L,lambda_cross=0,lambda_decay=c(0,0),lambda_smooth=0,Lag=0,b0_H0=NULL)$perf_mat
     perf_array[i,,]<-perf_math
     perf_mat<-perf_mat+perf_math
     setTxtProgressBar(pb, i)
@@ -1006,7 +1011,7 @@ if (perform_computations)
   
   for (i in 1:anzsim)
   {
-    perf_math<-simulation_embed_vs_fold(len,sigma_low,ar_low,ar_high,period_high,high_freq_diff,target_as_explanatory,lead,periodicity,M,L,lambda_cross)$perf_mat
+    perf_math<-simulation_embed_vs_fold_reg(len,sigma_low,ar_low,ar_high,period_high,high_freq_diff,target_as_explanatory,lead,periodicity,M,L,lambda_cross=0,lambda_decay=c(0,0),lambda_smooth=0,Lag=0,b0_H0=NULL)$perf_mat
     perf_array[i,,]<-perf_math
     perf_mat<-perf_mat+perf_math
     setTxtProgressBar(pb, i)
@@ -1085,7 +1090,7 @@ if (perform_computations)
   
   for (i in 1:anzsim)
   {
-    perf_math<-simulation_embed_vs_fold(len,sigma_low,ar_low,ar_high,period_high,high_freq_diff,target_as_explanatory,lead,periodicity,M,L,lambda_cross)$perf_mat
+    perf_math<-simulation_embed_vs_fold_reg(len,sigma_low,ar_low,ar_high,period_high,high_freq_diff,target_as_explanatory,lead,periodicity,M,L,lambda_cross=0,lambda_decay=c(0,0),lambda_smooth=0,Lag=0,b0_H0=NULL)$perf_mat
     perf_array[i,,]<-perf_math
     perf_mat<-perf_mat+perf_math
     setTxtProgressBar(pb, i)
@@ -1161,7 +1166,7 @@ if (perform_computations)
   
   for (i in 1:anzsim)
   {
-    perf_math<-simulation_embed_vs_fold(len,sigma_low,ar_low,ar_high,period_high,high_freq_diff,target_as_explanatory,lead,periodicity,M,L,lambda_cross)$perf_mat
+    perf_math<-simulation_embed_vs_fold_reg(len,sigma_low,ar_low,ar_high,period_high,high_freq_diff,target_as_explanatory,lead,periodicity,M,L,lambda_cross=0,lambda_decay=c(0,0),lambda_smooth=0,Lag=0,b0_H0=NULL)$perf_mat
     perf_array[i,,]<-perf_math
     perf_mat<-perf_mat+perf_math
     setTxtProgressBar(pb, i)
@@ -1236,7 +1241,7 @@ if (perform_computations)
   
   for (i in 1:anzsim)
   {
-    perf_math<-simulation_embed_vs_fold(len,sigma_low,ar_low,ar_high,period_high,high_freq_diff,target_as_explanatory,lead,periodicity,M,L,lambda_cross)$perf_mat
+    perf_math<-simulation_embed_vs_fold_reg(len,sigma_low,ar_low,ar_high,period_high,high_freq_diff,target_as_explanatory,lead,periodicity,M,L,lambda_cross=0,lambda_decay=c(0,0),lambda_smooth=0,Lag=0,b0_H0=NULL)$perf_mat
     perf_array[i,,]<-perf_math
     perf_mat<-perf_mat+perf_math
     setTxtProgressBar(pb, i)
@@ -1309,7 +1314,7 @@ if (perform_computations)
   
   for (i in 1:anzsim)
   {
-    perf_math<-simulation_embed_vs_fold(len,sigma_low,ar_low,ar_high,period_high,high_freq_diff,target_as_explanatory,lead,periodicity,M,L,lambda_cross)$perf_mat
+    perf_math<-simulation_embed_vs_fold_reg(len,sigma_low,ar_low,ar_high,period_high,high_freq_diff,target_as_explanatory,lead,periodicity,M,L,lambda_cross=0,lambda_decay=c(0,0),lambda_smooth=0,Lag=0,b0_H0=NULL)$perf_mat
     perf_array[i,,]<-perf_math
     perf_mat<-perf_mat+perf_math
     setTxtProgressBar(pb, i)
@@ -1384,7 +1389,7 @@ if (perform_computations)
   
   for (i in 1:anzsim)
   {
-    perf_math<-simulation_embed_vs_fold(len,sigma_low,ar_low,ar_high,period_high,high_freq_diff,target_as_explanatory,lead,periodicity,M,L,lambda_cross)$perf_mat
+    perf_math<-simulation_embed_vs_fold_reg(len,sigma_low,ar_low,ar_high,period_high,high_freq_diff,target_as_explanatory,lead,periodicity,M,L,lambda_cross=0,lambda_decay=c(0,0),lambda_smooth=0,Lag=0,b0_H0=NULL)$perf_mat
     perf_array[i,,]<-perf_math
     perf_mat<-perf_mat+perf_math
     setTxtProgressBar(pb, i)
@@ -1459,7 +1464,7 @@ if (perform_computations)
   
   for (i in 1:anzsim)
   {
-    perf_math<-simulation_embed_vs_fold(len,sigma_low,ar_low,ar_high,period_high,high_freq_diff,target_as_explanatory,lead,periodicity,M,L,lambda_cross)$perf_mat
+    perf_math<-simulation_embed_vs_fold_reg(len,sigma_low,ar_low,ar_high,period_high,high_freq_diff,target_as_explanatory,lead,periodicity,M,L,lambda_cross=0,lambda_decay=c(0,0),lambda_smooth=0,Lag=0,b0_H0=NULL)$perf_mat
     perf_array[i,,]<-perf_math
     perf_mat<-perf_mat+perf_math
     setTxtProgressBar(pb, i)
@@ -1532,7 +1537,7 @@ if (perform_computations)
   
   for (i in 1:anzsim)
   {
-    perf_math<-simulation_embed_vs_fold(len,sigma_low,ar_low,ar_high,period_high,high_freq_diff,target_as_explanatory,lead,periodicity,M,L,lambda_cross)$perf_mat
+    perf_math<-simulation_embed_vs_fold_reg(len,sigma_low,ar_low,ar_high,period_high,high_freq_diff,target_as_explanatory,lead,periodicity,M,L,lambda_cross=0,lambda_decay=c(0,0),lambda_smooth=0,Lag=0,b0_H0=NULL)$perf_mat
     perf_array[i,,]<-perf_math
     perf_mat<-perf_mat+perf_math
     setTxtProgressBar(pb, i)
@@ -1605,7 +1610,10 @@ M<-100
 L<-2*periodicity
 # Full cross-sectional regularization
 lambda_cross<-1
-
+lambda_smooth<-0
+lambda_decay<-c(0,0)
+# Shrink towards 0
+b0_H0=NULL
 
 # Computations need approx 5-10 mins: Results were previously stored
 perform_computations<-F
@@ -1621,7 +1629,7 @@ if (perform_computations)
   
   for (i in 1:anzsim)
   {
-    perf_math<-simulation_embed_vs_fold_reg(len,sigma_low,ar_low,ar_high,period_high,high_freq_diff,target_as_explanatory,lead,periodicity,M,L,lambda_cross)$perf_mat
+    perf_math<-simulation_embed_vs_fold_reg(len,sigma_low,ar_low,ar_high,period_high,high_freq_diff,target_as_explanatory,lead,periodicity,M,L,lambda_cross,lambda_decay,lambda_smooth,Lag,b0_H0)$perf_mat
     perf_array[i,,]<-perf_math
     perf_mat<-perf_mat+perf_math
     setTxtProgressBar(pb, i)
@@ -1681,9 +1689,30 @@ periodicity<-6
 M<-100
 # Filter length: L too large leads to overfitting
 L<-2*periodicity
-# Full cross-sectional regularization
-lambda_cross<-1
-
+# Regularization:
+#   -In contrast to example 13 above we here consider b+b0_H0 whereby b0_H0!=0 is optimal (under our model assumptions)
+#     -In contrast to example 13 our target for b here is 0
+#   -Therefore we may impose any regularization without enduring misspecification
+#   -In particular 'full' decay regularization will provide the best solution (which is 0)
+#   -But any other regularization is fine too (all coefficients across all series are zero)
+lambda_cross<-0.9
+lambda_decay<-c(0.9,0.9)
+lambda_smooth<-0.9
+# Shrinkage towards best one-sided filter applied to last release
+#   All other releases are shrunken towards 0
+#   a. Compute optimal filter applied to last release (assuming noise and stock-data for target and span of high-freq diff = low-freq increment)
+cutoff<-pi/periodicity
+gamma<-c(cutoff/pi,(1/pi)*sin(cutoff*1:(L-1))/(1:(L-1)))
+#   b. Plug gamm into b0_H0 properly
+if (period_high==1)
+{
+  b0_H0<-gamma
+} else
+{
+  b0_H0<-matrix(rep(0,L*period_high),nrow=L,ncol=period_high)
+  # Plug into b0_H0 matrix: last column corresponds to latest release      
+  b0_H0[,ncol(b0_H0)]<-gamma
+}
 
 # Computations need approx 5-10 mins: Results were previously stored
 perform_computations<-F
@@ -1699,15 +1728,7 @@ if (perform_computations)
   
   for (i in 1:anzsim)
   {
-    if (period_high==1)
-    {
-      b0_H0<-c(1,rep(0,L-1))
-    } else
-    {
-      b0_H0<-matrix(rep(0,L*period_high),nrow=L,ncol=period_high)
-      b0_H0[1,1]<-1
-    }
-    perf_math<-simulation_embed_vs_fold_reg(len,sigma_low,ar_low,ar_high,period_high,high_freq_diff,target_as_explanatory,lead,periodicity,M,L,lambda_cross,b0_H0)$perf_mat
+    perf_math<-simulation_embed_vs_fold_reg(len,sigma_low,ar_low,ar_high,period_high,high_freq_diff,target_as_explanatory,lead,periodicity,M,L,lambda_cross,lambda_decay,lambda_smooth,Lag,b0_H0)$perf_mat
     perf_array[i,,]<-perf_math
     perf_mat<-perf_mat+perf_math
     setTxtProgressBar(pb, i)
