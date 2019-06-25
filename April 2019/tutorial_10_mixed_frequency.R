@@ -1649,7 +1649,7 @@ sqrt(anzsim)*(perf_mat[1,]-perf_mat[2,])/(2*sqrt(apply(var_perf,2,sum)))
 # 14. Same as 13. but high_freq_diff<-F (i.e. quarterly differences instead of monthly)
 #   -Model assumption: low-freq data is stock data i.e. diffs of low-freq data are sum of high-freq diffs within low-freq span
 #   -If this model assumption is true/pertinent and if high_freq_diff<-F then 
-#     -The latest high-freq diff series is encompassing all other series
+#     -The latest high-freq diff series is encompassing all other series:
 #     -Regularization:
 #       -Set b0_H0 identity for latest series and zero for other series
 #       -Impose reg-weights (we can impose smoothness, cross-sec and decay)
@@ -1664,7 +1664,7 @@ period_high<-6
 sigma_low<-3
 # Use differences of high-freq data on high-freq scale (for example monthly) or on low-freq scale (for example quarterly)
 #   Stored results for high_freq_diff<-T and high_freq_diff<-F
-high_freq_diff<-T
+high_freq_diff<-F
 # Use low-freq target data as explanatory too (not suitable when target is GDP: publication-lag and revisions)
 target_as_explanatory<-F
 # DGP of differenced idiosyncratic component (low-freq data)

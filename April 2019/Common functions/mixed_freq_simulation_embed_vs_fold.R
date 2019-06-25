@@ -297,9 +297,9 @@ simulation_embed_vs_fold_reg<-function(len,sigma_low,ar_low,ar_high,period_high,
   Lag<-0
 # MSE  
   lambda<-eta<-0
-# No decay/smooth reg
-  lambda_decay<-c(0,0)
-  lambda_smooth<-0
+# No decay/smooth reg: these are preset to 0 in the head of the function
+#  lambda_decay<-c(0,0)
+#  lambda_smooth<-0
   # Estimate filter coefficients
   if (sigma_low==0)
   {
@@ -307,7 +307,7 @@ simulation_embed_vs_fold_reg<-function(len,sigma_low,ar_low,ar_high,period_high,
   } else
   {
     mdfa_obj_mixed<-MDFA_reg(L,weight_func_embed,Lag,Gamma, cutoff, lambda, eta, lambda_cross, 
-                             lambda_decay, lambda_smooth, troikaner = F)$mdfa_obj 
+                             lambda_decay, lambda_smooth, troikaner = F,b0_H0)$mdfa_obj 
   }
   
   
