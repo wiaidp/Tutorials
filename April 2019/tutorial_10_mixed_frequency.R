@@ -1726,7 +1726,7 @@ if (perform_computations)
   var_perf<-perf_mat
   pb <- txtProgressBar(min = 1, max = anzsim, style = 3)
   
-  for (i in 1:anzsim)
+  for (i in 1:anzsim)#i<-1
   {
     perf_math<-simulation_embed_vs_fold_reg(len,sigma_low,ar_low,ar_high,period_high,high_freq_diff,target_as_explanatory,lead,periodicity,M,L,lambda_cross,lambda_decay,lambda_smooth,Lag,b0_H0)$perf_mat
     perf_array[i,,]<-perf_math
