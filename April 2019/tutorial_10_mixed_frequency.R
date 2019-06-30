@@ -1754,6 +1754,108 @@ perf_mat
 sqrt(anzsim)*(perf_mat[1,]-perf_mat[2,])/(2*sqrt(apply(var_perf,2,sum)))
 
 
+#--------------------------------------------------------------------------------------------------------
+# 15. Same as 14. but periodicity<-1 i.e. target is identity
+#   This setting maginifies misspecification of folding 
+#     -the (folded) spectrum of the target is flat (noise) 
+#     -but in fact there is serially correlation across 'months' (within the same 'quarter') 
+#   In this case sigma sets the MSE: 
+#     -in the example below sigma=3 i.e. the MSE of the optimal procedure should be 9
+#     -we see that embedding with regularization comes arbitrary close to that limit (out-of-sample MSE is 9.05 below)
+#     -folding still suffers from misspecification: MSE out-of-sample is 9.82 in the xample below
+anzsim<-100
+# Sample length
+len<-1200
+# In-sample length
+insamp<-600
+# Folding rate
+period_high<-6
+# strength of low-freq indiosyncratic component
+sigma_low<-3
+# Use differences of high-freq data on high-freq scale (for example monthly) or on low-freq scale (for example quarterly)
+#   Stored results for high_freq_diff<-T and high_freq_diff<-F
+high_freq_diff<-F
+# Use low-freq target data as explanatory too (not suitable when target is GDP: publication-lag and revisions)
+target_as_explanatory<-F
+# DGP of differenced idiosyncratic component (low-freq data)
+#   Low-freq data is flow-data (sum of high-freq: for example sum in months of quarter) + idiosyncratic (independent) component
+ar_low<-0.09
+# DGP of differenced data
+ar_high<-0.09
+# Lead time: fractional 1/period_high corresponds to 1 time-unit on high-frequency scale
+lead<-0/period_high
+# Target: specify cutoff of ideal lowpass
+periodicity<-1
+# Ideal filter: used for evaluating time-domain MSE
+# Length of ideal lowpass (M is the half-length: effective length is 2*M-1 since filter is symmetric)
+M<-100
+# Filter length: L too large leads to overfitting
+L<-2*periodicity
+# Regularization:
+#   -In contrast to example 13 above we here consider b+b0_H0 whereby b0_H0!=0 is optimal (under our model assumptions)
+#     -In contrast to example 13 our target for b here is 0
+#   -Therefore we may impose any regularization without enduring misspecification
+#   -In particular 'full' decay regularization will provide the best solution (which is 0)
+#   -But any other regularization is fine too (all coefficients across all series are zero)
+lambda_cross<-0.9
+lambda_decay<-c(0.9,0.9)
+lambda_smooth<-0.9
+# Shrinkage towards best one-sided filter applied to last release
+#   All other releases are shrunken towards 0
+#   a. Compute optimal filter applied to last release (assuming noise and stock-data for target and span of high-freq diff = low-freq increment)
+cutoff<-pi/periodicity
+gamma<-c(cutoff/pi,(1/pi)*sin(cutoff*1:(L-1))/(1:(L-1)))
+#   b. Plug gamm into b0_H0 properly
+if (period_high==1)
+{
+  b0_H0<-gamma
+} else
+{
+  b0_H0<-matrix(rep(0,L*period_high),nrow=L,ncol=period_high)
+  # Plug into b0_H0 matrix: last column corresponds to latest release      
+  b0_H0[,ncol(b0_H0)]<-gamma
+}
+
+# Computations need approx 5-10 mins: Results were previously stored
+perform_computations<-F
+
+if (perform_computations)
+{
+  set.seed(1)
+  anzsim<-100
+  perf_mat<-matrix(rep(0,2*3),nrow=2,ncol=3)
+  perf_array<-array(dim=c(anzsim,dim(perf_mat)))
+  var_perf<-perf_mat
+  pb <- txtProgressBar(min = 1, max = anzsim, style = 3)
+  
+  for (i in 1:anzsim)#i<-1
+  {
+    perf_math<-simulation_embed_vs_fold_reg(len,sigma_low,ar_low,ar_high,period_high,high_freq_diff,target_as_explanatory,lead,periodicity,M,L,lambda_cross,lambda_decay,lambda_smooth,Lag,b0_H0)$perf_mat
+    perf_array[i,,]<-perf_math
+    perf_mat<-perf_mat+perf_math
+    setTxtProgressBar(pb, i)
+  }  
+  for (i in 1:nrow(var_perf))
+  {
+    for (j in 1:ncol(var_perf))
+    {
+      var_perf[i,j]<-var(perf_array[,i,j])
+    }
+  }
+  perf_mat<-perf_mat/anzsim
+  save(perf_mat,file=paste("output/perf_mat_",len,"_",insamp,"_",period_high,"_",sigma_low,"_",high_freq_diff,"_",target_as_explanatory,"_",ar_low,"_",ar_high,"_",round(lead,3),"_",periodicity,"_",L,"_",lambda_cross,sep=""))
+  save(var_perf,file=paste("output/var_perf_",len,"_",insamp,"_",period_high,"_",sigma_low,"_",high_freq_diff,"_",target_as_explanatory,"_",ar_low,"_",ar_high,"_",round(lead,3),"_",periodicity,"_",L,"_",lambda_cross,sep=""))
+} else
+{
+  load(file=paste("output/perf_mat_",len,"_",insamp,"_",period_high,"_",sigma_low,"_",high_freq_diff,"_",target_as_explanatory,"_",ar_low,"_",ar_high,"_",round(lead,3),"_",periodicity,"_",L,"_",lambda_cross,sep=""))
+  load(file=paste("output/var_perf_",len,"_",insamp,"_",period_high,"_",sigma_low,"_",high_freq_diff,"_",target_as_explanatory,"_",ar_low,"_",ar_high,"_",round(lead,3),"_",periodicity,"_",L,"_",lambda_cross,sep=""))
+}
+
+perf_mat
+# Test for significance of differences: larger than 2 (in abs) means significance
+sqrt(anzsim)*(perf_mat[1,]-perf_mat[2,])/(2*sqrt(apply(var_perf,2,sum)))
+
+
 #------
 # Todos
 #   -One month ahead
