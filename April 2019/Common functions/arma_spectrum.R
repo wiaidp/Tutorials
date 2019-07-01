@@ -91,3 +91,28 @@ varma_spectrum_func<-function(a1,b1,K,plot_T)
 }
 
 #varma_spec[10,,]
+
+
+
+trffkt_func<-function(b,K,plot_T)
+{
+  trffkt<-rep(0,K+1)
+  for (j in 0:K)#j<-0
+  {
+# Frequency    
+    omega_j<-j*pi/K
+    trffkt[j]<-b%*%exp(1.i*(0:(length(b)-1))*omega_j)
+  }
+  if (plot_T)
+  {
+    plot(abs(trffkt),type="l",main=paste("Amplitude, b=",ifelse(is.null(b),"NULL",round(b,3)),sep=""),
+         axes=F,xlab="Frequency",ylab="Amplitude",col="black")
+    # We take 2-nd colname from weight_func because the first column is the target        
+    axis(1,at=c(0,1:6*K/6+1),labels=c("0","pi/6","2pi/6","3pi/6",
+                                      "4pi/6","5pi/6","pi"))
+    axis(2)
+    box()
+    
+  }
+  return(list(trffkt=trffkt))
+}

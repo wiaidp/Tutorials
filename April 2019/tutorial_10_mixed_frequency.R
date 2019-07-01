@@ -32,6 +32,8 @@ source("Common functions/mdfa_trade_func.r")
 source("Common functions/ideal_filter.r")
 source("Common functions/MSE_perf.r")
 source("Common functions/mixed_freq_simulation_embed_vs_fold.r")
+source("Common functions/arma_spectrum.r")
+
 
 # Specify experimental setting
 # Sample length

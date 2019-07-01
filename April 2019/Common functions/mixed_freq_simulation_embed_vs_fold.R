@@ -14,7 +14,7 @@ simulation_embed_vs_fold_reg<-function(len,sigma_low,ar_low,ar_high,period_high,
     b0_H0=NULL
   }
   
-  
+# Generate data  
   x_low<-rep(NA,len)
   eps_low<-sigma_low*arima.sim(n=len,list(ar = c(ar_low), ma = c(0)))
   
@@ -57,6 +57,9 @@ simulation_embed_vs_fold_reg<-function(len,sigma_low,ar_low,ar_high,period_high,
 #  ts.plot(data_mat)
   
   #acf(data_mat)
+#-------------------------------------------------------------------------------------------------
+# 1. Embedding  
+  
   
   #Use target series a sexplanatory variable: not suitable for GDP since GDP releases are delayed and noisy (subject to revisions)
   if (!target_as_explanatory)
@@ -113,9 +116,9 @@ simulation_embed_vs_fold_reg<-function(len,sigma_low,ar_low,ar_high,period_high,
   MSE_embed<-MSE_perf_func(insamp,y,yhat_mixed,len,mdfa_obj_mixed,data_mat,target_as_explanatory)$perf_mat
   
   
-  #----------------------------------------------------------------------------------------------------
-  #----------------------------------------------------------------------------------------------------
-  # Marc's 1. idea
+#----------------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------------
+# 2. Folding
   
   weight_func_highh<-spec_comp(length(eps_high[1:(insamp*period_high)]),as.matrix(cbind(eps_high[1:(insamp*period_high)],eps_high[1:(insamp*period_high)])), 0)$weight_func[,1]
   weight_func_high<-weight_func_highh#/sqrt(period_high)
@@ -126,14 +129,26 @@ simulation_embed_vs_fold_reg<-function(len,sigma_low,ar_low,ar_high,period_high,
   weight_func<-weight_funch<-cbind(weight_func_low,weight_func_low,weight_func_high)
   if (!target_as_explanatory)
   {
-    weight_func<-weight_funch<-cbind(weight_func_low,weight_func_high)
+    weight_func<-weight_funch<-weight_funchh<-cbind(weight_func_low,weight_func_high)
   } else
   {
-    weight_func<-weight_funch<-cbind(weight_func_low,weight_func_low,weight_func_high)
+    weight_func<-weight_funch<-weight_funchh<-cbind(weight_func_low,weight_func_low,weight_func_high)
   }
-  
-  # abs(DFT) of target is larger because target is sum of high-freq-data + noise
+# abs(DFT) of target is larger because target is sum of high-freq-data + noise
   ts.plot(abs(weight_func),col=c("blue","red"))
+  
+  if (F)
+  {
+# New correction term for removing misspecification bias of folding
+# Model assumption: stock-data i.e. low-freq data returns are sum of high-freq data returns  
+    b_unbias<-rep(1/period_high,period_high)
+    K<-nrow(weight_func)-1
+    plot_T<-T
+    spec_unbias<-trffkt_func(b_unbias,K,plot_T)$trffkt
+# Apply correction to folded low-freq spectrum (DFT)
+    weight_func[,1]<-weight_funch[,1]<-weight_funchh[,1]*abs(spec_unbias)
+    ts.plot(abs(weight_func),col=c("blue","red"))
+  }
   
   # Lead time: fractional 1/period_high corresponds to 1 time-unit on high-frequency scale
   lead<-0/period_high
