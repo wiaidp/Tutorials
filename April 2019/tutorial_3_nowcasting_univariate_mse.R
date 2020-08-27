@@ -18,7 +18,7 @@
 #   We also show that DFA based on dft and DFA based on Burg's max-entropy spectral estimate perform equally
 #     These results suggest that dft or Burg-spectrum can be used for real-time signal extraction (lowpass nowcasting) in practice
 
-# For illustration we here analyze univariate unconstrained MSE designs only
+# For illustration we here analyze univariat unconstrained MSE designs only
 #   -Multivariate examples will be considered in next tutorial
 #   -Customization and regularization will be tackled in separate tutorials
 
