@@ -76,6 +76,7 @@ eps_high<-arima.sim(n=period_high*len,list(ar = c(0.09), ma = c(0)))
 for (i in 1:len)
   x_low[i]<-sum(eps_high[(i-1)*period_high+1:period_high])+eps_low[i]
 
+#--------------------------------
 # Tucker's Idea
 #   Embedding of high-frequency data in low-frequency sampling-scheme (period_high columns)
 x_high_embed<-matrix(ncol=period_high,nrow=len)   
