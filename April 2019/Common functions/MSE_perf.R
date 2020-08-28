@@ -1,7 +1,7 @@
 
 #mdfa_obj<-mdfa_obj_mixed
 #yhat<-yhat_mixed
-MSE_perf_func<-function(insamp,y,yhat,len,mdfa_obj,data_mat,target_as_explanatory)
+MSE_perf_func<-function(insamp,y,yhat,len,mdfa_obj,target_as_explanatory)
 {
 
 

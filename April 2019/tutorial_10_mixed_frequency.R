@@ -1,4 +1,19 @@
+# New ideas
 
+# 1. Univariate can be expressed as Multivariate with all lags aligned horizontally and L=1
+#     -More generally: we can play with both dimensions in order to set-up a design
+
+# 2. Embedding is just one expression of the above where we 'play' with the set-up:
+#     -In this case the horizontal dimension corresponds to 'within quarter' time points and
+#       vertical dimensions are quarters (for example)
+#     -By doing so the withing quarters dynamics are accounted for horizontally whereas the quarter-to-quarter
+#       dynamics are 'modelled' vertically
+#     -Thus a quarterly series appears once only (only one column) i.e. it does not have 'within quarter' dynamics
+
+# 3. Problem of embedding is that one has less observations if target is quarterly series (3-times less than folding)
+#     -Solution: add the withing quarter time points by shifting (rotating) the quarterly target by omega/3 (one third 
+#       or 1/periodicity rotation)
+#     -Implications: what does the rotation mean?
 
 
 
@@ -165,7 +180,7 @@ ts.plot(cbind(yhat_mixed,y),col=c("blue","red"))
 
 # MSE performances
 
-MSE_embed<-MSE_perf_func(insamp,y,yhat_mixed,len,mdfa_obj_mixed)$perf_mat
+MSE_embed<-MSE_perf_func(insamp,y,yhat_mixed,len,mdfa_obj_mixed,target_as_explanatory)$perf_mat
   
 
 
@@ -280,7 +295,7 @@ y<-ideal_filter_func(periodicity,M,x_low)$y
 ts.plot(cbind(yhat_agg,y),col=c("blue","red"))
 
 # MSE performances
-MSE_fold<-MSE_perf_func(insamp,y,yhat_agg,len,mdfa_obj)$perf_mat
+MSE_fold<-MSE_perf_func(insamp,y,yhat_agg,len,mdfa_obj,target_as_explanatory)$perf_mat
 
 perf_mat<-rbind(MSE_embed,MSE_fold)
 rownames(perf_mat)<-c("Embed","Fold")
